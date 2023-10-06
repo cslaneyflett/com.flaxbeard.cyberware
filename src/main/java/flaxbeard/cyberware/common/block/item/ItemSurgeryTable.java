@@ -1,31 +1,31 @@
 package flaxbeard.cyberware.common.block.item;
 
-import net.minecraft.item.Item;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import flaxbeard.cyberware.Cyberware;
+import net.minecraft.world.item.Item;
 
 public class ItemSurgeryTable extends Item
 {
 	public ItemSurgeryTable()
 	{
 		super();
-		
+
 		String name = "surgery_table";
-		
+
 		setRegistryName(name);
-		ForgeRegistries.ITEMS.register(this);
+		// ForgeRegistries.ITEMS.register(this);
 		setTranslationKey(Cyberware.MODID + "." + name);
-        setMaxDamage(0);
-        
+		setMaxDamage(0);
+
 		setCreativeTab(Cyberware.creativeTab);
 	}
 
 	/*
 	@Nonnull
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer entityPlayer, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
+	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer entityPlayer, World worldIn, BlockPos pos,
+	EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
 	{
-		if (worldIn.isRemote)
+		if (worldIn.isClientSide())
 		{
 			return EnumActionResult.SUCCESS;
 		}
@@ -35,7 +35,7 @@ public class ItemSurgeryTable extends Item
 		}
 		else
 		{
-			IBlockState iblockstate = worldIn.getBlockState(pos);
+			BlockState iblockstate = worldIn.getBlockState(pos);
 			Block block = iblockstate.getBlock();
 			boolean flag = block.isReplaceable(worldIn, pos);
 
@@ -54,18 +54,23 @@ public class ItemSurgeryTable extends Item
 				boolean flag2 = flag || worldIn.isAirBlock(pos);
 				boolean flag3 = flag1 || worldIn.isAirBlock(blockpos);
 
-				if (flag2 && flag3 && worldIn.getBlockState(pos.down()).isFullyOpaque() && worldIn.getBlockState(blockpos.down()).isFullyOpaque())
+				if (flag2 && flag3 && worldIn.getBlockState(pos.down()).isFullyOpaque() && worldIn.getBlockState
+				(blockpos.down()).isFullyOpaque())
 				{
-					IBlockState iblockstate1 = CyberwareContent.surgeryTable.getDefaultState().withProperty(BlockSurgeryTable.OCCUPIED, Boolean.valueOf(false)).withProperty(BlockSurgeryTable.FACING, enumfacing).withProperty(BlockSurgeryTable.PART, BlockBed.EnumPartType.FOOT);
+					BlockState iblockstate1 = CyberwareContent.surgeryTable.getDefaultState().withProperty
+					(BlockSurgeryTable.OCCUPIED, Boolean.valueOf(false)).withProperty(BlockSurgeryTable.FACING,
+					enumfacing).withProperty(BlockSurgeryTable.PART, BlockBed.EnumPartType.FOOT);
 
 					if (worldIn.setBlockState(pos, iblockstate1, 11))
 					{
-						IBlockState iblockstate2 = iblockstate1.withProperty(BlockSurgeryTable.PART, BlockBed.EnumPartType.HEAD);
+						BlockState iblockstate2 = iblockstate1.withProperty(BlockSurgeryTable.PART, BlockBed
+						.EnumPartType.HEAD);
 						worldIn.setBlockState(blockpos, iblockstate2, 11);
 					}
 
 					SoundType soundtype = iblockstate1.getBlock().getSoundType();
-					worldIn.playSound((EntityPlayer)null, pos, soundtype.getPlaceSound(), SoundCategory.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+					worldIn.playSound((EntityPlayer)null, pos, soundtype.getPlaceSound(), SoundCategory.BLOCKS,
+					(soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
 					--stack.stackSize;
 					return EnumActionResult.SUCCESS;
 				}

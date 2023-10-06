@@ -1,39 +1,39 @@
 package flaxbeard.cyberware.common.item;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.shader.ShaderGroup;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.init.MobEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.ICyberware;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.shader.ShaderGroup;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class VanillaWares
 {
 	public static class SpiderEyeWare implements ICyberware
 	{
 		private static final ItemStack itemStackSpiderEye = new ItemStack(Items.SPIDER_EYE);
-		
+
 		public SpiderEyeWare()
 		{
 			MinecraftForge.EVENT_BUS.register(this);
@@ -68,84 +68,85 @@ public class VanillaWares
 		{
 			return true;
 		}
-		
+
 		@SubscribeEvent
 		public void handleSpiderNightVision(CyberwareUpdateEvent event)
 		{
-			EntityLivingBase entityLivingBase = event.getEntityLiving();
-			if (entityLivingBase.ticksExisted % 20 != 0) return;
-			
+			LivingEntity entityLivingBase = event.getEntity();
+			if (entityLivingBase.tickCount % 20 != 0) return;
+
 			ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
 			if (cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 			{
-				entityLivingBase.addPotionEffect(new PotionEffect(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, -53, true, false));
-			}
-			else
+				entityLivingBase.addEffect(new MobEffect(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, -53, true,
+					false
+				));
+			} else
 			{
-				PotionEffect effect = entityLivingBase.getActivePotionEffect(MobEffects.NIGHT_VISION);
+				MobEffect effect = entityLivingBase.getActivePotionEffect(MobEffects.NIGHT_VISION);
 				if (effect != null && effect.getAmplifier() == -53)
 				{
 					entityLivingBase.removePotionEffect(MobEffects.NIGHT_VISION);
 				}
 			}
 		}
-		
-		@SideOnly(Side.CLIENT)
+
+		@OnlyIn(Dist.CLIENT)
 		@SubscribeEvent
 		public void onDrawScreenPost(RenderGameOverlayEvent.Pre event)
 		{
 			if (event.getType() == ElementType.CROSSHAIRS)
 			{
-				EntityPlayer entityPlayer = Minecraft.getMinecraft().player;
+				Player entityPlayer = Minecraft.getInstance().player;
 				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-				if ( cyberwareUserData != null
-				  && cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye) )
+				if (cyberwareUserData != null
+					&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 				{
 					GlStateManager.translate(0, event.getResolution().getScaledHeight() / 5, 0);
 				}
 			}
 		}
-		
-		
-		@SideOnly(Side.CLIENT)
+
+		@OnlyIn(Dist.CLIENT)
 		@SubscribeEvent
 		public void onDrawScreenPost(RenderGameOverlayEvent.Post event)
 		{
 			if (event.getType() == ElementType.CROSSHAIRS)
 			{
-				EntityPlayer entityPlayer = Minecraft.getMinecraft().player;
+				Player entityPlayer = Minecraft.getInstance().player;
 				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-				if ( cyberwareUserData != null
-				  && cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye) )
+				if (cyberwareUserData != null
+					&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 				{
 					GlStateManager.translate(0, -event.getResolution().getScaledHeight() / 5, 0);
 				}
 			}
 		}
-		
+
 		@SubscribeEvent
-		@SideOnly(Side.CLIENT)
+		@OnlyIn(Dist.CLIENT)
 		public void handleSpiderVision(TickEvent.ClientTickEvent event)
 		{
 			if (event.phase != TickEvent.Phase.START) return;
-			
-			EntityPlayer entityPlayer = Minecraft.getMinecraft().player;
-			
+
+			Player entityPlayer = Minecraft.getInstance().player;
+
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-			if ( cyberwareUserData != null
-			  && cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye) )
+			if (cyberwareUserData != null
+				&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 			{
-				if (Minecraft.getMinecraft().entityRenderer.getShaderGroup() == null)
+				if (Minecraft.getInstance().entityRenderer.getShaderGroup() == null)
 				{
-					Minecraft.getMinecraft().entityRenderer.loadShader(new ResourceLocation("shaders/post/spider.json"));
+					Minecraft.getInstance().entityRenderer.loadShader(new ResourceLocation("shaders/post/spider" +
+						".json"));
 				}
-			}
-			else if (entityPlayer != null && !entityPlayer.isSpectator())
+			} else if (entityPlayer != null && !entityPlayer.isSpectator())
 			{
-				ShaderGroup shaderGroup = Minecraft.getMinecraft().entityRenderer.getShaderGroup();
-				if (shaderGroup != null && shaderGroup.getShaderGroupName().equals("minecraft:shaders/post/spider.json"))
+				ShaderGroup shaderGroup = Minecraft.getInstance().entityRenderer.getShaderGroup();
+				if (shaderGroup != null && shaderGroup.getShaderGroupName().equals("minecraft:shaders/post/spider" +
+					".json"))
 				{
-					Minecraft.getMinecraft().entityRenderer.stopUseShader();
+					Minecraft.getInstance().entityRenderer.stopUseShader();
 				}
 			}
 		}
@@ -168,7 +169,7 @@ public class VanillaWares
 
 		private String[] getDesciption(ItemStack stack)
 		{
-			return I18n.format("cyberware.tooltip.spider_eye").split("\\\\n");
+			return I18n.get("cyberware.tooltip.spider_eye").split("\\\\n");
 		}
 
 		@Override
@@ -178,13 +179,13 @@ public class VanillaWares
 		}
 
 		@Override
-		public void onAdded(EntityLivingBase entityLivingBase, ItemStack stack)
+		public void onAdded(LivingEntity entityLivingBase, ItemStack stack)
 		{
 			// no operation
 		}
 
 		@Override
-		public void onRemoved(EntityLivingBase entityLivingBase, ItemStack stack)
+		public void onRemoved(LivingEntity entityLivingBase, ItemStack stack)
 		{
 			// no operation
 		}
@@ -212,6 +213,5 @@ public class VanillaWares
 		{
 			return false;
 		}
-		
 	}
 }

@@ -1,25 +1,15 @@
 package flaxbeard.cyberware.common.block.tile;
 
-import net.darkhax.tesla.api.ITeslaConsumer;
-import net.darkhax.tesla.api.ITeslaHolder;
-import net.darkhax.tesla.api.ITeslaProducer;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.fml.common.Optional;
 
-@Optional.InterfaceList({
-	@Optional.Interface(iface = "net.darkhax.tesla.api.ITeslaConsumer", modid = "tesla"),
-	@Optional.Interface(iface = "net.darkhax.tesla.api.ITeslaHolder", modid = "tesla"),
-	@Optional.Interface(iface = "net.darkhax.tesla.api.ITeslaProducer", modid = "tesla")
-})
-public class PowerContainer implements ITeslaConsumer, ITeslaHolder, ITeslaProducer, INBTSerializable<NBTTagCompound>
+public class PowerContainer implements INBTSerializable<CompoundTag>
 {
-
 	private long stored;
 	private long capacity;
 	private long inputRate;
 	private long outputRate;
-	
+
 	public PowerContainer()
 	{
 		this.stored = 0;
@@ -29,25 +19,25 @@ public class PowerContainer implements ITeslaConsumer, ITeslaHolder, ITeslaProdu
 	}
 
 	@Override
-	public NBTTagCompound serializeNBT()
+	public CompoundTag serializeNBT()
 	{
-		final NBTTagCompound tag = new NBTTagCompound();
-		tag.setLong("power", stored);
-		tag.setLong("capacity", capacity);
-		tag.setLong("input", inputRate);
-		tag.setLong("output", outputRate);
-		
+		final CompoundTag tag = new CompoundTag();
+		tag.putLong("power", stored);
+		tag.putLong("capacity", capacity);
+		tag.putLong("input", inputRate);
+		tag.putLong("output", outputRate);
+
 		return tag;
 	}
-	
+
 	@Override
-	public void deserializeNBT(NBTTagCompound tagCompound)
+	public void deserializeNBT(CompoundTag tagCompound)
 	{
 		this.stored = tagCompound.getLong("power");
 		this.capacity = tagCompound.getLong("capacity");
 		this.inputRate = tagCompound.getLong("input");
 		this.outputRate = tagCompound.getLong("output");
-			
+
 		if (this.stored > this.getCapacity())
 		{
 			this.stored = this.getCapacity();
@@ -70,12 +60,12 @@ public class PowerContainer implements ITeslaConsumer, ITeslaHolder, ITeslaProdu
 	public long givePower(long Tesla, boolean simulated)
 	{
 		final long acceptedTesla = Math.min(this.getCapacity() - this.stored, Math.min(inputRate, Tesla));
-		
+
 		if (!simulated)
 		{
 			this.stored += acceptedTesla;
 		}
-			
+
 		return acceptedTesla;
 	}
 
@@ -83,13 +73,12 @@ public class PowerContainer implements ITeslaConsumer, ITeslaHolder, ITeslaProdu
 	public long takePower(long Tesla, boolean simulated)
 	{
 		final long removedPower = Math.min(this.stored, Math.min(outputRate, Tesla));
-		
+
 		if (!simulated)
 		{
 			this.stored -= removedPower;
 		}
-			
+
 		return removedPower;
 	}
-
 }

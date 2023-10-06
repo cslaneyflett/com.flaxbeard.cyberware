@@ -1,12 +1,11 @@
 package flaxbeard.cyberware.client.render;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-
 import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.tile.TileEntityBeaconPost.TileEntityBeaconPostMaster;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class TileEntityBeaconLargeRenderer extends TileEntitySpecialRenderer<TileEntityBeaconPostMaster>
 {
@@ -15,11 +14,12 @@ public class TileEntityBeaconLargeRenderer extends TileEntitySpecialRenderer<Til
 	private static final String texture2 = "cyberware:textures/models/radio_base.png";
 
 	@Override
-	public void render(TileEntityBeaconPostMaster te, double x, double y, double z, float partialTicks, int destroyStage, float alpha)
+	public void render(TileEntityBeaconPostMaster te, double x, double y, double z, float partialTicks,
+					   int destroyStage, float alpha)
 	{
 		if (te != null)
 		{
-			IBlockState state = te.getWorld().getBlockState(te.getPos());
+			BlockState state = te.getLevel().getBlockState(te.getPos());
 			if (state.getBlock() == CyberwareContent.radioPost)
 			{
 				GlStateManager.pushMatrix();
@@ -34,5 +34,4 @@ public class TileEntityBeaconLargeRenderer extends TileEntitySpecialRenderer<Til
 			}
 		}
 	}
-
 }

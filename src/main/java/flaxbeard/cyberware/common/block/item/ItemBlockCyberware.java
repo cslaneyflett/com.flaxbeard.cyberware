@@ -1,33 +1,38 @@
 package flaxbeard.cyberware.common.block.item;
 
-import java.util.List;
-
-import com.mojang.realmsclient.gui.ChatFormatting;
-
 import flaxbeard.cyberware.api.item.ICyberwareTabItem;
-import net.minecraft.block.Block;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
-public class ItemBlockCyberware extends ItemBlock implements ICyberwareTabItem
+public class ItemBlockCyberware extends BlockItem implements ICyberwareTabItem
 {
 	private String[] tt;
-	
-	public ItemBlockCyberware(Block block)
+
+	public ItemBlockCyberware(Block block, Properties properties)
 	{
-		super(block);
+		super(block, properties);
 	}
-	
+
+	public ItemBlockCyberware(Block block, Properties properties, String... tooltip)
+	{
+		super(block, properties);
+		this.tt = tooltip;
+	}
+
 	public ItemBlockCyberware(Block block, String... tooltip)
 	{
-		super(block);
+		super(block, new Properties());
 		this.tt = tooltip;
 	}
 
@@ -38,15 +43,15 @@ public class ItemBlockCyberware extends ItemBlock implements ICyberwareTabItem
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag advanced)
+	@OnlyIn(Dist.CLIENT)
+	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag advanced)
 	{
-		if (this.tt != null)
+		if (this.tt == null) return;
+
+		for (String str : tt)
 		{
-			for (String str : tt)
-			{
-				tooltip.add(ChatFormatting.GRAY + I18n.format(str));
-			}
+			// TODO: chat components .translatable
+			tooltip.add(Component.literal(ChatFormatting.GRAY + I18n.get(str)));
 		}
 	}
 }

@@ -1,96 +1,58 @@
 package flaxbeard.cyberware.common.network;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityEngineeringTable;
-import io.netty.buffer.ByteBuf;
-
-import java.util.concurrent.Callable;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.network.NetworkEvent;
 
-public class ScannerSmashPacket implements IMessage
+import java.util.function.Supplier;
+
+public class ScannerSmashPacket
 {
-	public ScannerSmashPacket() {}
-	
-	private int x;
-	private int y;
-	private int z;
+	private final BlockPos pos;
 
-	public ScannerSmashPacket(int x, int y, int z)
+	public ScannerSmashPacket(BlockPos pos)
 	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
+		this.pos = pos;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public static void encode(ScannerSmashPacket packet, FriendlyByteBuf buf)
 	{
-		buf.writeInt(x);
-		buf.writeInt(y);
-		buf.writeInt(z);
+		buf.writeBlockPos(packet.pos);
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		x = buf.readInt();
-		y = buf.readInt();
-		z = buf.readInt();
-	}
-	
-	public static class ScannerSmashPacketHandler implements IMessageHandler<ScannerSmashPacket, IMessage>
-	{
 
-		@Override
-		public IMessage onMessage(ScannerSmashPacket message, MessageContext ctx)
+	public static ScannerSmashPacket decode(FriendlyByteBuf buf)
+	{
+		return new ScannerSmashPacket(buf.readBlockPos());
+	}
+
+	public static class ScannerSmashPacketHandler
+	{
+		public static void handle(ScannerSmashPacket msg, Supplier<NetworkEvent.Context> ctx)
 		{
-			Minecraft.getMinecraft().addScheduledTask(new DoSync(message.x, message.y, message.z));
-
-			return null;
+			ctx.get().enqueueWork(new DoSync(msg.pos));
+			ctx.get().setPacketHandled(true);
 		}
-		
 	}
-	
-	private static class DoSync implements Callable<Void>
+
+	private record DoSync(BlockPos pos) implements Runnable
 	{
-		private int x;
-		private int y;
-		private int z;
-		
-		public DoSync(int x, int y, int z)
-		{
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
-		
 		@Override
-		public Void call()
+		public void run()
 		{
-			World world = Minecraft.getMinecraft().world;
-			
+			Level world = Minecraft.getInstance().level;
+
 			if (world != null)
 			{
-				TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
-				if (te != null && te instanceof TileEntityEngineeringTable)
+				BlockEntity te = world.getBlockEntity(pos);
+				if (te instanceof TileEntityEngineeringTable eng)
 				{
-					TileEntityEngineeringTable eng = (TileEntityEngineeringTable) te;
 					eng.smashSounds();
 				}
 			}
-			
-			return null;
 		}
-		
-
 	}
-	
-
-
 }

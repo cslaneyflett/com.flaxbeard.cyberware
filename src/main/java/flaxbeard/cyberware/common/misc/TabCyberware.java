@@ -1,41 +1,42 @@
 package flaxbeard.cyberware.common.misc;
 
+import flaxbeard.cyberware.api.CyberwareAPI;
+import flaxbeard.cyberware.api.item.ICyberware;
+import flaxbeard.cyberware.api.item.ICyberware.Quality;
+import flaxbeard.cyberware.api.item.ICyberwareTabItem;
+import flaxbeard.cyberware.api.item.ICyberwareTabItem.EnumCategory;
+import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.handler.CreativeMenuHandler;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.ForgeRegistries;
+
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.api.item.ICyberware.Quality;
-import flaxbeard.cyberware.api.item.ICyberware;
-import flaxbeard.cyberware.api.item.ICyberwareTabItem;
-import flaxbeard.cyberware.api.item.ICyberwareTabItem.EnumCategory;
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.handler.CreativeMenuHandler;
-
-public class TabCyberware extends CreativeTabs
+public class TabCyberware extends CreativeModeTab
 {
-
 	public TabCyberware(String label)
 	{
 		super(label);
 	}
-	
+
 	@Nonnull
 	@Override
-	public ItemStack createIcon() {
+	public ItemStack makeIcon()
+	{
 		return new ItemStack(CyberwareContent.cybereyes);
 	}
-	
+
 	@Override
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public void displayAllRelevantItems(NonNullList<ItemStack> list)
 	{
 		Map<EnumCategory, List<ItemStack>> subLists = new EnumMap<>(EnumCategory.class);
@@ -44,22 +45,23 @@ public class TabCyberware extends CreativeTabs
 			subLists.put(category, new ArrayList<>());
 		}
 		NonNullList<ItemStack> unsorted = NonNullList.create();
-		
-		Quality q = CreativeMenuHandler.pageSelected == 0 ? CyberwareAPI.QUALITY_SCAVENGED : CyberwareAPI.QUALITY_MANUFACTURED;
-		
-		for (Item item : Item.REGISTRY)
+
+		Quality q = CreativeMenuHandler.pageSelected == 0 ? CyberwareAPI.QUALITY_SCAVENGED :
+			CyberwareAPI.QUALITY_MANUFACTURED;
+
+		for (Item item : ForgeRegistries.ITEMS)
 		{
 			if (item == null)
 			{
 				continue;
 			}
-			for (CreativeTabs tab : item.getCreativeTabs())
+			for (CreativeModeTab tab : item.getCreativeTabs())
 			{
 				if (tab == this)
 				{
 					if (item instanceof ICyberwareTabItem)
 					{
-						NonNullList<ItemStack> tempList = NonNullList.create();	
+						NonNullList<ItemStack> tempList = NonNullList.create();
 						item.getSubItems(this, tempList);
 
 						for (ItemStack stack : tempList)
@@ -78,21 +80,20 @@ public class TabCyberware extends CreativeTabs
 								subLists.get(cat).add(stack);
 							}
 						}
-					}
-					else
+					} else
 					{
 						item.getSubItems(this, unsorted);
 					}
 				}
 			}
 		}
-		
+
 		for (EnumCategory category : EnumCategory.values())
 		{
 			List<ItemStack> toAdd = subLists.get(category);
 			list.addAll(toAdd);
 		}
-		
+
 		list.addAll(unsorted);
 /*
 		if (this.getRelevantEnchantmentTypes() != null)

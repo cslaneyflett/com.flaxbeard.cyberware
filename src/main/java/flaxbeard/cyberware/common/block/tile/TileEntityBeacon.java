@@ -1,5 +1,23 @@
 package flaxbeard.cyberware.common.block.tile;
 
+import flaxbeard.cyberware.api.CyberwareAPI;
+import flaxbeard.cyberware.api.ICyberwareUserData;
+import flaxbeard.cyberware.api.item.EnableDisableHelper;
+import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.block.BlockBeaconLarge;
+import flaxbeard.cyberware.common.item.ItemBrainUpgrade;
+import flaxbeard.cyberware.common.lib.LibConstants;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,34 +26,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import flaxbeard.cyberware.api.ICyberwareUserData;
-import flaxbeard.cyberware.common.item.ItemBrainUpgrade;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.ITickable;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.api.item.EnableDisableHelper;
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.block.BlockBeaconLarge;
-import flaxbeard.cyberware.common.lib.LibConstants;
-
-public class TileEntityBeacon extends TileEntity implements ITickable
+public class TileEntityBeacon extends BlockEntity implements ITickable
 {
-	private static List<Integer> tiers = new CopyOnWriteArrayList<>();
-	private static Map<Integer, Map<Integer, Map<BlockPos, Integer>>> mapBeaconPositionByTierDimension = new HashMap<>();
+	private static final List<Integer> tiers = new CopyOnWriteArrayList<>();
+	private static final Map<Integer, Map<Integer, Map<BlockPos, Integer>>> mapBeaconPositionByTierDimension =
+		new HashMap<>();
 	private boolean wasWorking = false;
 	private int count = 0;
-	
 	private static int TIER = 2;
-	
+
 	private static Map<Integer, Map<BlockPos, Integer>> getBeaconPositionsForTier(int tier)
 	{
 		Map<Integer, Map<BlockPos, Integer>> mapBeaconPositionByDimension = mapBeaconPositionByTierDimension.get(tier);
@@ -50,49 +49,54 @@ public class TileEntityBeacon extends TileEntity implements ITickable
 				Collections.reverse(tiers);
 			}
 		}
-		
+
 		return mapBeaconPositionByDimension;
 	}
-	
-	public static Map<BlockPos, Integer> getBeaconPositionsForTierAndDimension(int tier, @Nonnull World world)
+
+	public static Map<BlockPos, Integer> getBeaconPositionsForTierAndDimension(int tier, @Nonnull Level level)
 	{
 		Map<Integer, Map<BlockPos, Integer>> mapBeaconPositionByDimension = getBeaconPositionsForTier(tier);
-		int idDimension = world.provider.getDimension();
+		// TODO: dimension id?
+		int idDimension = level.dimension();
 		return mapBeaconPositionByDimension.computeIfAbsent(idDimension, k -> new HashMap<>());
 	}
-	
+
 	@Override
 	public void update()
-	{			
-		boolean working = !world.isBlockPowered(pos);
-		
+	{
+		// TODO: power?
+		boolean working = level.isBlockPowered(worldPosition);
+
 		if (!wasWorking && working)
 		{
 			enable();
 		}
-		
+
 		if (wasWorking && !working)
 		{
 			disable();
 		}
-		
+
 		wasWorking = working;
-		
-		if (world.isRemote && working)
+
+		if (level.isClientSide() && working)
 		{
+			ClientLevel clientLevel = (ClientLevel) level;
 			count = (count + 1) % 20;
 			if (count == 0)
 			{
-				IBlockState state = world.getBlockState(pos);
+				BlockState state = clientLevel.getBlockState(worldPosition);
 				if (state.getBlock() == CyberwareContent.radio)
 				{
-					boolean ns = state.getValue(BlockBeaconLarge.FACING) == EnumFacing.NORTH
-					          || state.getValue(BlockBeaconLarge.FACING) == EnumFacing.SOUTH;
-					boolean backwards = state.getValue(BlockBeaconLarge.FACING) == EnumFacing.SOUTH
-					                 || state.getValue(BlockBeaconLarge.FACING) == EnumFacing.EAST;
+					boolean ns = state.getValue(BlockBeaconLarge.FACING) == Direction.NORTH
+						|| state.getValue(BlockBeaconLarge.FACING) == Direction.SOUTH;
+					boolean backwards = state.getValue(BlockBeaconLarge.FACING) == Direction.SOUTH
+						|| state.getValue(BlockBeaconLarge.FACING) == Direction.EAST;
+
 					float dist = .2F;
 					float speedMod = .08F;
 					int degrees = 45;
+
 					for (int index = 0; index < 5; index++)
 					{
 						float sin = (float) Math.sin(Math.toRadians(degrees));
@@ -104,24 +108,29 @@ public class TileEntityBeacon extends TileEntity implements ITickable
 						float backOffsetX = (backwards ^ ns ? -.3F : .3F);
 						float backOffsetZ = (backwards ? .4F : -.4F);
 
-						world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, 
-								pos.getX() + .5F + (ns ? xOffset + backOffsetX : backOffsetZ), 
-								pos.getY() + .5F + yOffset, 
-								pos.getZ() + .5F + (ns ? backOffsetZ : xOffset + backOffsetX), 
-								ns ? xSpeed : 0, 
-								ySpeed, 
-								ns ? 0 : xSpeed,
-								255, 255, 255 );
-						
-						world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, 
-								pos.getX() + .5F + (ns ? -xOffset + backOffsetX : backOffsetZ), 
-								pos.getY() + .5F + yOffset, 
-								pos.getZ() + .5F + (ns ? backOffsetZ : -xOffset + backOffsetX), 
-								ns ? -xSpeed : 0, 
-								ySpeed, 
-								ns ? 0 : -xSpeed,
-								255, 255, 255 );
-	
+						// TODO
+						//						clientLevel.spawnParticle(ParticleTypes.SMOKE,
+						//								worldPosition.getX() + .5F + (ns ? xOffset + backOffsetX :
+						//								backOffsetZ),
+						//								worldPosition.getY() + .5F + yOffset,
+						//								worldPosition.getZ() + .5F + (ns ? backOffsetZ : xOffset +
+						//								backOffsetX),
+						//								ns ? xSpeed : 0,
+						//								ySpeed,
+						//								ns ? 0 : xSpeed,
+						//								255, 255, 255);
+						//
+						//						clientLevel.spawnParticle(ParticleTypes.SMOKE,
+						//								worldPosition.getX() + .5F + (ns ? -xOffset + backOffsetX :
+						//								backOffsetZ),
+						//								worldPosition.getY() + .5F + yOffset,
+						//								worldPosition.getZ() + .5F + (ns ? backOffsetZ : -xOffset +
+						//								backOffsetX),
+						//								ns ? -xSpeed : 0,
+						//								ySpeed,
+						//								ns ? 0 : -xSpeed,
+						//								255, 255, 255);
+
 						degrees += 18;
 					}
 				}
@@ -131,48 +140,51 @@ public class TileEntityBeacon extends TileEntity implements ITickable
 
 	private void disable()
 	{
-		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, world);
-		mapBeaconPosition.remove(getPos());
+		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, level);
+		mapBeaconPosition.remove(getBlockPos());
 	}
 
 	private void enable()
 	{
-		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, world);
-		if (!mapBeaconPosition.containsKey(getPos()))
+		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, level);
+		if (!mapBeaconPosition.containsKey(getBlockPos()))
 		{
-			mapBeaconPosition.put(getPos(), LibConstants.BEACON_RANGE);
+			mapBeaconPosition.put(getBlockPos(), LibConstants.BEACON_RANGE);
 		}
 	}
-	
-	@Override
-	public void invalidate()
-	{
-		disable();
-		super.invalidate();
-	}
-	
-	public static int isInRange(World world, double posX, double posY, double posZ)
+
+	// TODO
+	//	@Override
+	//	public void invalidate() {
+	//		disable();
+	//		super.invalidate();
+	//	}
+
+	public static int isInRange(Level level, double posX, double posY, double posZ)
 	{
 		for (int tier : tiers)
 		{
-			Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(tier, world);
+			Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(tier, level);
 			for (Entry<BlockPos, Integer> entry : mapBeaconPosition.entrySet())
 			{
 				double squareDistance = (posX - entry.getKey().getX()) * (posX - entry.getKey().getX())
-				                      + (posZ - entry.getKey().getZ()) * (posZ - entry.getKey().getZ());
+					+ (posZ - entry.getKey().getZ()) * (posZ - entry.getKey().getZ());
 				if (squareDistance < entry.getValue() * entry.getValue())
 				{
 					return tier;
 				}
 			}
 		}
-		
-		List<EntityLivingBase> entitiesInRange = world.getEntitiesWithinAABB(EntityPlayer.class,
-				new AxisAlignedBB(posX - LibConstants.BEACON_RANGE_INTERNAL, 0, posZ - LibConstants.BEACON_RANGE_INTERNAL,
-				                  posX + LibConstants.BEACON_RANGE_INTERNAL, 255, posZ + LibConstants.BEACON_RANGE_INTERNAL) );
-		
+
+		List<Player> entitiesInRange = level.getEntitiesOfClass(
+			Player.class,
+			new AABB(posX - LibConstants.BEACON_RANGE_INTERNAL, 0, posZ - LibConstants.BEACON_RANGE_INTERNAL,
+				posX + LibConstants.BEACON_RANGE_INTERNAL, 255, posZ + LibConstants.BEACON_RANGE_INTERNAL
+			)
+		);
+
 		ItemStack itemStackRadioRaw = CyberwareContent.brainUpgrades.getCachedStack(ItemBrainUpgrade.META_RADIO);
-		for (EntityLivingBase entityInRange : entitiesInRange)
+		for (LivingEntity entityInRange : entitiesInRange)
 		{
 			if (ItemBrainUpgrade.isRadioWorking(entityInRange))
 			{
@@ -180,15 +192,15 @@ public class TileEntityBeacon extends TileEntity implements ITickable
 				if (cyberwareUserData != null)
 				{
 					ItemStack itemStackRadio = cyberwareUserData.getCyberware(itemStackRadioRaw);
-					if ( !itemStackRadio.isEmpty()
-					  && EnableDisableHelper.isEnabled(itemStackRadio) )
+					if (!itemStackRadio.isEmpty()
+						&& EnableDisableHelper.isEnabled(itemStackRadio))
 					{
 						return 1;
 					}
 				}
 			}
 		}
-		
+
 		return -1;
 	}
 }

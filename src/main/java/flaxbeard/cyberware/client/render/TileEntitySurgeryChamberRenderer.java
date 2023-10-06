@@ -1,15 +1,14 @@
 package flaxbeard.cyberware.client.render;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.util.EnumFacing;
-
 import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.BlockSurgeryChamber;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgeryChamber;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class TileEntitySurgeryChamberRenderer extends TileEntitySpecialRenderer<TileEntitySurgeryChamber>
 {
@@ -17,22 +16,23 @@ public class TileEntitySurgeryChamberRenderer extends TileEntitySpecialRenderer<
 	private static final String texture = "cyberware:textures/models/surgery_chamber_door.png";
 
 	@Override
-	public void render(TileEntitySurgeryChamber te, double x, double y, double z, float partialTicks, int destroyStage, float alpha)
+	public void render(TileEntitySurgeryChamber te, double x, double y, double z, float partialTicks, int destroyStage
+		, float alpha)
 	{
 		if (te != null)
 		{
-			float ticks = Minecraft.getMinecraft().player.ticksExisted + partialTicks;
-			
+			float ticks = Minecraft.getInstance().player.tickCount + partialTicks;
+
 			GlStateManager.pushMatrix();
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-			GlStateManager.translate(x+.5, y+.5, z+.5);
-			
-			IBlockState state = te.getWorld().getBlockState(te.getPos());
+			GlStateManager.translate(x + .5, y + .5, z + .5);
+
+			BlockState state = te.getLevel().getBlockState(te.getPos());
 			if (state.getBlock() == CyberwareContent.surgeryChamber)
 			{
-				
-				EnumFacing facing = state.getValue(BlockSurgeryChamber.FACING);
-				
+
+				Direction facing = state.getValue(BlockSurgeryChamber.FACING);
+
 				switch (facing)
 				{
 					case EAST:
@@ -50,37 +50,36 @@ public class TileEntitySurgeryChamberRenderer extends TileEntitySpecialRenderer<
 						break;
 				}
 				ClientUtils.bindTexture(texture);
-	
+
 				boolean isOpen = state.getValue(BlockSurgeryChamber.OPEN);
 				if (isOpen != te.lastOpen)
 				{
 					te.lastOpen = isOpen;
 					te.openTicks = ticks;
 				}
-				
+
 				float ticksPassed = Math.min(10, ticks - te.openTicks);
 				float rotate = (float) (Math.sin(ticksPassed * ((Math.PI / 2) / 10F)) * 90F);
-						
+
 				if (!isOpen)
 				{
 					rotate = 90F - (float) (Math.sin(ticksPassed * ((Math.PI / 2) / 10F)) * 90F);
 				}
-	
+
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(-6F / 16F, 0F, -6F / 16F);
 				GlStateManager.rotate(-rotate, 0F, 1F, 0F);
 				model.render(null, 0, 0, 0, 0, 0, .0625f);
 				GlStateManager.popMatrix();
-				
+
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(6F / 16F, 0F, -6F / 16F);
 				GlStateManager.rotate(rotate, 0F, 1F, 0F);
 				model.renderRight(null, 0, 0, 0, 0, 0, .0625f);
 				GlStateManager.popMatrix();
-					
+
 				GlStateManager.popMatrix();
 			}
 		}
 	}
-
 }

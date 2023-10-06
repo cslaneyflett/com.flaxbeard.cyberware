@@ -1,26 +1,31 @@
 package flaxbeard.cyberware.client.gui;
 
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.common.block.tile.TileEntityComponentBox;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class GuiComponentBox extends GuiContainer
 {
-	/** The ResourceLocation containing the chest GUI texture. */
-	public static final ResourceLocation BOX_GUI_TEXTURE = new ResourceLocation(Cyberware.MODID + ":textures/gui/component_box.png");
-	private IInventory playerInventory;
+	/**
+	 * The ResourceLocation containing the chest GUI texture.
+	 */
+	public static final ResourceLocation BOX_GUI_TEXTURE = new ResourceLocation(Cyberware.MODID + ":textures/gui" +
+		"/component_box.png");
+	private Container playerInventory;
 	private String name;
-	/** window height is calculated with these values; the more rows, the heigher */
+	/**
+	 * window height is calculated with these values; the more rows, the heigher
+	 */
 	private int inventoryRows;
 
-	public GuiComponentBox(IInventory playerInventory, TileEntityComponentBox box)
+	public GuiComponentBox(Container playerInventory, TileEntityComponentBox box)
 	{
 		super(new ContainerComponentBox(playerInventory, box));
 		this.playerInventory = playerInventory;
@@ -32,7 +37,7 @@ public class GuiComponentBox extends GuiContainer
 		this.name = box.getDisplayName().getUnformattedText();
 	}
 
-	public GuiComponentBox(IInventory playerInventory, ItemStack itemStack)
+	public GuiComponentBox(Container playerInventory, ItemStack itemStack)
 	{
 		super(new ContainerComponentBox(playerInventory, itemStack));
 		this.playerInventory = playerInventory;
@@ -57,7 +62,9 @@ public class GuiComponentBox extends GuiContainer
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
 	{
 		this.fontRenderer.drawString(this.name, 8, 6, 4210752);
-		this.fontRenderer.drawString(this.playerInventory.getDisplayName().getUnformattedText(), 8, this.ySize - 96 + 2, 4210752);
+		this.fontRenderer.drawString(this.playerInventory.getDisplayName().getUnformattedText(), 8,
+			this.ySize - 96 + 2, 4210752
+		);
 	}
 
 	/**

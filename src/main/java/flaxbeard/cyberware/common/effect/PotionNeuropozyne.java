@@ -1,51 +1,53 @@
 package flaxbeard.cyberware.common.effect;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
 import flaxbeard.cyberware.Cyberware;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class PotionNeuropozyne extends Potion
+public class PotionNeuropozyne extends MobEffectInstance
 {
-	private static final ResourceLocation resource = new ResourceLocation(Cyberware.MODID + ":textures/gui/potions.png");
+	private static final ResourceLocation resource = new ResourceLocation(Cyberware.MODID + ":textures/gui/potions" +
+		".png");
 	private int iconIndex;
-	
+
 	public PotionNeuropozyne(String name, boolean isBadEffectIn, int liquidColorIn, int iconIndex)
 	{
 		super(isBadEffectIn, liquidColorIn);
 		setPotionName("cyberware.potion." + name);
 		setRegistryName(new ResourceLocation(Cyberware.MODID, name));
-		ForgeRegistries.POTIONS.register(this);
+		// ForgeRegistries.POTIONS.register(this);
 		this.iconIndex = iconIndex;
 	}
-	
+
 	@Override
-	@SideOnly(Side.CLIENT)
-	public void renderInventoryEffect(int x, int y, PotionEffect effect, Minecraft mc) {
+	@OnlyIn(Dist.CLIENT)
+	public void renderInventoryEffect(int x, int y, MobEffect effect, Minecraft mc)
+	{
 		render(x + 6, y + 7, 1);
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
-	public void renderHUDEffect(int x, int y, PotionEffect effect, Minecraft mc, float alpha) {
+	@OnlyIn(Dist.CLIENT)
+	public void renderHUDEffect(int x, int y, MobEffect effect, Minecraft mc, float alpha)
+	{
 		render(x + 3, y + 3, alpha);
 	}
 
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	private void render(int x, int y, float alpha)
 	{
-		Minecraft.getMinecraft().renderEngine.bindTexture(resource);
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buf = tessellator.getBuffer();
-		buf.begin(7, DefaultVertexFormats.POSITION_TEX);
+		Minecraft.getInstance().renderEngine.bindTexture(resource);
+		Tesselator tesselator = Tesselator.getInstance();
+		BufferBuilder buf = tesselator.getBuffer();
+		buf.begin(7, DefaultVertexFormat.POSITION_TEX);
 		GlStateManager.color(1, 1, 1, alpha);
 
 		int textureX = iconIndex % 8 * 18;
@@ -56,7 +58,6 @@ public class PotionNeuropozyne extends Potion
 		buf.pos(x + 18, y, 0).tex((textureX + 18) * 0.00390625, textureY * 0.00390625).endVertex();
 		buf.pos(x, y, 0).tex(textureX * 0.00390625, textureY * 0.00390625).endVertex();
 
-		tessellator.draw();
+		tesselator.draw();
 	}
-
 }

@@ -1,19 +1,16 @@
 package flaxbeard.cyberware.client;
 
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-
-import org.lwjgl.input.Keyboard;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 
 public class KeyBinds
 {
-	public static KeyBinding menu;
+	public static KeyMapping menu;
 
-	public static void init()
+	public static void register(RegisterKeyMappingsEvent event)
 	{
-		menu = new KeyBinding("cyberware.keybinds.menu", Keyboard.KEY_R, "cyberware.keybinds.category");
-		ClientRegistry.registerKeyBinding(menu);
+		menu = new KeyMapping("cyberware.keybinds.menu", InputConstants.KEY_R, "cyberware.keybinds.category");
+		event.register(menu);
 	}
-
-
 }

@@ -1,20 +1,19 @@
 package flaxbeard.cyberware.client.gui.hud;
 
-import java.io.File;
-
-import net.minecraftforge.common.config.Configuration;
 import flaxbeard.cyberware.api.hud.IHudSaveData;
-import flaxbeard.cyberware.common.CyberwareConfig;
+import flaxbeard.cyberware.common.config.CyberwareConfig;
+import net.minecraftforge.common.config.Configuration;
+
+import java.io.File;
 
 public class HudConfigData implements IHudSaveData
 {
 	private Configuration config;
-	
+
 	public HudConfigData(String name)
 	{
 		config = new Configuration(new File(CyberwareConfig.configDirectory, "cyberware_hud/" + name + ".cfg"));
 	}
-	
 
 	@Override
 	public void setString(String key, String s)
@@ -26,21 +25,21 @@ public class HudConfigData implements IHudSaveData
 	public void setInteger(String key, int i)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setBoolean(String key, boolean b)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void setFloat(String key, float f)
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

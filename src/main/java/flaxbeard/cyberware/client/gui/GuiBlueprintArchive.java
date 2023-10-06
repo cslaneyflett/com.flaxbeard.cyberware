@@ -1,27 +1,32 @@
 package flaxbeard.cyberware.client.gui;
 
+import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.item.IBlueprint;
+import flaxbeard.cyberware.common.block.tile.TileEntityBlueprintArchive;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.block.tile.TileEntityBlueprintArchive;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class GuiBlueprintArchive extends GuiContainer
 {
-	/** The ResourceLocation containing the chest GUI texture. */
-	private static final ResourceLocation ARCHIVE_GUI_TEXTURE = new ResourceLocation(Cyberware.MODID + ":textures/gui/blueprint_archive.png");
-	private IInventory playerInventory;
+	/**
+	 * The ResourceLocation containing the chest GUI texture.
+	 */
+	private static final ResourceLocation ARCHIVE_GUI_TEXTURE = new ResourceLocation(Cyberware.MODID + ":textures/gui" +
+		"/blueprint_archive.png");
+	private Container playerInventory;
 	private TileEntityBlueprintArchive archive;
-	/** window height is calculated with these values; the more rows, the heigher */
+	/**
+	 * window height is calculated with these values; the more rows, the heigher
+	 */
 	private int inventoryRows;
 
-	public GuiBlueprintArchive(IInventory playerInventory, TileEntityBlueprintArchive archive)
+	public GuiBlueprintArchive(Container playerInventory, TileEntityBlueprintArchive archive)
 	{
 		super(new ContainerBlueprintArchive(playerInventory, archive));
 		this.playerInventory = playerInventory;
@@ -46,9 +51,12 @@ public class GuiBlueprintArchive extends GuiContainer
 	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
 	{
 		//this.fontRendererObj.drawString(this.archive.getDisplayName().getUnformattedText(), 8, 6, 4210752);
-		//this.fontRendererObj.drawString(this.playerInventory.getDisplayName().getUnformattedText(), 8, this.ySize - 96 + 2, 4210752);
+		//this.fontRendererObj.drawString(this.playerInventory.getDisplayName().getUnformattedText(), 8, this.ySize -
+		// 96 + 2, 4210752);
 		this.fontRenderer.drawString(this.archive.getDisplayName().getUnformattedText(), 8, 6, 4210752);
-		this.fontRenderer.drawString(this.playerInventory.getDisplayName().getUnformattedText(), 8, this.ySize - 96 + 2, 4210752);
+		this.fontRenderer.drawString(this.playerInventory.getDisplayName().getUnformattedText(), 8,
+			this.ySize - 96 + 2, 4210752
+		);
 
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(0, 0, 100F);

@@ -1,13 +1,12 @@
 package flaxbeard.cyberware.common.misc;
 
-import javax.annotation.Nonnull;
-
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
+
+import javax.annotation.Nonnull;
 
 public class SpecificWrapper implements IItemHandlerModifiable
 {
-
 	private final IItemHandlerModifiable compose;
 	private final int[] slots;
 
@@ -22,12 +21,12 @@ public class SpecificWrapper implements IItemHandlerModifiable
 	{
 		return slots.length;
 	}
-	
+
 	private int getIndex(int input)
 	{
 		return slots[input];
 	}
-	
+
 	@Nonnull
 	@Override
 	public ItemStack getStackInSlot(int slot)
@@ -39,10 +38,10 @@ public class SpecificWrapper implements IItemHandlerModifiable
 
 		return ItemStack.EMPTY;
 	}
-	
+
 	@Nonnull
 	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate)
+	public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate)
 	{
 		if (checkSlot(slot))
 		{
@@ -51,7 +50,7 @@ public class SpecificWrapper implements IItemHandlerModifiable
 
 		return stack;
 	}
-	
+
 	@Nonnull
 	@Override
 	public ItemStack extractItem(int slot, int amount, boolean simulate)
@@ -65,12 +64,23 @@ public class SpecificWrapper implements IItemHandlerModifiable
 	}
 
 	@Override
-	public void setStackInSlot(int slot, ItemStack stack)
+	public void setStackInSlot(int slot, @Nonnull ItemStack stack)
 	{
 		if (checkSlot(slot))
 		{
 			compose.setStackInSlot(getIndex(slot), stack);
 		}
+	}
+
+	@Override
+	public boolean isItemValid(int slot, @Nonnull ItemStack stack)
+	{
+		if (checkSlot(slot))
+		{
+			return compose.isItemValid(getIndex(slot), stack);
+		}
+
+		return false;
 	}
 
 	private boolean checkSlot(int localSlot)
@@ -79,8 +89,8 @@ public class SpecificWrapper implements IItemHandlerModifiable
 	}
 
 	@Override
-	public int getSlotLimit(int slot) {
+	public int getSlotLimit(int slot)
+	{
 		return 64;
 	}
-
 }

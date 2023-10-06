@@ -1,22 +1,20 @@
 package flaxbeard.cyberware.client;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.stream.Collectors;
-
+import flaxbeard.cyberware.Cyberware;
 import org.lwjgl.opengl.ARBFragmentShader;
 import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.ARBVertexShader;
 import org.lwjgl.opengl.GL11;
 
-import flaxbeard.cyberware.Cyberware;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 
 public class ShaderUtil
 {
 	private static final int VERT = ARBVertexShader.GL_VERTEX_SHADER_ARB;
 	private static final int FRAG = ARBFragmentShader.GL_FRAGMENT_SHADER_ARB;
-
 	public static int alpha = 0;
 
 	public static void init()
@@ -68,7 +66,7 @@ public class ShaderUtil
 		}
 
 		ARBShaderObjects.glLinkProgramARB(program);
-		if(ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE)
+		if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE)
 		{
 			Cyberware.logger.error("Shader objectLinkStatus: " + getLogInfo(program));
 			return 0;
@@ -90,7 +88,7 @@ public class ShaderUtil
 		{
 			shader = ARBShaderObjects.glCreateShaderObjectARB(shaderType);
 
-			if(shader == 0)
+			if (shader == 0)
 			{
 				return 0;
 			}
@@ -102,8 +100,7 @@ public class ShaderUtil
 				throw new RuntimeException("Error creating shader: " + getLogInfo(shader));
 
 			return shader;
-		}
-		catch(Exception e)
+		} catch (Exception e)
 		{
 			ARBShaderObjects.glDeleteObjectARB(shader);
 			e.printStackTrace();
@@ -115,16 +112,20 @@ public class ShaderUtil
 	{
 		InputStream in = ShaderUtil.class.getResourceAsStream(filename);
 
-		if(in == null)
+		if (in == null)
 			return "";
 
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"))) {
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8")))
+		{
 			return reader.lines().collect(Collectors.joining("\n"));
 		}
 	}
 
 	private static String getLogInfo(int obj)
 	{
-		return ARBShaderObjects.glGetInfoLogARB(obj, ARBShaderObjects.glGetObjectParameteriARB(obj, ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB));
+		return ARBShaderObjects.glGetInfoLogARB(obj, ARBShaderObjects.glGetObjectParameteriARB(
+			obj,
+			ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB
+		));
 	}
 }

@@ -1,6 +1,6 @@
 {
-    "parent": "item/generated",
-    "textures": {
-        "layer0": "cyberware:items/brain_upgrades_radio"
-    }
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "cyberware:items/brain_upgrades_radio"
+  }
 }

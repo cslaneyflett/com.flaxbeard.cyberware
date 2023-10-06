@@ -1,117 +1,69 @@
 package flaxbeard.cyberware.common.network;
 
-import io.netty.buffer.ByteBuf;
-
-import java.util.concurrent.Callable;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
-public class ParticlePacket implements IMessage
+import java.util.function.Supplier;
+
+public class ParticlePacket
 {
-	public ParticlePacket() {}
-	
-	private int effectId;
-	private float x;
-	private float y;
-	private float z;
+	private final int effectId;
+	private final BlockPos pos;
 
-	public ParticlePacket(int effectId, float x, float y, float z)
+	public ParticlePacket(int effectId, BlockPos pos)
 	{
 		this.effectId = effectId;
-		this.x = x;
-		this.y = y;
-		this.z = z;
+		this.pos = pos;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public static void encode(ParticlePacket packet, FriendlyByteBuf buf)
 	{
-		buf.writeInt(effectId);
-		buf.writeFloat(x);
-		buf.writeFloat(y);
-		buf.writeFloat(z);
+		buf.writeInt(packet.effectId);
+		buf.writeBlockPos(packet.pos);
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		effectId = buf.readInt();
-		x = buf.readFloat();
-		y = buf.readFloat();
-		z = buf.readFloat();
-	}
-	
-	public static class ParticlePacketHandler implements IMessageHandler<ParticlePacket, IMessage>
-	{
 
-		@Override
-		public IMessage onMessage(ParticlePacket message, MessageContext ctx)
+	public static ParticlePacket decode(FriendlyByteBuf buf)
+	{
+		return new ParticlePacket(buf.readInt(), buf.readBlockPos());
+	}
+
+	public static class ParticlePacketHandler
+	{
+		public static void handle(ParticlePacket msg, Supplier<NetworkEvent.Context> ctx)
 		{
-			Minecraft.getMinecraft().addScheduledTask(new DoSync(message.effectId, message.x, message.y, message.z));
-
-			return null;
+			ctx.get().enqueueWork(new DoSync(msg.effectId, msg.pos));
+			ctx.get().setPacketHandled(true);
 		}
-		
 	}
-	
-	private static class DoSync implements Callable<Void>
+
+	private record DoSync(int effectId, BlockPos pos) implements Runnable
 	{
-		private int effectId;
-		private float x;
-		private float y;
-		private float z;
-		
-		public DoSync(int effectId, float x, float y, float z)
-		{
-			this.effectId = effectId;
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
-		
 		@Override
-		public Void call()
+		public void run()
 		{
-			World world = Minecraft.getMinecraft().world;
-			
+			ClientLevel world = Minecraft.getInstance().level;
+
+			// effectId: EnumParticleTypes.HEART, EnumParticleTypes.ANGRY_VILLAGER
+
+			// TODO: particle
 			if (world != null)
 			{
-				switch (effectId)
+				for (int index = 0; index < 5; index++)
 				{
-				case 0:
-					for (int index = 0; index < 5; index++)
-					{
-						world.spawnParticle(EnumParticleTypes.HEART,
-								x + world.rand.nextFloat() - 0.5F,
-								y + world.rand.nextFloat() - 0.5F,
-								z + world.rand.nextFloat() - 0.5F,
-								2.0F * (world.rand.nextFloat() - 0.5F),
-								0.5F,
-								2.0F * (world.rand.nextFloat() - 0.5F) );
-					}
-					break;
-					
-				case 1:
-					for (int index = 0; index < 5; index++)
-					{
-						world.spawnParticle(EnumParticleTypes.VILLAGER_ANGRY,
-								x + world.rand.nextFloat() - 0.5F,
-								y + world.rand.nextFloat() - 0.5F,
-								z + world.rand.nextFloat() - 0.5F,
-								2.0F * (world.rand.nextFloat() - 0.5F),
-								.5F,
-								2.0F * (world.rand.nextFloat() - 0.5F) );
-					}
-					break;
+					// world.spawnParticle(
+					// 		,
+					// 		pos.x + world.rand.nextFloat() - 0.5F,
+					// 		pos.y + world.rand.nextFloat() - 0.5F,
+					// 		pos.z + world.rand.nextFloat() - 0.5F,
+					// 		2.0F * (world.rand.nextFloat() - 0.5F),
+					// 		0.5F,
+					// 		2.0F * (world.rand.nextFloat() - 0.5F)
+					// );
 				}
 			}
-			
-			return null;
 		}
 	}
 }

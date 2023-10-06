@@ -1,21 +1,21 @@
 package flaxbeard.cyberware.client.gui.hud;
 
-import net.minecraft.nbt.NBTTagCompound;
 import flaxbeard.cyberware.api.hud.IHudSaveData;
+import net.minecraft.nbt.CompoundTag;
 
 public class HudNBTData implements IHudSaveData
 {
-	private NBTTagCompound tag;
-	
-	public HudNBTData(NBTTagCompound tag)
+	private final CompoundTag tag;
+
+	public HudNBTData(CompoundTag tag)
 	{
 		this.tag = tag;
 	}
-	
+
 	@Override
 	public void setString(String key, String s)
 	{
-		tag.setString(key, s);
+		tag.putString(key, s);
 	}
 
 	@Override
@@ -23,11 +23,11 @@ public class HudNBTData implements IHudSaveData
 	{
 		return tag.getString(key);
 	}
-	
+
 	@Override
 	public void setBoolean(String key, boolean b)
 	{
-		tag.setBoolean(key, b);
+		tag.putBoolean(key, b);
 	}
 
 	@Override
@@ -35,11 +35,11 @@ public class HudNBTData implements IHudSaveData
 	{
 		return tag.getBoolean(key);
 	}
-	
+
 	@Override
 	public void setFloat(String key, float f)
 	{
-		tag.setFloat(key, f);
+		tag.putFloat(key, f);
 	}
 
 	@Override
@@ -51,18 +51,17 @@ public class HudNBTData implements IHudSaveData
 	@Override
 	public void setInteger(String key, int i)
 	{
-		tag.setInteger(key, i);
+		tag.putInt(key, i);
 	}
 
 	@Override
 	public int getInteger(String key)
 	{
-		return tag.getInteger(key);
+		return tag.getInt(key);
 	}
-	
-	public NBTTagCompound getTag()
+
+	public CompoundTag getTag()
 	{
 		return tag;
 	}
-
 }

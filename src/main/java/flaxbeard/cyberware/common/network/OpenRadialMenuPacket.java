@@ -2,51 +2,38 @@ package flaxbeard.cyberware.common.network;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
-public class OpenRadialMenuPacket implements IMessage
+import java.util.function.Supplier;
+
+public class OpenRadialMenuPacket
 {
 	public OpenRadialMenuPacket() {}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public static void encode(OpenRadialMenuPacket packet, FriendlyByteBuf buf)
 	{
-		// no operation
+		// nothing
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		// no operation
-	}
-	
-	public static class OpenRadialMenuPacketHandler implements IMessageHandler<OpenRadialMenuPacket, IMessage>
-	{
-		@Override
-		public IMessage onMessage(OpenRadialMenuPacket message, MessageContext ctx)
-		{
-			EntityPlayerMP player = ctx.getServerHandler().player;
-			DimensionManager.getWorld(player.world.provider.getDimension()).addScheduledTask(new DoSync(player));
 
-			return null;
+	public static OpenRadialMenuPacket decode(FriendlyByteBuf buf)
+	{
+		return new OpenRadialMenuPacket();
+	}
+
+	public static class OpenRadialMenuPacketHandler
+	{
+		public static void handle(OpenRadialMenuPacket msg, Supplier<NetworkEvent.Context> ctx)
+		{
+			// TODO: DimensionManager.getLevel(message.dimensionKey) for queue?
+			ctx.get().enqueueWork(new DoSync(ctx.get().getSender()));
+			ctx.get().setPacketHandled(true);
 		}
 	}
-	
-	private static class DoSync implements Runnable
-	{
-		private EntityPlayer entityPlayer;
 
-		public DoSync(EntityPlayer entityPlayer)
-		{
-			this.entityPlayer = entityPlayer;
-		}
-		
+	private record DoSync(Player entityPlayer) implements Runnable
+	{
 		@Override
 		public void run()
 		{

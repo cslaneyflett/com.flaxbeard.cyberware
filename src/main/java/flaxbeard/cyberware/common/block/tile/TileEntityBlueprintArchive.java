@@ -1,30 +1,36 @@
 package flaxbeard.cyberware.common.block.tile;
 
-import javax.annotation.Nonnull;
-
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.oredict.OreDictionary;
 import flaxbeard.cyberware.api.item.IBlueprint;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.ItemStackHandler;
 
-public class TileEntityBlueprintArchive extends TileEntity
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+public class TileEntityBlueprintArchive extends BlockEntity
 {
+	public TileEntityBlueprintArchive(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState)
+	{
+		super(pType, pPos, pBlockState);
+	}
+
 	public class ItemStackHandlerBlueprint extends ItemStackHandler
-	{		
+	{
 		public ItemStackHandlerBlueprint(int i)
 		{
 			super(i);
@@ -35,109 +41,100 @@ public class TileEntityBlueprintArchive extends TileEntity
 		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate)
 		{
 			if (!isItemValidForSlot(slot, stack)) return stack;
-			
+
 			return super.insertItem(slot, stack, simulate);
 		}
-		
+
 		public boolean isItemValidForSlot(int slot, ItemStack stack)
 		{
 			if (!stack.isEmpty() && stack.getItem() instanceof IBlueprint) return true;
-			int[] ids = OreDictionary.getOreIDs(stack);
-			int paperId = OreDictionary.getOreID("paper");
-			for (int id : ids)
-			{
-				if (id == paperId)
-				{
-					return true;
-				}
-			}
-			
-			return stack.isEmpty();
+			return stack.is(Items.PAPER);
 		}
-
 	}
-	
-	public ItemStackHandler slots = new ItemStackHandlerBlueprint(18);
+
+	public LazyOptional<ItemStackHandler> slots = LazyOptional.of(() -> new ItemStackHandlerBlueprint(18));
 	public String customName = null;
-	
-	@Override
-	public boolean hasCapability(Capability<?> capability, EnumFacing facing)
-	{
-		if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
-		{
-			return true;
-		}
-		return super.hasCapability(capability, facing);
-	}
-	
+
+	//	@Override
+	//	public boolean hasCapability(Capability<?> capability, Direction facing)
+	//	{
+	//		if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+	//			return true;
+	//		}
+	//		return super.hasCapability(capability, facing);
+	//	}
 
 	@Override
-	public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+	public @Nonnull <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability,
+													  final @Nullable Direction facing)
 	{
-		if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+		if (capability == ForgeCapabilities.ITEM_HANDLER)
 		{
-			return (T) slots;
+			return slots.cast();
 		}
+
 		return super.getCapability(capability, facing);
 	}
-	
+
 	@Override
-	public void readFromNBT(NBTTagCompound tagCompound)
+	public void readFromNBT(CompoundTag tagCompound)
 	{
 		super.readFromNBT(tagCompound);
-		
-		slots.deserializeNBT(tagCompound.getCompoundTag("inv"));
-		
-		if (tagCompound.hasKey("CustomName"))
+
+		slots.deserializeNBT(tagCompound.getCompound("inv"));
+
+		if (tagCompound.contains("CustomName"))
 		{
 			customName = tagCompound.getString("CustomName");
 		}
 	}
-	
+
 	@Nonnull
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound)
+	public CompoundTag writeToNBT(CompoundTag tagCompound)
 	{
 		tagCompound = super.writeToNBT(tagCompound);
-		
-		tagCompound.setTag("inv", this.slots.serializeNBT());
-		
+
+		tagCompound.put("inv", this.slots.serializeNBT());
+
 		if (this.hasCustomName())
 		{
-			tagCompound.setString("CustomName", customName);
+			tagCompound.putString("CustomName", customName);
 		}
-				
+
 		return tagCompound;
 	}
 
 	@Override
-	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
+	public void onDataPacket(Connection net, SPacketUpdateTileEntity pkt)
 	{
-		NBTTagCompound data = pkt.getNbtCompound();
+		CompoundTag data = pkt.getNbtCompound();
 		this.readFromNBT(data);
 	}
-	
+
 	@Override
 	public SPacketUpdateTileEntity getUpdatePacket()
 	{
-		NBTTagCompound data = new NBTTagCompound();
+		CompoundTag data = new CompoundTag();
 		this.writeToNBT(data);
 		return new SPacketUpdateTileEntity(pos, 0, data);
 	}
-	
+
 	@Nonnull
 	@Override
-	public NBTTagCompound getUpdateTag()
+	public CompoundTag getUpdateTag()
 	{
-		return writeToNBT(new NBTTagCompound());
+		return writeToNBT(new CompoundTag());
 	}
-	
-	public boolean isUsableByPlayer(EntityPlayer entityPlayer)
+
+	public boolean isUsableByPlayer(Player entityPlayer)
 	{
-		return this.world.getTileEntity(pos) == this
-		    && entityPlayer.getDistanceSq(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= 64.0D;
+		return this.level.getBlockEntity(worldPosition) == this
+			&& entityPlayer.position().distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
+			worldPosition.getZ() + 0.5D
+		) <= 64.0D;
 	}
-	
+
 	public String getName()
 	{
 		return this.hasCustomName() ? customName : "cyberware.container.blueprint_archive";
@@ -152,15 +149,15 @@ public class TileEntityBlueprintArchive extends TileEntity
 	{
 		this.customName = name;
 	}
-	
+
 	@Override
-	public ITextComponent getDisplayName()
+	public Component getDisplayName()
 	{
-		return this.hasCustomName() ? new TextComponentString(this.getName()) : new TextComponentTranslation(this.getName());
+		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());
 	}
-	
+
 	@Override
-	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState)
+	public boolean shouldRefresh(Level world, BlockPos pos, BlockState oldState, BlockState newState)
 	{
 		return (oldState.getBlock() != newState.getBlock());
 	}

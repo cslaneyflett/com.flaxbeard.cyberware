@@ -1,107 +1,108 @@
 package flaxbeard.cyberware.common.item;
 
-import java.util.List;
-
-import com.mojang.realmsclient.gui.ChatFormatting;
-
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.common.CyberwareContent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 
 public class ItemExpCapsule extends Item
 {
 	public ItemExpCapsule(String name)
 	{
 		super();
-		
+
 		setRegistryName(name);
-		ForgeRegistries.ITEMS.register(this);
+		// ForgeRegistries.ITEMS.register(this);
 		setTranslationKey(Cyberware.MODID + "." + name);
-		
+
 		setCreativeTab(Cyberware.creativeTab);
-				
+
 		setMaxDamage(0);
 		setMaxStackSize(1);
 
 		CyberwareContent.items.add(this);
 	}
-	
+
 	@Override
-	public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> list)
+	public void getSubItems(@Nonnull CreativeModeTab tab, @Nonnull NonNullList<ItemStack> list)
 	{
-		if (this.isInCreativeTab(tab)) {
+		if (this.getCreativeTabs().contains(tab))
+		{
 			ItemStack stack = new ItemStack(this);
-			NBTTagCompound tagCompound = new NBTTagCompound();
-			tagCompound.setInteger("xp", 100);
-			stack.setTagCompound(tagCompound);
+			CompoundTag tagCompound = new CompoundTag();
+			tagCompound.putInt("xp", 100);
+			stack.setTag(tagCompound);
 			list.add(stack);
 		}
 	}
-	
-	@SideOnly(Side.CLIENT)
+
+	@OnlyIn(Dist.CLIENT)
 	public boolean hasEffect(ItemStack stack)
 	{
 		return true;
 	}
-	
+
 	@Nonnull
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer entityPlayer, @Nonnull EnumHand hand)
+	public InteractionResultHolder<ItemStack> onItemRightClick(Level world, Player entityPlayer,
+															   @Nonnull InteractionHand hand)
 	{
-		ItemStack stack = entityPlayer.getHeldItem(hand);
+		ItemStack stack = entityPlayer.getItemInHand(hand);
 
 		int xp = 0;
-		NBTTagCompound tagCompound = stack.getTagCompound();
-		if ( tagCompound != null
-		  && tagCompound.hasKey("xp") )
+		CompoundTag tagCompound = stack.getTag();
+		if (tagCompound != null
+			&& tagCompound.contains("xp")
+		)
 		{
-			xp = tagCompound.getInteger("xp");
+			xp = tagCompound.getInt("xp");
 		}
 
-		if (!entityPlayer.capabilities.isCreativeMode)
+		if (!entityPlayer.isCreative())
 		{
 			stack.shrink(1);
 		}
 
-		entityPlayer.addExperience(xp);
+		entityPlayer.giveExperiencePoints(xp);
 
-		return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+		return new InteractionResultHolder<>(InteractionResult.SUCCESS, stack);
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn)
+	@OnlyIn(Dist.CLIENT)
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn)
 	{
 		int xp = 0;
-		NBTTagCompound tagCompound = stack.getTagCompound();
-		if ( tagCompound != null
-		  && tagCompound.hasKey("xp") )
+		CompoundTag tagCompound = stack.getTag();
+		if (tagCompound != null
+			&& tagCompound.contains("xp"))
 		{
-			xp = tagCompound.getInteger("xp");
+			xp = tagCompound.getInt("xp");
 		}
-		String before = I18n.format("cyberware.tooltip.exp_capsule.before");
-		if (before.length() > 0) before += " ";
-		
-		String after = I18n.format("cyberware.tooltip.exp_capsule.after");
-		if (after.length() > 0) after = " " + after;
-		
-		tooltip.add(ChatFormatting.RED + before + xp + after);
+		String before = I18n.get("cyberware.tooltip.exp_capsule.before");
+		if (!before.isEmpty()) before += " ";
+
+		String after = I18n.get("cyberware.tooltip.exp_capsule.after");
+		if (!after.isEmpty()) after = " " + after;
+
+		tooltip.add(Component.literal(ChatFormatting.RED + before + xp + after));
 	}
 }

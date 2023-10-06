@@ -2,62 +2,43 @@ package flaxbeard.cyberware.common.network;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.network.NetworkEvent;
 
-public class TriggerActiveAbilityPacket implements IMessage
+import java.util.function.Supplier;
+
+public class TriggerActiveAbilityPacket
 {
-	public TriggerActiveAbilityPacket() {}
-	
-	private ItemStack stack;
+	private final ItemStack stack;
 
 	public TriggerActiveAbilityPacket(ItemStack stack)
 	{
 		this.stack = stack;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public static void encode(TriggerActiveAbilityPacket packet, FriendlyByteBuf buf)
 	{
-		ByteBufUtils.writeItemStack(buf, stack);
+		buf.writeItem(packet.stack);
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		stack = ByteBufUtils.readItemStack(buf);
-	}
-	
-	public static class TriggerActiveAbilityPacketHandler implements IMessageHandler<TriggerActiveAbilityPacket, IMessage>
-	{
-		@Override
-		public IMessage onMessage(TriggerActiveAbilityPacket message, MessageContext ctx)
-		{
-			EntityPlayerMP player = ctx.getServerHandler().player;
-			DimensionManager.getWorld(player.world.provider.getDimension()).addScheduledTask(new DoSync(message.stack, player));
 
-			return null;
+	public static TriggerActiveAbilityPacket decode(FriendlyByteBuf buf)
+	{
+		return new TriggerActiveAbilityPacket(buf.readItem());
+	}
+
+	public static class TriggerActiveAbilityPacketHandler
+	{
+		public static void handle(TriggerActiveAbilityPacket msg, Supplier<NetworkEvent.Context> ctx)
+		{
+			ctx.get().enqueueWork(new DoSync(msg.stack, ctx.get().getSender()));
+			ctx.get().setPacketHandled(true);
 		}
 	}
-	
-	private static class DoSync implements Runnable
-	{
-		private ItemStack stack;
-		private EntityPlayer entityPlayer;
 
-		public DoSync(ItemStack stack, EntityPlayer entityPlayer)
-		{
-			this.stack = stack;
-			this.entityPlayer = entityPlayer;
-		}
-		
+	private record DoSync(ItemStack stack, ServerPlayer entityPlayer) implements Runnable
+	{
 		@Override
 		public void run()
 		{

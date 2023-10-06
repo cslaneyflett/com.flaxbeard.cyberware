@@ -1,13 +1,13 @@
 package flaxbeard.cyberware.api.item;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public interface ICyberwareTabItem
-{	
+{
 	public static enum EnumCategory
 	{
 		BLOCKS,
-		BODYPARTS,
+		BODY_PARTS,
 		EYES,
 		CRANIUM,
 		HEART,

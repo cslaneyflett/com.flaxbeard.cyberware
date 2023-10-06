@@ -1,39 +1,32 @@
 package flaxbeard.cyberware.common.item;
 
-import javax.annotation.Nonnull;
-
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.common.CyberwareContent;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import javax.annotation.Nonnull;
 
 public class ItemCyberwareBase extends Item
 {
 	public String[] subnames;
-	private ItemStack[] itemStackCache;
+	private final ItemStack[] itemStackCache;
 
 	public ItemCyberwareBase(String name, String... subnames)
 	{
-		super();
-		
-		setRegistryName(name);
-		ForgeRegistries.ITEMS.register(this);
-		setTranslationKey(Cyberware.MODID + "." + name);
-        
-		setCreativeTab(Cyberware.creativeTab);
-				
+		super(new Item.Properties());
+
+		//		setCreativeTab(Cyberware.creativeTab);
+
 		this.subnames = subnames;
 		itemStackCache = new ItemStack[Math.max(subnames.length, 1)];
 
-		setHasSubtypes(this.subnames.length > 0);
-		setMaxDamage(0);
-
-        CyberwareContent.items.add(this);
+		CyberwareContent.items.add(this);
 	}
-	
+
 	@Nonnull
 	@Override
 	public String getTranslationKey(ItemStack itemstack)
@@ -45,39 +38,41 @@ public class ItemCyberwareBase extends Item
 		}
 		return super.getTranslationKey(itemstack) + "." + subnames[damage];
 	}
-	
-	@Override
-	public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> list)
+
+	public void getSubItems(@Nonnull CreativeModeTab tab, @Nonnull NonNullList<ItemStack> list)
 	{
-		if (this.isInCreativeTab(tab)) {
+		if (this.getCreativeTabs().contains(tab))
+		{
 			if (subnames.length == 0)
 			{
 				list.add(new ItemStack(this));
 			}
 			for (int metadata = 0; metadata < subnames.length; metadata++)
 			{
-				list.add(new ItemStack(this, 1, metadata));
+				list.add(new ItemStack(this, 1, CyberwareItemMetadata.of(metadata)));
 			}
 		}
 	}
 
-	public ItemStack getCachedStack(int damage)
+	public ItemStack getCachedStack(int flag)
 	{
-		ItemStack itemStack = itemStackCache[damage];
-		if ( itemStack != null
-		  && ( itemStack.getItem() != this
-		    || itemStack.getCount() != 1
-		    || getDamage(itemStack) != damage ) )
+		ItemStack itemStack = itemStackCache[flag];
+		if (itemStack != null
+			&& (itemStack.getItem() != this
+			|| itemStack.getCount() != 1
+			|| !CyberwareItemMetadata.matches(itemStack, flag))
+		)
 		{
 			Cyberware.logger.error(String.format("Corrupted item stack cache: found %s as %s:%d, expected %s:%d",
-			                                     itemStack, itemStack.getItem(), itemStack.getItemDamage(),
-			                                     this, damage ));
+				itemStack, itemStack.getItem(), CyberwareItemMetadata.get(itemStack),
+				this, flag
+			));
 			itemStack = null;
 		}
 		if (itemStack == null)
 		{
-			itemStack = new ItemStack(this, 1, damage);
-			itemStackCache[damage] = itemStack;
+			itemStack = new ItemStack(this, 1, CyberwareItemMetadata.of(flag));
+			itemStackCache[flag] = itemStack;
 		}
 		return itemStack;
 	}

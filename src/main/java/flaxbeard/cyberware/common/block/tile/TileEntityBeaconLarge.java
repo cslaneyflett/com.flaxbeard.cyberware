@@ -1,56 +1,56 @@
 package flaxbeard.cyberware.common.block.tile;
 
-import java.util.Map;
-
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.ITickable;
-import net.minecraft.util.math.BlockPos;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.BlockBeaconLarge;
 import flaxbeard.cyberware.common.block.BlockBeaconPost;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.ITickable;
+import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.Map;
 
 public class TileEntityBeaconLarge extends TileEntityBeacon implements ITickable
 {
 	private boolean wasWorking = false;
 	private int count = 0;
-	
 	private static int TIER = 3;
-	
+
 	@Override
 	public void update()
 	{
-		IBlockState master = world.getBlockState(pos.add(0, -10, 0));
-		
-		boolean powered = world.isBlockPowered(pos.add(1, -10, 0))
-				|| world.isBlockPowered(pos.add(-1, -10, 0))
-				|| world.isBlockPowered(pos.add(0, -10, 1))
-				|| world.isBlockPowered(pos.add(0, -10, -1));
-		boolean working = !powered && master.getBlock() == CyberwareContent.radioPost && master.getValue(BlockBeaconPost.TRANSFORMED) == 2;
-		
+		BlockState master = level.getBlockState(worldPosition.offset(0, -10, 0));
+
+		boolean powered = level.isBlockPowered(worldPosition.offset(1, -10, 0))
+			|| level.isBlockPowered(worldPosition.offset(-1, -10, 0))
+			|| level.isBlockPowered(worldPosition.offset(0, -10, 1))
+			|| level.isBlockPowered(worldPosition.offset(0, -10, -1));
+		boolean working =
+			!powered && master.getBlock() == CyberwareContent.radioPost && master.getValue(BlockBeaconPost.TRANSFORMED) == 2;
+
 		if (!wasWorking && working)
 		{
 			this.enable();
 		}
-		
+
 		if (wasWorking && !working)
 		{
 			disable();
 		}
-		
+
 		wasWorking = working;
-		
-		if (world.isRemote && working)
+
+		if (level.isClientSide() && working)
 		{
 			count = (count + 1) % 20;
 			if (count == 0)
 			{
-				IBlockState state = world.getBlockState(pos);
+				BlockState state = level.getBlockState(worldPosition);
 				if (state.getBlock() == CyberwareContent.radioLarge)
 				{
-					boolean ns = state.getValue(BlockBeaconLarge.FACING) == EnumFacing.EAST || state.getValue(BlockBeaconLarge.FACING) == EnumFacing.WEST;
+					boolean ns =
+						state.getValue(BlockBeaconLarge.FACING) == Direction.EAST || state.getValue(BlockBeaconLarge.FACING) == Direction.WEST;
 					float dist = .5F;
 					float speedMod = .2F;
 					int degrees = 45;
@@ -62,50 +62,51 @@ public class TileEntityBeaconLarge extends TileEntityBeacon implements ITickable
 						float yOffset = .2F + dist * cos;
 						float xSpeed = speedMod * sin;
 						float ySpeed = speedMod * cos;
-						world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, 
-								pos.getX() + .5F + (ns ? xOffset : 0), 
-								pos.getY() + .5F + yOffset, 
-								pos.getZ() + .5F + (ns ? 0 : xOffset), 
-								ns ? xSpeed : 0, 
-								ySpeed, 
-								ns ? 0 : xSpeed,
-								255, 255, 255 );
-						
-						world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, 
-								pos.getX() + .5F - (ns ? xOffset : 0), 
-								pos.getY() + .5F + yOffset, 
-								pos.getZ() + .5F - (ns ? 0 : xOffset), 
-								ns ? -xSpeed : 0, 
-								ySpeed, 
-								ns ? 0 : -xSpeed,
-								255, 255, 255 );
-	
+						// TODO: particles
+						//						level.spawnParticle(EnumParticleTypes.SMOKE_NORMAL,
+						//								worldPosition.getX() + .5F + (ns ? xOffset : 0),
+						//								worldPosition.getY() + .5F + yOffset,
+						//								worldPosition.getZ() + .5F + (ns ? 0 : xOffset),
+						//								ns ? xSpeed : 0,
+						//								ySpeed,
+						//								ns ? 0 : xSpeed,
+						//								255, 255, 255 );
+						//
+						//						level.spawnParticle(EnumParticleTypes.SMOKE_NORMAL,
+						//								worldPosition.getX() + .5F - (ns ? xOffset : 0),
+						//								worldPosition.getY() + .5F + yOffset,
+						//								worldPosition.getZ() + .5F - (ns ? 0 : xOffset),
+						//								ns ? -xSpeed : 0,
+						//								ySpeed,
+						//								ns ? 0 : -xSpeed,
+						//								255, 255, 255 );
+
 						degrees += 5;
 					}
 				}
 			}
 		}
 	}
-	
+
 	private void disable()
 	{
-		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, world);
-		mapBeaconPosition.remove(getPos());
+		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, level);
+		mapBeaconPosition.remove(worldPosition);
 	}
 
 	private void enable()
 	{
-		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, world);
-		if (!mapBeaconPosition.containsKey(getPos()))
+		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, level);
+		if (!mapBeaconPosition.containsKey(worldPosition))
 		{
-			mapBeaconPosition.put(getPos(), LibConstants.LARGE_BEACON_RANGE);
+			mapBeaconPosition.put(worldPosition, LibConstants.LARGE_BEACON_RANGE);
 		}
 	}
-	
-	@Override
-	public void invalidate()
-	{
-		disable();
-		super.invalidate();
-	}
+
+	//	@Override
+	//	public void invalidate()
+	//	{
+	//		disable();
+	//		super.invalidate();
+	//	}
 }

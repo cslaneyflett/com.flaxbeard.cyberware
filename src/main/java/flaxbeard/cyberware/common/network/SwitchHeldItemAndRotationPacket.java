@@ -1,25 +1,19 @@
 package flaxbeard.cyberware.common.network;
 
-import io.netty.buffer.ByteBuf;
-
-import java.util.concurrent.Callable;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent;
 
-public class SwitchHeldItemAndRotationPacket implements IMessage
+import java.util.function.Supplier;
+
+public class SwitchHeldItemAndRotationPacket
 {
-	public SwitchHeldItemAndRotationPacket() {}
-	
-	private int slot;
-	private int entityId;
-	private int attackerId;
+	private final int slot;
+	private final int entityId;
+	private final int attackerId;
 
 	public SwitchHeldItemAndRotationPacket(int slot, int entityId, int attackerId)
 	{
@@ -28,96 +22,51 @@ public class SwitchHeldItemAndRotationPacket implements IMessage
 		this.attackerId = attackerId;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public static void encode(SwitchHeldItemAndRotationPacket packet, FriendlyByteBuf buf)
 	{
-		buf.writeInt(entityId);
-		buf.writeInt(slot);
-		buf.writeInt(attackerId);
+		buf.writeInt(packet.slot);
+		buf.writeInt(packet.entityId);
+		buf.writeInt(packet.attackerId);
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		entityId = buf.readInt();
-		slot = buf.readInt();
-		attackerId = buf.readInt();
-	}
-	
-	public static class SwitchHeldItemAndRotationPacketHandler implements IMessageHandler<SwitchHeldItemAndRotationPacket, IMessage>
-	{
 
-		@Override
-		public IMessage onMessage(SwitchHeldItemAndRotationPacket message, MessageContext ctx)
+	public static SwitchHeldItemAndRotationPacket decode(FriendlyByteBuf buf)
+	{
+		return new SwitchHeldItemAndRotationPacket(buf.readInt(), buf.readInt(), buf.readInt());
+	}
+
+	public static class SwitchHeldItemAndRotationPacketHandler
+	{
+		public static void handle(SwitchHeldItemAndRotationPacket msg, Supplier<NetworkEvent.Context> ctx)
 		{
-			Minecraft.getMinecraft().addScheduledTask(new DoSync(message.entityId, message.slot, message.attackerId));
-
-			return null;
+			ctx.get().enqueueWork(new SwitchHeldItemAndRotationPacket.DoSync(msg.slot, msg.slot, msg.attackerId));
+			ctx.get().setPacketHandled(true);
 		}
-		
 	}
-	
-	private static class DoSync implements Callable<Void>
-	{
-		private int entityId;
-		private int slot;
-		private int attackerId;
 
-		
-		public DoSync(int entityId, int slot, int attackerId)
-		{
-			this.entityId = entityId;
-			this.slot = slot;
-			this.attackerId = attackerId;
-		}
-		
+	private record DoSync(int entityId, int slot, int attackerId) implements Runnable
+	{
 		@Override
-		public Void call()
+		public void run()
 		{
-			Entity targetEntity = Minecraft.getMinecraft().world.getEntityByID(entityId);
-			
-			if (targetEntity != null)
+			assert Minecraft.getInstance().level != null;
+			Entity targetEntity = Minecraft.getInstance().level.getEntity(entityId);
+
+			if (targetEntity instanceof Player player)
 			{
-				((EntityPlayer) targetEntity).inventory.currentItem = slot;
+				// TODO: this right?
+				player.getInventory().pickSlot(slot);
 
 				if (attackerId != -1)
 				{
-					((EntityPlayer) targetEntity).closeScreen();
-					Entity facingEntity = Minecraft.getMinecraft().world.getEntityByID(attackerId);
-					
+					player.closeContainer(); // TODO: this right?
+					Entity facingEntity = Minecraft.getInstance().level.getEntity(attackerId);
+
 					if (facingEntity != null)
 					{
-						faceEntity(targetEntity, facingEntity);
+						targetEntity.lookAt(EntityAnchorArgument.Anchor.EYES, facingEntity.getEyePosition());
 					}
 				}
 			}
-			
-			return null;
 		}
-		
-		public static void faceEntity(Entity player, Entity entity)
-		{
-			double d0 = entity.posX - player.posX;
-			double d2 = entity.posZ - player.posZ;
-			double d1;
-
-			if (entity instanceof EntityLivingBase)
-			{
-				EntityLivingBase entitylivingbase = (EntityLivingBase) entity;
-				d1 = entitylivingbase.posY + entitylivingbase.getEyeHeight()
-				   - (player.posY + player.getEyeHeight());
-			}
-			else
-			{
-				d1 = (entity.getEntityBoundingBox().minY + entity.getEntityBoundingBox().maxY) / 2.0D
-				   - (player.posY + player.getEyeHeight());
-			}
-
-			double d3 = (double) MathHelper.sqrt(d0 * d0 + d2 * d2);
-			player.rotationPitch = (float) (-(MathHelper.atan2(d1, d3) * (180D / Math.PI)));
-			player.rotationYaw = (float) (MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-		}
-		
 	}
-
 }

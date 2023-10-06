@@ -1,22 +1,15 @@
 package flaxbeard.cyberware.common.network;
 
-import flaxbeard.cyberware.Cyberware;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.server.level.ServerPlayer;
 
-public class GuiPacket implements IMessage
+// TODO: needs entirely rethinking
+public class GuiPacket
 {
-	private int guid;
-	private int x;
-	private int y;
-	private int z;
+	private final int guid;
+	private final int x;
+	private final int y;
+	private final int z;
 
-	public GuiPacket() {}
-	
 	public GuiPacket(int guid, int x, int y, int z)
 	{
 		this.guid = guid;
@@ -25,64 +18,13 @@ public class GuiPacket implements IMessage
 		this.z = z;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	private record DoSync(int guid, int x, int y, int z, ServerPlayer playerEntity) implements Runnable
 	{
-		buf.writeInt(x);
-		buf.writeInt(y);
-		buf.writeInt(z);
-		buf.writeInt(guid);
-	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		x = buf.readInt();
-		y = buf.readInt();
-		z = buf.readInt();
-		guid = buf.readInt();
-	}
-	
-	public static class GuiPacketHandler implements IMessageHandler<GuiPacket, IMessage>
-	{
-
-		@Override
-		public IMessage onMessage(GuiPacket message, MessageContext ctx)
-		{
-			EntityPlayerMP serverPlayer = ctx.getServerHandler().player;
-			DimensionManager.getWorld(serverPlayer.world.provider.getDimension()).addScheduledTask(new DoSync(ctx, message.guid, message.x, message.y, message.z));
-
-
-			return null;
-		}
-		
-	}
-	
-	private static class DoSync implements Runnable
-	{
-		private int guid;
-		private int x;
-		private int y;
-		private int z;
-		private MessageContext context;
-		
-		public DoSync(MessageContext ctx, int guid, int x, int y, int z)
-		{
-			this.context = ctx;
-			this.guid = guid;
-			this.x = x;
-			this.y = y;
-			this.z = z;
-		}
-
 		@Override
 		public void run()
 		{
-			EntityPlayerMP serverPlayer = context.getServerHandler().player;
-			serverPlayer.openGui(Cyberware.INSTANCE, guid, serverPlayer.world, x, y, z);
-			
-			
+			// TODO
+			// serverPlayer.openGui(Cyberware.INSTANCE, guid, playerEntity.level, x, y, z);
 		}
-		
 	}
 }

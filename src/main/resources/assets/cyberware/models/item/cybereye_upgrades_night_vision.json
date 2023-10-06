@@ -1,6 +1,6 @@
 {
-    "parent": "item/generated",
-    "textures": {
-        "layer0": "cyberware:items/cybereye_upgrades_night_vision"
-    }
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "cyberware:items/cybereye_upgrades_night_vision"
+  }
 }

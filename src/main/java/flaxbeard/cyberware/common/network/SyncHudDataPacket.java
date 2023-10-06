@@ -2,66 +2,48 @@ package flaxbeard.cyberware.common.network;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
 
-public class SyncHudDataPacket implements IMessage
+import java.util.function.Supplier;
+
+public class SyncHudDataPacket
 {
-	public SyncHudDataPacket() {}
-	
-	private NBTTagCompound tagCompound;
+	private final CompoundTag tagCompound;
 
-	public SyncHudDataPacket(NBTTagCompound tagCompound)
+	public SyncHudDataPacket(CompoundTag tagCompound)
 	{
 		this.tagCompound = tagCompound;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public static void encode(SyncHudDataPacket packet, FriendlyByteBuf buf)
 	{
-		ByteBufUtils.writeTag(buf, tagCompound);
+		buf.writeNbt(packet.tagCompound);
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		tagCompound = ByteBufUtils.readTag(buf);
-	}
-	
-	public static class SyncHudDataPacketHandler implements IMessageHandler<SyncHudDataPacket, IMessage>
-	{
-		@Override
-		public IMessage onMessage(SyncHudDataPacket message, MessageContext ctx)
-		{
-			EntityPlayerMP player = ctx.getServerHandler().player;
-			DimensionManager.getWorld(player.world.provider.getDimension()).addScheduledTask(new DoSync(message.tagCompound, player));
 
-			return null;
+	public static SyncHudDataPacket decode(FriendlyByteBuf buf)
+	{
+		return new SyncHudDataPacket(buf.readNbt());
+	}
+
+	public static class SyncHudDataPacketHandler
+	{
+		public static void handle(SyncHudDataPacket msg, Supplier<NetworkEvent.Context> ctx)
+		{
+			ctx.get().enqueueWork(new DoSync(msg.tagCompound, ctx.get().getSender()));
+			ctx.get().setPacketHandled(true);
 		}
 	}
-	
-	private static class DoSync implements Runnable
-	{
-		private NBTTagCompound tagCompound;
-		private EntityPlayer entityPlayer;
 
-		public DoSync(NBTTagCompound tagCompound, EntityPlayer entityPlayer)
-		{
-			this.tagCompound = tagCompound;
-			this.entityPlayer = entityPlayer;
-		}
-		
+	private record DoSync(CompoundTag tagCompound, ServerPlayer entityPlayer) implements Runnable
+	{
 		@Override
 		public void run()
 		{
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+
 			if (cyberwareUserData != null)
 			{
 				cyberwareUserData.setHudData(tagCompound);

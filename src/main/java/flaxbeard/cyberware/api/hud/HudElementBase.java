@@ -1,8 +1,7 @@
 package flaxbeard.cyberware.api.hud;
 
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.entity.player.EntityPlayer;
-
+import com.mojang.blaze3d.platform.Window;
+import net.minecraft.world.entity.player.Player;
 
 public abstract class HudElementBase implements IHudElement
 {
@@ -13,49 +12,50 @@ public abstract class HudElementBase implements IHudElement
 	private int width = 0;
 	private int height = 0;
 	private boolean hidden = false;
-	private String name;
-	
+	private final String name;
 	private EnumAnchorHorizontal defaultHAnchor = EnumAnchorHorizontal.LEFT;
 	private EnumAnchorVertical defaultVAnchor = EnumAnchorVertical.TOP;
 	private EnumAnchorHorizontal hAnchor = EnumAnchorHorizontal.LEFT;
 	private EnumAnchorVertical vAnchor = EnumAnchorVertical.TOP;
-	
+
 	public HudElementBase(String name)
 	{
 		this.name = name;
 	}
 
 	@Override
-	public void render(EntityPlayer entityPlayer, ScaledResolution resolution, boolean isHUDjackAvailable, boolean isConfigOpen, float partialTicks)
+	public void render(Player entityPlayer, Window window, boolean isHUDjackAvailable, boolean isConfigOpen,
+					   float partialTicks)
 	{
 		int x = getX();
 		int y = getY();
 		if (getHorizontalAnchor() == EnumAnchorHorizontal.RIGHT)
 		{
-			x = resolution.getScaledWidth() - x - getWidth();
+			x = window.getGuiScaledWidth() - x - getWidth();
 		}
 		if (getVerticalAnchor() == EnumAnchorVertical.BOTTOM)
 		{
-			y = resolution.getScaledHeight() - y - getHeight();
+			y = window.getGuiScaledHeight() - y - getHeight();
 		}
-		
-		renderElement(x, y, entityPlayer, resolution, isHUDjackAvailable, isConfigOpen, partialTicks);
+
+		renderElement(x, y, entityPlayer, window, isHUDjackAvailable, isConfigOpen, partialTicks);
 	}
-	
-	public abstract void renderElement(int x, int y, EntityPlayer entityPlayer, ScaledResolution resolution, boolean hudjackAvailable, boolean isConfigOpen, float partialTicks);
+
+	public abstract void renderElement(int x, int y, Player entityPlayer, Window window, boolean hudjackAvailable,
+									   boolean isConfigOpen, float partialTicks);
 
 	public void setDefaultX(int x)
 	{
 		this.defaultX = x;
 		setX(x);
 	}
-	
+
 	public void setDefaultY(int y)
 	{
 		this.defaultY = y;
 		setY(y);
 	}
-	
+
 	@Override
 	public boolean canMove()
 	{
@@ -121,7 +121,7 @@ public abstract class HudElementBase implements IHudElement
 	{
 		return hAnchor;
 	}
-	
+
 	public void setDefaultHorizontalAnchor(EnumAnchorHorizontal anchor)
 	{
 		defaultHAnchor = anchor;
@@ -139,7 +139,7 @@ public abstract class HudElementBase implements IHudElement
 	{
 		return vAnchor;
 	}
-	
+
 	public void setDefaultVerticalAnchor(EnumAnchorVertical anchor)
 	{
 		defaultVAnchor = anchor;
@@ -151,17 +151,17 @@ public abstract class HudElementBase implements IHudElement
 	{
 		vAnchor = anchor;
 	}
-	
+
 	public void setWidth(int w)
 	{
 		width = w;
 	}
-	
+
 	public void setHeight(int h)
 	{
 		height = h;
 	}
-	
+
 	@Override
 	public void reset()
 	{
@@ -170,13 +170,13 @@ public abstract class HudElementBase implements IHudElement
 		vAnchor = defaultVAnchor;
 		hAnchor = defaultHAnchor;
 	}
-	
+
 	@Override
 	public String getUniqueName()
 	{
 		return name;
 	}
-	
+
 	@Override
 	public void save(IHudSaveData data)
 	{
@@ -194,5 +194,4 @@ public abstract class HudElementBase implements IHudElement
 		vAnchor = data.getBoolean("top") ? EnumAnchorVertical.TOP : EnumAnchorVertical.BOTTOM;
 		hAnchor = data.getBoolean("left") ? EnumAnchorHorizontal.LEFT : EnumAnchorHorizontal.RIGHT;
 	}
-
 }

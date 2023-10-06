@@ -1,25 +1,24 @@
 package flaxbeard.cyberware.common.item;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ISpecialBattery;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 
 public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 {
-
 	public ItemDenseBattery(String name, EnumSlot slot)
 	{
 		super(name, slot);
 	}
-	
+
 	@Override
 	public boolean isIncompatible(ItemStack stack, ItemStack other)
 	{
 		return other.getItem() == CyberwareContent.lowerOrgansUpgrades
-		    && stack.getItemDamage() == ItemLowerOrgansUpgrade.META_BATTERY;
+			&& CyberwareItemMetadata.get(stack) == ItemLowerOrgansUpgrade.META_BATTERY;
 	}
 
 	@Override
@@ -30,8 +29,8 @@ public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 			int amountToAdd = Math.min(getCapacity(battery) - getStoredEnergy(battery), amount);
 			if (!simulate)
 			{
-				NBTTagCompound data = CyberwareAPI.getCyberwareNBT(battery);
-				data.setInteger("power", data.getInteger("power") + amountToAdd);
+				CompoundTag data = CyberwareAPI.getCyberwareNBT(battery);
+				data.putInt("power", data.getInt("power") + amountToAdd);
 			}
 			return amountToAdd;
 		}
@@ -44,8 +43,8 @@ public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 		int amountToSub = Math.min(getStoredEnergy(battery), amount);
 		if (!simulate)
 		{
-			NBTTagCompound data = CyberwareAPI.getCyberwareNBT(battery);
-			data.setInteger("power", data.getInteger("power") - amountToSub);
+			CompoundTag data = CyberwareAPI.getCyberwareNBT(battery);
+			data.putInt("power", data.getInt("power") - amountToSub);
 		}
 		return amountToSub;
 	}
@@ -53,19 +52,18 @@ public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 	@Override
 	public int getStoredEnergy(ItemStack battery)
 	{
-		NBTTagCompound data = CyberwareAPI.getCyberwareNBT(battery);
+		CompoundTag data = CyberwareAPI.getCyberwareNBT(battery);
 
-		if (!data.hasKey("power"))
+		if (!data.contains("power"))
 		{
-			data.setInteger("power", 0);
+			data.putInt("power", 0);
 		}
-		return data.getInteger("power");
+		return data.getInt("power");
 	}
-	
+
 	@Override
 	public int getCapacity(ItemStack battery)
 	{
 		return LibConstants.DENSE_BATTERY_CAPACITY;
 	}
-
 }

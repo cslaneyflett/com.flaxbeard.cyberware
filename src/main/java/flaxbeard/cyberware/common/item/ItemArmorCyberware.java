@@ -1,49 +1,33 @@
 package flaxbeard.cyberware.common.item;
 
-import javax.annotation.Nonnull;
-
-import net.minecraft.block.BlockCauldron;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.model.ModelBiped;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.stats.StatList;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.item.IDeconstructable;
 import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.common.CyberwareContent;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class ItemArmorCyberware extends ItemArmor implements IDeconstructable
+import javax.annotation.Nonnull;
+
+public class ItemArmorCyberware extends ArmorItem implements IDeconstructable
 {
-	
-	public ItemArmorCyberware(String name, ArmorMaterial materialIn, int renderIndexIn, EntityEquipmentSlot equipmentSlotIn)
+	public ItemArmorCyberware(String name, ArmorMaterial materialIn, EquipmentSlot equipmentSlotIn,
+							  Properties propertiesIn)
 	{
-		super(materialIn, renderIndexIn, equipmentSlotIn);
-		
+		super(materialIn, equipmentSlotIn, propertiesIn);
+
 		setRegistryName(name);
-		ForgeRegistries.ITEMS.register(this);
+		// ForgeRegistries.ITEMS.register(this);
 		setTranslationKey(Cyberware.MODID + "." + name);
-		
+
 		setCreativeTab(Cyberware.creativeTab);
-		
+
 		CyberwareContent.items.add(this);
 	}
 
@@ -57,74 +41,73 @@ public class ItemArmorCyberware extends ItemArmor implements IDeconstructable
 	public NonNullList<ItemStack> getComponents(ItemStack stack)
 	{
 		Item item = stack.getItem();
-		
+
 		NonNullList<ItemStack> nnl = NonNullList.create();
+		// TODO: damage states
 		if (item == CyberwareContent.trenchCoat)
 		{
 			nnl.add(new ItemStack(CyberwareContent.component, 2, 2));
 			nnl.add(new ItemStack(Items.LEATHER, 12, 0));
 			nnl.add(new ItemStack(Items.DYE, 1, 0));
-		}
-		else if (item == CyberwareContent.jacket)
+		} else if (item == CyberwareContent.jacket)
 		{
 			nnl.add(new ItemStack(CyberwareContent.component, 1, 2));
 			nnl.add(new ItemStack(Items.LEATHER, 8, 0));
 			nnl.add(new ItemStack(Items.DYE, 1, 0));
-		}
-		else
+		} else
 		{
 			nnl.add(new ItemStack(Blocks.STAINED_GLASS, 4, 15));
 			nnl.add(new ItemStack(CyberwareContent.component, 1, 4));
 		}
 		return nnl;
 	}
-	
+
 	@Override
-	@SideOnly(Side.CLIENT)
-	public ModelBiped getArmorModel(EntityLivingBase entityLivingBase, ItemStack itemStack, EntityEquipmentSlot armorSlot, ModelBiped _default)
+	@OnlyIn(Dist.CLIENT)
+	public ModelBiped getArmorModel(LivingEntity entityLivingBase, ItemStack itemStack, EntityEquipmentSlot armorSlot,
+									ModelBiped _default)
 	{
-		if ( !itemStack.isEmpty()
-		  && itemStack.getItem() == CyberwareContent.trenchCoat)
+		if (!itemStack.isEmpty()
+			&& itemStack.getItem() == CyberwareContent.trenchCoat)
 		{
 			ClientUtils.modelTrenchCoat.setDefaultModel(_default);
 			return ClientUtils.modelTrenchCoat;
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override
 	public boolean hasColor(@Nonnull ItemStack stack)
 	{
-		if (getArmorMaterial() != CyberwareContent.trenchMat)
+		if (getMaterial() != CyberwareContent.trenchMat)
 		{
 			return false;
 		}
-		
-		NBTTagCompound tagCompound = stack.getTagCompound();
+
+		CompoundTag tagCompound = stack.getTag();
 		return tagCompound != null
-		    && tagCompound.hasKey("display", 10)
-		    && tagCompound.getCompoundTag("display").hasKey("color", 3);
+			&& tagCompound.contains("display", 10)
+			&& tagCompound.getCompound("display").contains("color", 3);
 	}
-	
+
 	@Override
 	public int getColor(@Nonnull ItemStack stack)
 	{
-		if (getArmorMaterial() != CyberwareContent.trenchMat)
+		if (getMaterial() != CyberwareContent.trenchMat)
 		{
 			return 16777215;
-		}
-		else
+		} else
 		{
-			NBTTagCompound tagCompound = stack.getTagCompound();
+			CompoundTag tagCompound = stack.getTag();
 
 			if (tagCompound != null)
 			{
-				NBTTagCompound tagCompoundDisplay = tagCompound.getCompoundTag("display");
+				CompoundTag tagCompoundDisplay = tagCompound.getCompound("display");
 
-				if (tagCompoundDisplay.hasKey("color", 3))
+				if (tagCompoundDisplay.contains("color", 3))
 				{
-					return tagCompoundDisplay.getInteger("color");
+					return tagCompoundDisplay.getInt("color");
 				}
 			}
 
@@ -135,17 +118,17 @@ public class ItemArmorCyberware extends ItemArmor implements IDeconstructable
 	@Override
 	public void removeColor(@Nonnull ItemStack stack)
 	{
-		if (getArmorMaterial() == CyberwareContent.trenchMat)
+		if (getMaterial() == CyberwareContent.trenchMat)
 		{
-			NBTTagCompound tagCompound = stack.getTagCompound();
+			CompoundTag tagCompound = stack.getTag();
 
 			if (tagCompound != null)
 			{
-				NBTTagCompound tagCompoundDisplay = tagCompound.getCompoundTag("display");
+				CompoundTag tagCompoundDisplay = tagCompound.getCompound("display");
 
-				if (tagCompoundDisplay.hasKey("color"))
+				if (tagCompoundDisplay.contains("color"))
 				{
-					tagCompoundDisplay.removeTag("color");
+					tagCompoundDisplay.remove("color");
 				}
 			}
 		}
@@ -153,36 +136,36 @@ public class ItemArmorCyberware extends ItemArmor implements IDeconstructable
 
 	public void setColor(ItemStack stack, int color)
 	{
-		if (getArmorMaterial() != CyberwareContent.trenchMat)
+		if (getMaterial() != CyberwareContent.trenchMat)
 		{
-			throw new UnsupportedOperationException("Can\'t dye non-leather!");
-		}
-		else
+			throw new UnsupportedOperationException("Can't dye non-leather!");
+		} else
 		{
-			NBTTagCompound tagCompound = stack.getTagCompound();
+			CompoundTag tagCompound = stack.getTag();
 
 			if (tagCompound == null)
 			{
-				tagCompound = new NBTTagCompound();
-				stack.setTagCompound(tagCompound);
+				tagCompound = new CompoundTag();
+				stack.setTag(tagCompound);
 			}
 
-			NBTTagCompound tagCompoundDisplay = tagCompound.getCompoundTag("display");
+			CompoundTag tagCompoundDisplay = tagCompound.getCompound("display");
 
-			if (!tagCompound.hasKey("display", 10))
+			if (!tagCompound.contains("display", 10))
 			{
-				tagCompound.setTag("display", tagCompoundDisplay);
+				tagCompound.put("display", tagCompoundDisplay);
 			}
 
-			tagCompoundDisplay.setInteger("color", color);
+			tagCompoundDisplay.putInt("color", color);
 		}
 	}
-	
+
 	@Override
-	public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> list)
+	public void getSubItems(@Nonnull CreativeModeTab tab, @Nonnull NonNullList<ItemStack> list)
 	{
-		if (isInCreativeTab(tab)) {
-			if (getArmorMaterial() == CyberwareContent.trenchMat)
+		if (getCreativeTabs().contains(tab))
+		{
+			if (getMaterial() == CyberwareContent.trenchMat)
 			{
 				super.getSubItems(tab, list);
 				ItemStack brown = new ItemStack(this);
@@ -191,25 +174,29 @@ public class ItemArmorCyberware extends ItemArmor implements IDeconstructable
 				ItemStack white = new ItemStack(this);
 				setColor(white, 0xEAEAEA);
 				list.add(white);
-			}
-			else
+			} else
 			{
 				super.getSubItems(tab, list);
 			}
 		}
 	}
-	
+
 	@Nonnull
 	@Override
-	public EnumActionResult onItemUse(@Nonnull EntityPlayer entityPlayer, @Nonnull World world, @Nonnull BlockPos blockPos,
-	                                  @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
-		final IBlockState blockState = world.getBlockState(blockPos);
+	public EnumActionResult onItemUse(@Nonnull EntityPlayer entityPlayer, @Nonnull World world,
+									  @Nonnull BlockPos blockPos,
+									  @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
+									  float hitZ)
+	{
+		final BlockState blockState = world.getBlockState(blockPos);
 		final ItemStack itemStack = entityPlayer.getHeldItem(hand);
-		if ( !world.isRemote
-		  && blockState.getBlock() instanceof BlockCauldron
-		  && hasColor(itemStack) ) {
+		if (!world.isClientSide()
+			&& blockState.getBlock() instanceof BlockCauldron
+			&& hasColor(itemStack))
+		{
 			final int waterLevel = blockState.getValue(BlockCauldron.LEVEL);
-			if (waterLevel > 0) {
+			if (waterLevel > 0)
+			{
 				removeColor(itemStack);
 				((BlockCauldron) blockState.getBlock()).setWaterLevel(world, blockPos, blockState, waterLevel - 1);
 				entityPlayer.addStat(StatList.ARMOR_CLEANED);

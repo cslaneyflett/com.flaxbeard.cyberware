@@ -2,133 +2,115 @@ package flaxbeard.cyberware.common.network;
 
 import flaxbeard.cyberware.client.gui.ContainerEngineeringTable;
 import flaxbeard.cyberware.common.block.tile.TileEntityEngineeringTable;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.network.NetworkEvent;
 
-public class EngineeringSwitchArchivePacket implements IMessage
+import java.util.function.Supplier;
+
+public class EngineeringSwitchArchivePacket
 {
-	public EngineeringSwitchArchivePacket() {}
-	
-	private BlockPos pos;
-	private int dimensionId;
-	private int entityId;
-	private boolean direction;
-	private boolean isComponent;
+	private final BlockPos pos;
+	private final ResourceKey<Level> dimensionKey;
+	private final int entityId;
+	private final boolean direction;
+	private final boolean isComponent;
 
-	public EngineeringSwitchArchivePacket(BlockPos pos, EntityPlayer entityPlayer, boolean direction, boolean isComponent)
+	public EngineeringSwitchArchivePacket(BlockPos pos, Player entityPlayer, boolean direction, boolean isComponent)
 	{
-		this.dimensionId = entityPlayer.world.provider.getDimension();
-		this.entityId = entityPlayer.getEntityId();
+		this.dimensionKey = entityPlayer.level.dimension();
+		this.entityId = entityPlayer.getId();
 		this.pos = pos;
 		this.direction = direction;
 		this.isComponent = isComponent;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	EngineeringSwitchArchivePacket(BlockPos pos, ResourceKey<Level> dimensionKey, boolean direction, boolean isComponent, int entityId)
 	{
-		buf.writeBoolean(direction);
-		buf.writeBoolean(isComponent);
-		buf.writeInt(entityId);
-		buf.writeInt(pos.getX());
-		buf.writeInt(pos.getY());
-		buf.writeInt(pos.getZ());
-		buf.writeInt(dimensionId);
+		this.dimensionKey = dimensionKey;
+		this.entityId = entityId;
+		this.pos = pos;
+		this.direction = direction;
+		this.isComponent = isComponent;
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		direction = buf.readBoolean();
-		isComponent = buf.readBoolean();
-		entityId = buf.readInt();
-		int x = buf.readInt();
-		int y = buf.readInt();
-		int z = buf.readInt();
-		pos = new BlockPos(x, y, z);
-		dimensionId = buf.readInt();
-	}
-	
-	public static class EngineeringSwitchArchivePacketHandler implements IMessageHandler<EngineeringSwitchArchivePacket, IMessage>
-	{
-		@Override
-		public IMessage onMessage(EngineeringSwitchArchivePacket message, MessageContext ctx)
-		{
-			DimensionManager.getWorld(message.dimensionId).addScheduledTask(new DoSync(message.pos, message.dimensionId, message.entityId, message.direction, message.isComponent));
 
-			return null;
+	public static void encode(EngineeringSwitchArchivePacket packet, FriendlyByteBuf buf)
+	{
+		buf.writeBlockPos(packet.pos);
+		buf.writeResourceKey(packet.dimensionKey);
+		buf.writeBoolean(packet.direction);
+		buf.writeBoolean(packet.isComponent);
+		buf.writeInt(packet.entityId);
+	}
+
+	public static EngineeringSwitchArchivePacket decode(FriendlyByteBuf buf)
+	{
+		return new EngineeringSwitchArchivePacket(buf.readBlockPos(), buf.readResourceKey(Registry.DIMENSION_REGISTRY), buf.readBoolean(), buf.readBoolean(), buf.readInt());
+	}
+
+	public static class EngineeringSwitchArchivePacketHandler
+	{
+		public static void handle(EngineeringSwitchArchivePacket msg, Supplier<NetworkEvent.Context> ctx)
+		{
+			// TODO: DimensionManager.getLevel(message.dimensionKey) for queue?
+			ctx.get().enqueueWork(new DoSync(msg.pos, msg.dimensionKey, msg.entityId, msg.direction, msg.isComponent));
+			ctx.get().setPacketHandled(true);
 		}
 	}
-	
-	private static class DoSync implements Runnable
+
+	private record DoSync(BlockPos pos, ResourceKey<Level> dimensionKey, int entityId, boolean direction,
+						  boolean isComponent) implements Runnable
 	{
-		private BlockPos pos;
-		private int dimensionId;
-		private int entityId;
-		private boolean direction;
-		private boolean isComponent;
-
-		private DoSync(BlockPos pos, int dimensionId, int entityId, boolean direction, boolean isComponent)
-		{
-			this.pos = pos;
-			this.dimensionId = dimensionId;
-			this.entityId = entityId;
-			this.direction = direction;
-			this.isComponent = isComponent;
-		}
-
 		@Override
 		public void run()
 		{
-			World world = DimensionManager.getWorld(dimensionId);
-			Entity entity = world.getEntityByID(entityId);
-			if (entity instanceof EntityPlayer)
+			// TODO: dimension
+			Level world = DimensionManager.getLevel(dimensionKey);
+			Entity entity = world.getEntity(entityId);
+
+			if (entity instanceof Player entityPlayer)
 			{
-				EntityPlayer entityPlayer = (EntityPlayer) entity;
-				
 				if (isComponent)
 				{
-					if (entityPlayer.openContainer instanceof ContainerEngineeringTable)
+					if (entityPlayer.containerMenu instanceof ContainerEngineeringTable containerEngineeringTable)
 					{
 						if (direction)
 						{
-							((ContainerEngineeringTable) entityPlayer.openContainer).nextComponentBox();
-						}
-						else
+							containerEngineeringTable.nextComponentBox();
+						} else
 						{
-							((ContainerEngineeringTable) entityPlayer.openContainer).prevComponentBox();
+							containerEngineeringTable.prevComponentBox();
 						}
-						// TileEntityEngineeringTable te = (TileEntityEngineeringTable) world.getTileEntity(pos);
-						//te.lastPlayerArchive.put(entityPlayer.getCachedUniqueIdString(), ((ContainerEngineeringTable) entityPlayer.openContainer).archive.getPos());
+
+						// TileEntityEngineeringTable te = (TileEntityEngineeringTable) world.getBlockEntity(pos);
+						//te.lastPlayerArchive.put(entityPlayer.getCachedUniqueIdString(), (
+						// (ContainerEngineeringTable) entityPlayer.containerMenu).archive.getPos());
 					}
-				}
-				else
+				} else
 				{
-					if (entityPlayer.openContainer instanceof ContainerEngineeringTable)
+					if (entityPlayer.containerMenu instanceof ContainerEngineeringTable containerEngineeringTable)
 					{
 						if (direction)
 						{
-							((ContainerEngineeringTable) entityPlayer.openContainer).nextArchive();
-						}
-						else
+							containerEngineeringTable.nextArchive();
+						} else
 						{
-							((ContainerEngineeringTable) entityPlayer.openContainer).prevArchive();
+							containerEngineeringTable.prevArchive();
 						}
-						TileEntityEngineeringTable te = (TileEntityEngineeringTable) world.getTileEntity(pos);
-						te.lastPlayerArchive.put(entityPlayer.getCachedUniqueIdString(), ((ContainerEngineeringTable) entityPlayer.openContainer).archive.getPos());
+
+						TileEntityEngineeringTable te = (TileEntityEngineeringTable) world.getBlockEntity(pos);
+						assert te != null;
+
+						te.lastPlayerArchive.put(entityPlayer.getStringUUID(), containerEngineeringTable.archive.getBlockPos());
 					}
 				}
 			}
-			
-			
 		}
-		
 	}
 }

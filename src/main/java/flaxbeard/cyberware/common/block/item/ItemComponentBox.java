@@ -1,71 +1,72 @@
 package flaxbeard.cyberware.common.block.item;
 
-import java.util.List;
-
-import com.mojang.realmsclient.gui.ChatFormatting;
-
-import flaxbeard.cyberware.Cyberware;
-import net.minecraft.block.Block;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 
 public class ItemComponentBox extends ItemBlockCyberware
 {
-
 	public ItemComponentBox(Block block)
 	{
-		super(block);
-		this.setMaxStackSize(1);
+		super(block, new Properties()
+			.stacksTo(1)
+		);
 	}
-	
+
 	@Nonnull
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer entityPlayer, @Nonnull EnumHand hand)
+	public InteractionResult useOn(UseOnContext useOnContext)
 	{
-		ItemStack itemStackIn = entityPlayer.getHeldItem(hand);
-		entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
-		return new ActionResult<>(EnumActionResult.PASS, itemStackIn);
+		Player entityPlayer = useOnContext.getPlayer();
+		assert entityPlayer != null;
+
+		ItemStack itemStackIn = useOnContext.getItemInHand();
+		// TODO: gui
+		//		entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
+		return InteractionResult.PASS;
 	}
-	
+
 	@Nonnull
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer entityPlayer, World worldIn, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ)
+	public InteractionResult place(BlockPlaceContext placeContext)
 	{
-		if (entityPlayer.isSneaking())
+		Player entityPlayer = placeContext.getPlayer();
+		assert entityPlayer != null;
+
+		if (entityPlayer.isShiftKeyDown())
 		{
-			EnumActionResult res = super.onItemUse(entityPlayer, worldIn, pos, hand, facing, hitX, hitY, hitZ);
-			if (res == EnumActionResult.SUCCESS && entityPlayer.isCreative())
+			InteractionResult res = super.place(placeContext);
+			if (res == InteractionResult.SUCCESS && entityPlayer.isCreative())
 			{
-				entityPlayer.inventory.mainInventory.set(entityPlayer.inventory.currentItem, ItemStack.EMPTY);
+				entityPlayer.getInventory().removeItem(placeContext.getItemInHand());
 			}
 			return res;
-		}
-		else
+		} else
 		{
-			entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
+			//			entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
 		}
-		return EnumActionResult.SUCCESS;
+		return InteractionResult.SUCCESS;
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
-	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag advanced)
+	@OnlyIn(Dist.CLIENT)
+	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag advanced)
 	{
-		tooltip.add(ChatFormatting.GRAY + I18n.format("cyberware.tooltip.component_box"));
-		tooltip.add(ChatFormatting.GRAY + I18n.format("cyberware.tooltip.component_box2"));
+		tooltip.add(Component.literal(ChatFormatting.GRAY + I18n.get("cyberware.tooltip.component_box")));
+		tooltip.add(Component.literal(ChatFormatting.GRAY + I18n.get("cyberware.tooltip.component_box2")));
 	}
-	
 }

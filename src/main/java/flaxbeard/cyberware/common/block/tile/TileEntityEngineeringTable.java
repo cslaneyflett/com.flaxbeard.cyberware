@@ -1,125 +1,131 @@
 package flaxbeard.cyberware.common.block.tile;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.ITickable;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.RangedWrapper;
-import net.minecraftforge.oredict.OreDictionary;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.item.IBlueprint;
-import flaxbeard.cyberware.common.CyberwareConfig;
+import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.item.ItemBlueprint;
 import flaxbeard.cyberware.common.misc.SpecificWrapper;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.ScannerSmashPacket;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.ITickable;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
+import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.wrapper.RangedWrapper;
+import org.jetbrains.annotations.NotNull;
 
-public class TileEntityEngineeringTable extends TileEntity implements ITickable
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 {
-	public static class TileEntityEngineeringDummy extends TileEntity
+	public static class TileEntityEngineeringDummy extends BlockEntity
 	{
-		@Override
-		public boolean hasCapability(Capability<?> capability, EnumFacing facing)
-		{
-			TileEntity above = world.getTileEntity(pos.add(0, 1, 0));
-			if (above != null && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
-			{
-				return above.hasCapability(capability, facing);
-			}
-			return super.hasCapability(capability, facing);
-		}
-		
+
+		//		@Override
+		//		public boolean hasCapability(Capability<?> capability, Direction facing)
+		//		{
+		//			BlockEntity above = level.getBlockEntity(worldPosition.offset(0, 1, 0));
+		//			if (above != null && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+		//				return above.hasCapability(capability, facing);
+		//			}
+		//			return super.hasCapability(capability, facing);
+		//		}
 
 		@Override
-		public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+		public @Nonnull <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability,
+														  final @Nullable Direction facing)
 		{
-			TileEntity above = world.getTileEntity(pos.add(0, 1, 0));
-			if (above != null && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+			assert level != null;
+			BlockEntity above = level.getBlockEntity(worldPosition.relative(Direction.UP));
+
+			if (above != null && capability == ForgeCapabilities.ITEM_HANDLER)
 			{
 				return above.getCapability(capability, facing);
 			}
+
 			return super.getCapability(capability, facing);
 		}
 	}
-	
+
 	public class ItemStackHandlerEngineering extends ItemStackHandler
 	{
 		public boolean overrideExtract = false;
-		private TileEntityEngineeringTable table;
-		
+		private final TileEntityEngineeringTable table;
+
 		public ItemStackHandlerEngineering(TileEntityEngineeringTable table, int i)
 		{
 			super(i);
 			this.table = table;
 		}
-		
+
 		@Override
-	    public void setStackInSlot(int slot, ItemStack stack)
-	    {
+		public void setStackInSlot(int slot, ItemStack stack)
+		{
 			boolean check = false;
-			if (slot == 0 && this.getStackInSlot(0).isEmpty() && !world.isRemote)
+			if (slot == 0 && this.getStackInSlot(0).isEmpty() && !level.isClientSide())
 			{
 				check = true;
 			}
-			
+
 			super.setStackInSlot(slot, stack);
-			
+
 			if (check)
 			{
-				table.world.setBlockState(getPos(), table.world.getBlockState(getPos()), 2);
-				table.world.notifyBlockUpdate(pos, table.world.getBlockState(getPos()), table.world.getBlockState(getPos()), 2);
+				table.level.setBlockState(worldPosition, table.level.getBlockState(worldPosition), 2);
+				table.level.notifyBlockUpdate(worldPosition, table.level.getBlockState(worldPosition),
+					table.level.getBlockState(worldPosition), 2
+				);
 			}
-			
+
 			if (slot >= 2 && slot <= 8)
 			{
 				table.updateRecipe();
 			}
-	    }
-		
+		}
+
 		@Nonnull
 		@Override
 		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate)
 		{
 			if (!isItemValidForSlot(slot, stack)) return stack;
-			
+
 			boolean check = false;
-			if (slot == 0 && this.getStackInSlot(0).isEmpty() && !simulate && !world.isRemote)
+			if (slot == 0 && this.getStackInSlot(0).isEmpty() && !simulate && !level.isClientSide())
 			{
 				check = true;
 			}
-			
+
 			ItemStack result = super.insertItem(slot, stack, simulate);
-			
+
 			if (check)
 			{
-				table.world.setBlockState(getPos(), table.world.getBlockState(getPos()), 2);
-				table.world.notifyBlockUpdate(pos, table.world.getBlockState(getPos()), table.world.getBlockState(getPos()), 2);
+				table.level.setBlockState(worldPosition, table.level.getBlockState(worldPosition), 2);
+				table.level.notifyBlockUpdate(worldPosition, table.level.getBlockState(worldPosition),
+					table.level.getBlockState(worldPosition), 2
+				);
 			}
 
 			if (slot >= 2 && slot <= 8 && !simulate)
@@ -128,20 +134,19 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 			}
 			return result;
 		}
-		
+
 		@Nonnull
 		@Override
 		public ItemStack extractItem(int slot, int amount, boolean simulate)
 		{
 			if (!canRemoveItem(slot)) return ItemStack.EMPTY;
-			
+
 
 			ItemStack result = super.extractItem(slot, amount, simulate);
 			if (slot == 9 && !result.isEmpty() && !simulate)
 			{
 
 				table.subtractResources();
-				
 			}
 			if (slot >= 2 && slot <= 7 && !simulate)
 			{
@@ -166,16 +171,7 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 				case 0:
 					return CyberwareAPI.canDeconstruct(stack);
 				case 1:
-					int[] ids = OreDictionary.getOreIDs(stack);
-					int paperId = OreDictionary.getOreID("paper");
-					for (int id : ids)
-					{
-						if (id == paperId)
-						{
-							return true;
-						}
-					}
-					return false;
+					return stack.is(Items.PAPER);
 				case 8:
 					return !stack.isEmpty() && stack.getItem() instanceof IBlueprint;
 				case 9:
@@ -185,7 +181,7 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 			}
 		}
 	}
-	
+
 	public class GuiWrapper implements IItemHandlerModifiable
 	{
 		private ItemStackHandlerEngineering slots;
@@ -200,14 +196,14 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 		{
 			return slots.getSlots();
 		}
-		
+
 		@Nonnull
 		@Override
 		public ItemStack getStackInSlot(int slot)
 		{
 			return slots.getStackInSlot(slot);
 		}
-		
+
 		@Nonnull
 		@Override
 		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate)
@@ -217,7 +213,7 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 			slots.overrideExtract = false;
 			return res;
 		}
-		
+
 		@Nonnull
 		@Override
 		public ItemStack extractItem(int slot, int amount, boolean simulate)
@@ -237,135 +233,141 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 		}
 
 		@Override
-		public int getSlotLimit(int slot) {
+		public int getSlotLimit(int slot)
+		{
 			return 64;
 		}
-		
+
+		@Override
+		public boolean isItemValid(int slot, @NotNull ItemStack stack)
+		{
+			return true;
+		}
 	}
-	
+
 	public ItemStackHandlerEngineering slots = new ItemStackHandlerEngineering(this, 10);
-	private final RangedWrapper slotsTopSides = new RangedWrapper(slots, 0, 7);
-	private final SpecificWrapper slotsBottom = new SpecificWrapper(slots, 2, 3, 4, 5, 6, 7, 9);
+	private final LazyOptional<RangedWrapper> slotsTopSides = LazyOptional.of(() -> new RangedWrapper(slots, 0, 7));
+	private final LazyOptional<SpecificWrapper> slotsBottom = LazyOptional.of(() -> new SpecificWrapper(slots, 2, 3, 4, 5, 6, 7, 9));
 	public final GuiWrapper guiSlots = new GuiWrapper(slots);
 	public String customName = null;
 	public float clickedTime = -100F;
 	private int time;
 	public HashMap<String, BlockPos> lastPlayerArchive = new HashMap<>();
-	
-	@Override
-	public boolean hasCapability(Capability<?> capability, EnumFacing facing)
-	{
-		if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
-		{
-			return true;
-		}
-		return super.hasCapability(capability, facing);
-	}
-	
+
+	//	@Override
+	//	public boolean hasCapability(Capability<?> capability, Direction facing)
+	//	{
+	//		if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+	//			return true;
+	//		}
+	//		return super.hasCapability(capability, facing);
+	//	}
 
 	@Override
-	public <T> T getCapability(Capability<T> capability, EnumFacing facing)
+	public @Nonnull <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability,
+													  final @Nullable Direction facing)
 	{
-		if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+		if (capability == ForgeCapabilities.ITEM_HANDLER)
 		{
-			if (facing == EnumFacing.DOWN)
+			if (facing == Direction.DOWN)
 			{
-				return (T) slotsBottom;
-			}
-			else
+				return slotsBottom.cast();
+			} else
 			{
-				return (T) slotsTopSides;
+				return slotsTopSides.cast();
 			}
 		}
+
 		return super.getCapability(capability, facing);
 	}
-	
+
 	@Override
-	public void readFromNBT(NBTTagCompound tagCompound)
+	public void readFromNBT(CompoundTag tagCompound)
 	{
 		super.readFromNBT(tagCompound);
-		
-		slots.deserializeNBT(tagCompound.getCompoundTag("inv"));
-		
-		if (tagCompound.hasKey("CustomName", 8))
+
+		slots.deserializeNBT(tagCompound.getCompound("inv"));
+
+		if (tagCompound.contains("CustomName", 8))
 		{
 			customName = tagCompound.getString("CustomName");
 		}
-		
-		this.time = tagCompound.getInteger("time");
-		
+
+		this.time = tagCompound.getInt("time");
+
 		lastPlayerArchive = new HashMap<>();
-		NBTTagList list = (NBTTagList) tagCompound.getTag("playerArchive");
-		for (int indexArchive = 0; indexArchive < list.tagCount(); indexArchive++)
+		ListTag list = tagCompound.getList("playerArchive", Tag.TAG_COMPOUND);
+		for (int indexArchive = 0; indexArchive < list.size(); indexArchive++)
 		{
-			NBTTagCompound tagCompoundAt = list.getCompoundTagAt(indexArchive);
+			CompoundTag tagCompoundAt = list.getCompound(indexArchive);
 			String name = tagCompoundAt.getString("name");
-			int x = tagCompoundAt.getInteger("x");
-			int y = tagCompoundAt.getInteger("y");
-			int z = tagCompoundAt.getInteger("z");
+			int x = tagCompoundAt.getInt("x");
+			int y = tagCompoundAt.getInt("y");
+			int z = tagCompoundAt.getInt("z");
 			BlockPos pos = new BlockPos(x, y, z);
 			lastPlayerArchive.put(name, pos);
 		}
-
 	}
-	
+
 	@Nonnull
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound)
+	public CompoundTag writeToNBT(CompoundTag tagCompound)
 	{
 		tagCompound = super.writeToNBT(tagCompound);
-		
-		tagCompound.setTag("inv", this.slots.serializeNBT());
-		
+
+		tagCompound.put("inv", this.slots.serializeNBT());
+
 		if (this.hasCustomName())
 		{
-			tagCompound.setString("CustomName", customName);
+			tagCompound.putString("CustomName", customName);
 		}
-		
-		tagCompound.setInteger("time", time);
-		NBTTagList list = new NBTTagList();
+
+		tagCompound.putInt("time", time);
+		ListTag list = new ListTag();
 		for (String name : this.lastPlayerArchive.keySet())
 		{
-			NBTTagCompound entry = new NBTTagCompound();
-			entry.setString("name", name);
+			CompoundTag entry = new CompoundTag();
+			entry.putString("name", name);
 			BlockPos pos = lastPlayerArchive.get(name);
-			entry.setInteger("x", pos.getX());
-			entry.setInteger("y", pos.getY());
-			entry.setInteger("z", pos.getZ());
-			list.appendTag(entry);
+			entry.putInt("x", pos.getX());
+			entry.putInt("y", pos.getY());
+			entry.putInt("z", pos.getZ());
+			list.add(entry);
 		}
-		tagCompound.setTag("playerArchive", list);
+		tagCompound.put("playerArchive", list);
 		return tagCompound;
 	}
-	
+
 	@Override
-	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
+	public void onDataPacket(Connection net, SPacketUpdateTileEntity pkt)
 	{
-		NBTTagCompound data = pkt.getNbtCompound();
+		CompoundTag data = pkt.getNbtCompound();
 		this.readFromNBT(data);
 	}
-	
+
 	@Override
 	public SPacketUpdateTileEntity getUpdatePacket()
 	{
-		NBTTagCompound data = new NBTTagCompound();
+		CompoundTag data = new CompoundTag();
 		this.writeToNBT(data);
-		return new SPacketUpdateTileEntity(pos, 0, data);
+		return new SPacketUpdateTileEntity(worldPosition, 0, data);
 	}
-	
+
 	@Nonnull
 	@Override
-	public NBTTagCompound getUpdateTag()
+	public CompoundTag getUpdateTag()
 	{
-		return writeToNBT(new NBTTagCompound());
+		return writeToNBT(new CompoundTag());
 	}
-	
-	public boolean isUsableByPlayer(EntityPlayer entityPlayer)
+
+	public boolean isUsableByPlayer(Player entityPlayer)
 	{
-		return this.world.getTileEntity(pos) == this
-		    && entityPlayer.getDistanceSq(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= 64.0D;
+		return this.level.getBlockEntity(worldPosition) == this
+			&& entityPlayer.position().distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
+			worldPosition.getZ() + 0.5D
+		) <= 64.0D;
 	}
-	
+
 	public String getName()
 	{
 		return this.hasCustomName() ? customName : "cyberware.container.engineering";
@@ -380,11 +382,11 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 	{
 		this.customName = name;
 	}
-	
+
 	@Override
-	public ITextComponent getDisplayName()
+	public Component getDisplayName()
 	{
-		return this.hasCustomName() ? new TextComponentString(this.getName()) : new TextComponentTranslation(this.getName());
+		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());
 	}
 
 	public void updateRecipe()
@@ -404,13 +406,12 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 				result.setCount(1);
 			}
 			this.slots.setStackInSlot(9, result);
-		}
-		else
+		} else
 		{
 			this.slots.setStackInSlot(9, ItemStack.EMPTY);
 		}
 	}
-	
+
 	public void subtractResources()
 	{
 		ItemStack blueprintStack = slots.getStackInSlot(8);
@@ -428,8 +429,7 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 				slots.setStackInSlot(indexSlot + 2, result.get(indexSlot));
 			}
 			this.updateRecipe();
-		}
-		else
+		} else
 		{
 			throw new IllegalStateException("Tried to subtract resources when no blueprint was available!");
 		}
@@ -439,12 +439,13 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 	public void smash(boolean pkt)
 	{
 		ItemStack toDestroy = slots.getStackInSlot(0);
-		
+
 		if (CyberwareAPI.canDeconstruct(toDestroy) && toDestroy.getCount() > 0)
 		{
 			ItemStack paperSlot = slots.getStackInSlot(1);
-			boolean doBlueprint = !paperSlot.isEmpty() && paperSlot.getCount() > 0 && paperSlot.getItem() == Items.PAPER;
-			
+			boolean doBlueprint =
+				!paperSlot.isEmpty() && paperSlot.getCount() > 0 && paperSlot.getItem() == Items.PAPER;
+
 			NonNullList<ItemStack> components = CyberwareAPI.getComponents(toDestroy);
 
 			List<ItemStack> random = new ArrayList<>();
@@ -460,9 +461,9 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 					}
 				}
 			}
-			
+
 			int numToRemove = 1;
-			switch (world.getDifficulty())
+			switch (level.getDifficulty())
 			{
 				case EASY:
 					numToRemove = 1;
@@ -479,19 +480,20 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 				default:
 					break;
 			}
-			
+
 			if (slots.getStackInSlot(0).isItemStackDamageable()) // Damaged items yield less
 			{
-				float percent = (slots.getStackInSlot(0).getItemDamage() * 1F  / slots.getStackInSlot(0).getMaxDamage());
+				float percent =
+					(slots.getStackInSlot(0).getItemDamage() * 1F / slots.getStackInSlot(0).getMaxDamage());
 				int addl = (int) (random.size() * percent);
 				addl = Math.max(0, addl - 1);
 				numToRemove += addl;
 			}
-			
+
 			numToRemove = Math.min(numToRemove, random.size() - 1);
 			for (int index = 0; index < numToRemove; index++)
 			{
-				random.remove(world.rand.nextInt(random.size()));
+				random.remove(level.getRandom().nextInt(random.size()));
 			}
 
 			ItemStackHandler handler = new ItemStackHandler(6);
@@ -500,7 +502,7 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 				handler.setStackInSlot(indexSlot, slots.getStackInSlot(indexSlot + 2).copy());
 			}
 			boolean canInsert = true;
-			
+
 			// Check if drops will fit
 			for (ItemStack drop : components)
 			{
@@ -515,14 +517,14 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 						break;
 					}
 				}
-				
+
 				if (!wasAble)
 				{
 					canInsert = false;
 					break;
 				}
 			}
-			
+
 			// Check if blueprint will fit
 			if (doBlueprint)
 			{
@@ -537,28 +539,33 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 						break;
 					}
 				}
-				
+
 				if (!wasAble)
 				{
 					canInsert = false;
 				}
 			}
 
-			
+
 			if (canInsert)
 			{
 				if (pkt)
 				{
-					CyberwarePacketHandler.INSTANCE.sendToAllAround(new ScannerSmashPacket(pos.getX(), pos.getY(), pos.getZ()), new TargetPoint(world.provider.getDimension(), pos.getX(), pos.getY(), pos.getZ(), 25));
+					CyberwarePacketHandler.INSTANCE.sendToAllAround(
+						new ScannerSmashPacket(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ()),
+						new TargetPoint(level.provider.getDimension(), worldPosition.getX(), worldPosition.getY(),
+							worldPosition.getZ(), 25
+						)
+					);
 				}
-				
-				if (!world.isRemote)
+
+				if (!level.isClientSide())
 				{
-					if (doBlueprint && getWorld().rand.nextFloat() < (CyberwareConfig.ENGINEERING_CHANCE / 100F))
+					if (doBlueprint && getLevel().getRandom().nextFloat() < (CyberwareConfig.INSTANCE.ENGINEERING_CHANCE.get() / 100F))
 					{
 						ItemStack blue = ItemBlueprint.getBlueprintForItem(toDestroy);
 						random.add(blue);
-						
+
 						ItemStack current = slots.getStackInSlot(1);
 						current.shrink(1);
 						if (current.getCount() <= 0)
@@ -567,8 +574,8 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 						}
 						slots.setStackInSlot(1, current);
 					}
-			
-					
+
+
 					for (ItemStack drop : random)
 					{
 						ItemStack dropLeft = drop.copy();
@@ -583,7 +590,7 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 								}
 							}
 						}
-						
+
 						for (int slot = 2; slot < 8; slot++)
 						{
 							dropLeft = slots.insertItem(slot, dropLeft, false);
@@ -593,62 +600,59 @@ public class TileEntityEngineeringTable extends TileEntity implements ITickable
 							}
 						}
 					}
-					
+
 					ItemStack current = slots.getStackInSlot(0);
 					current.shrink(1);
 					if (current.getCount() <= 0 || current.isEmpty())
 					{
-						world.notifyBlockUpdate(pos, world.getBlockState(getPos()), world.getBlockState(getPos()), 2);
+						world.notifyBlockUpdate(pos, world.getBlockState(worldPosition),
+							world.getBlockState(worldPosition), 2
+						);
 
 						current = ItemStack.EMPTY;
 					}
 					slots.setStackInSlot(0, current);
 					updateRecipe();
-				}
-				else
+				} else
 				{
 					smashSounds();
 				}
 			}
 		}
-
 	}
-
 
 	@Override
 	public void update()
 	{
-		if (world.isBlockPowered(getPos()) || world.isBlockPowered(getPos().add(0, -1, 0)))
+		if (level.isBlockPowered(worldPosition) || level.isBlockPowered(worldPosition.offset(0, -1, 0)))
 		{
 			if (time == 0)
 			{
 				this.smash(false);
 			}
 			time = (time + 1) % 25;
-		}
-		else
+		} else
 		{
 			time = 0;
 		}
 	}
 
-
 	public void smashSounds()
 	{
-		int x = pos.getX();
-		int y = pos.getY();
-		int z = pos.getZ();
-		clickedTime = Minecraft.getMinecraft().player.ticksExisted + Minecraft.getMinecraft().getRenderPartialTicks();
-		world.playSound(x, y, z, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 1F, 1F, false);
-		world.playSound(x, y, z, SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.BLOCKS, 1F, .5F, false);
+		var player = Minecraft.getInstance().player;
+		assert player != null;
+		clickedTime = player.tickCount + Minecraft.getInstance().getPartialTick();
+		assert level != null;
+		level.playSound(player, worldPosition, SoundEvents.PISTON_EXTEND, SoundSource.BLOCKS, 1F, 1F);
+		level.playSound(player, worldPosition, SoundEvents.ITEM_BREAK, SoundSource.BLOCKS, 1F, .5F);
 		for (int index = 0; index < 10; index++)
 		{
-			world.spawnParticle(EnumParticleTypes.ITEM_CRACK,
-			                    x + .5F, y, z + .5F,
-			                    .25F * (world.rand.nextFloat() - .5F), .1F, .25F * (world.rand.nextFloat() - .5F),
-			                    Item.getIdFromItem(slots.getStackInSlot(0).getItem()));
+			// TODO: particles
+			//			world.spawnParticle(EnumParticleTypes.ITEM_CRACK,
+			//			                    x + .5F, y, z + .5F,
+			//			                    .25F * (world.rand.nextFloat() - .5F), .1F, .25F * (world.rand.nextFloat()
+			//			                    - .5F),
+			//			                    Item.getIdFromItem(slots.getStackInSlot(0).getItem()));
 		}
 	}
-
-	
 }

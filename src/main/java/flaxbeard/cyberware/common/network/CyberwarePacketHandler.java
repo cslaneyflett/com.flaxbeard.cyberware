@@ -1,52 +1,137 @@
 package flaxbeard.cyberware.common.network;
 
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.relauncher.Side;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.hud.UpdateHudColorPacket;
-import flaxbeard.cyberware.api.hud.UpdateHudColorPacket.UpdateHudColorPacketHandler;
-import flaxbeard.cyberware.common.network.CyberwareSyncPacket.CyberwareSyncPacketHandler;
-import flaxbeard.cyberware.common.network.DodgePacket.DodgePacketHandler;
-import flaxbeard.cyberware.common.network.EngineeringDestroyPacket.EngineeringDestroyPacketHandler;
-import flaxbeard.cyberware.common.network.EngineeringSwitchArchivePacket.EngineeringSwitchArchivePacketHandler;
-import flaxbeard.cyberware.common.network.GuiPacket.GuiPacketHandler;
-import flaxbeard.cyberware.common.network.OpenRadialMenuPacket.OpenRadialMenuPacketHandler;
-import flaxbeard.cyberware.common.network.ParticlePacket.ParticlePacketHandler;
-import flaxbeard.cyberware.common.network.ScannerSmashPacket.ScannerSmashPacketHandler;
-import flaxbeard.cyberware.common.network.SurgeryRemovePacket.SurgeryRemovePacketHandler;
-import flaxbeard.cyberware.common.network.SwitchHeldItemAndRotationPacket.SwitchHeldItemAndRotationPacketHandler;
-import flaxbeard.cyberware.common.network.SyncHotkeyPacket.SyncHotkeyPacketHandler;
-import flaxbeard.cyberware.common.network.SyncHudDataPacket.SyncHudDataPacketHandler;
-import flaxbeard.cyberware.common.network.TriggerActiveAbilityPacket.TriggerActiveAbilityPacketHandler;
-import flaxbeard.cyberware.common.network.UpdateConfigPacket.UpdateConfigPacketHandler;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.registries.RegisterEvent;
+
+import java.util.Optional;
 
 public class CyberwarePacketHandler
 {
-	public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(Cyberware.MODID);
+	private static final String PROTOCOL_VERSION = "1";
+	public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
+		new ResourceLocation(Cyberware.MODID, "main"),
+		() -> PROTOCOL_VERSION,
+		PROTOCOL_VERSION::equals,
+		PROTOCOL_VERSION::equals
+	);
+
 	static
 	{
 		CyberwareAPI.PACKET_HANDLER = INSTANCE;
 	}
-	
-	public static void preInit()
-	{	
-		INSTANCE.registerMessage(CyberwareSyncPacketHandler.class, CyberwareSyncPacket.class, 0, Side.CLIENT);
-		INSTANCE.registerMessage(SurgeryRemovePacketHandler.class, SurgeryRemovePacket.class, 1, Side.SERVER);
-		INSTANCE.registerMessage(SwitchHeldItemAndRotationPacketHandler.class, SwitchHeldItemAndRotationPacket.class, 2, Side.CLIENT);
-		INSTANCE.registerMessage(DodgePacketHandler.class, DodgePacket.class, 3, Side.CLIENT);
-		INSTANCE.registerMessage(GuiPacketHandler.class, GuiPacket.class, 4, Side.SERVER);
-		INSTANCE.registerMessage(ParticlePacketHandler.class, ParticlePacket.class, 5, Side.CLIENT);
-		INSTANCE.registerMessage(EngineeringDestroyPacketHandler.class, EngineeringDestroyPacket.class, 6, Side.SERVER);
-		INSTANCE.registerMessage(ScannerSmashPacketHandler.class, ScannerSmashPacket.class, 7, Side.CLIENT);
-		INSTANCE.registerMessage(EngineeringSwitchArchivePacketHandler.class, EngineeringSwitchArchivePacket.class, 8, Side.SERVER);
-		INSTANCE.registerMessage(SyncHotkeyPacketHandler.class, SyncHotkeyPacket.class, 9, Side.SERVER);
-		INSTANCE.registerMessage(TriggerActiveAbilityPacketHandler.class, TriggerActiveAbilityPacket.class, 10, Side.SERVER);
-		INSTANCE.registerMessage(SyncHudDataPacketHandler.class, SyncHudDataPacket.class, 11, Side.SERVER);
-		INSTANCE.registerMessage(OpenRadialMenuPacketHandler.class, OpenRadialMenuPacket.class, 12, Side.SERVER);
-		INSTANCE.registerMessage(UpdateHudColorPacketHandler.class, UpdateHudColorPacket.class, 13, Side.SERVER);
-		INSTANCE.registerMessage(UpdateConfigPacketHandler.class, UpdateConfigPacket.class, 14, Side.CLIENT);
 
+	public static void register(RegisterEvent ignoredEvent)
+	{
+		INSTANCE.registerMessage(
+			0,
+			CyberwareSyncPacket.class,
+			CyberwareSyncPacket::encode,
+			CyberwareSyncPacket::decode,
+			CyberwareSyncPacket.CyberwareSyncPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+		);
+		INSTANCE.registerMessage(
+			1,
+			SurgeryRemovePacket.class,
+			SurgeryRemovePacket::encode,
+			SurgeryRemovePacket::decode,
+			SurgeryRemovePacket.SurgeryRemovePacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
+		INSTANCE.registerMessage(
+			2,
+			SwitchHeldItemAndRotationPacket.class,
+			SwitchHeldItemAndRotationPacket::encode,
+			SwitchHeldItemAndRotationPacket::decode,
+			SwitchHeldItemAndRotationPacket.SwitchHeldItemAndRotationPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+		);
+		INSTANCE.registerMessage(
+			3,
+			DodgePacket.class,
+			DodgePacket::encode,
+			DodgePacket::decode,
+			DodgePacket.DodgePacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+		);
+		//		INSTANCE.registerMessage(4 , GuiPacket.class, NetworkDirection.PLAY_TO_SERVER);
+		INSTANCE.registerMessage(
+			5,
+			ParticlePacket.class,
+			ParticlePacket::encode,
+			ParticlePacket::decode,
+			ParticlePacket.ParticlePacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+		);
+		INSTANCE.registerMessage(
+			6,
+			EngineeringDestroyPacket.class,
+			EngineeringDestroyPacket::encode,
+			EngineeringDestroyPacket::decode,
+			EngineeringDestroyPacket.EngineeringDestroyPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
+		INSTANCE.registerMessage(
+			7,
+			ScannerSmashPacket.class,
+			ScannerSmashPacket::encode,
+			ScannerSmashPacket::decode,
+			ScannerSmashPacket.ScannerSmashPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_CLIENT)
+		);
+		INSTANCE.registerMessage(
+			8,
+			EngineeringSwitchArchivePacket.class,
+			EngineeringSwitchArchivePacket::encode,
+			EngineeringSwitchArchivePacket::decode,
+			EngineeringSwitchArchivePacket.EngineeringSwitchArchivePacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
+		INSTANCE.registerMessage(
+			9,
+			SyncHotkeyPacket.class,
+			SyncHotkeyPacket::encode,
+			SyncHotkeyPacket::decode,
+			SyncHotkeyPacket.SyncHotkeyPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
+		INSTANCE.registerMessage(
+			10,
+			TriggerActiveAbilityPacket.class,
+			TriggerActiveAbilityPacket::encode,
+			TriggerActiveAbilityPacket::decode,
+			TriggerActiveAbilityPacket.TriggerActiveAbilityPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
+		INSTANCE.registerMessage(
+			11,
+			SyncHudDataPacket.class,
+			SyncHudDataPacket::encode,
+			SyncHudDataPacket::decode,
+			SyncHudDataPacket.SyncHudDataPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
+		INSTANCE.registerMessage(
+			12,
+			OpenRadialMenuPacket.class,
+			OpenRadialMenuPacket::encode,
+			OpenRadialMenuPacket::decode,
+			OpenRadialMenuPacket.OpenRadialMenuPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
+		INSTANCE.registerMessage(
+			13,
+			UpdateHudColorPacket.class,
+			UpdateHudColorPacket::encode,
+			UpdateHudColorPacket::decode,
+			UpdateHudColorPacket.UpdateHudColorPacketHandler::handle,
+			Optional.of(NetworkDirection.PLAY_TO_SERVER)
+		);
 	}
 }

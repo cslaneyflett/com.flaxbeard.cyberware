@@ -3,21 +3,16 @@ package flaxbeard.cyberware.common.network;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.HotkeyHelper;
-import io.netty.buffer.ByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import java.util.function.Supplier;
 
-public class SyncHotkeyPacket implements IMessage
+public class SyncHotkeyPacket
 {
-	public SyncHotkeyPacket() {}
-	
-	private int selectedPart;
-	private int key;
+	private final int selectedPart;
+	private final int key;
 
 	public SyncHotkeyPacket(int selectedPart, int key)
 	{
@@ -25,59 +20,46 @@ public class SyncHotkeyPacket implements IMessage
 		this.key = key;
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public static void encode(SyncHotkeyPacket packet, FriendlyByteBuf buf)
 	{
-		buf.writeInt(selectedPart);
-		buf.writeInt(key);
+		buf.writeInt(packet.selectedPart);
+		buf.writeInt(packet.key);
 	}
-	
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		selectedPart = buf.readInt();
-		key = buf.readInt();
-	}
-	
-	public static class SyncHotkeyPacketHandler implements IMessageHandler<SyncHotkeyPacket, IMessage>
-	{
-		@Override
-		public IMessage onMessage(SyncHotkeyPacket message, MessageContext ctx)
-		{
-			EntityPlayerMP player = ctx.getServerHandler().player;
-			DimensionManager.getWorld(player.world.provider.getDimension()).addScheduledTask(new DoSync(message.selectedPart, message.key, player));
 
-			return null;
+	public static SyncHotkeyPacket decode(FriendlyByteBuf buf)
+	{
+		return new SyncHotkeyPacket(buf.readInt(), buf.readInt());
+	}
+
+	public static class SyncHotkeyPacketHandler
+	{
+		public static void handle(SyncHotkeyPacket msg, Supplier<NetworkEvent.Context> ctx)
+		{
+			ctx.get().enqueueWork(new DoSync(msg.selectedPart, msg.key, ctx.get().getSender()));
+			ctx.get().setPacketHandled(true);
 		}
 	}
-	
-	private static class DoSync implements Runnable
-	{
-		private int selectedPart;
-		private int key;
-		private EntityPlayer entityPlayer;
 
-		public DoSync(int selectedPart, int key, EntityPlayer entityPlayer)
-		{
-			this.selectedPart = selectedPart;
-			this.key = key;
-			this.entityPlayer = entityPlayer;
-		}
-		
+	private record DoSync(int selectedPart, int key, ServerPlayer entityPlayer) implements Runnable
+	{
 		@Override
 		public void run()
 		{
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+
 			if (cyberwareUserData != null)
 			{
 				if (key == Integer.MAX_VALUE)
 				{
 					HotkeyHelper.removeHotkey(cyberwareUserData, cyberwareUserData.getActiveItems().get(selectedPart));
-				}
-				else
+				} else
 				{
 					HotkeyHelper.removeHotkey(cyberwareUserData, key);
-					HotkeyHelper.assignHotkey(cyberwareUserData, cyberwareUserData.getActiveItems().get(selectedPart), key);
+					HotkeyHelper.assignHotkey(
+						cyberwareUserData,
+						cyberwareUserData.getActiveItems().get(selectedPart),
+						key
+					);
 				}
 			}
 		}

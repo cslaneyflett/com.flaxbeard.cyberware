@@ -1,44 +1,44 @@
 package flaxbeard.cyberware.api.hud;
 
+import com.mojang.blaze3d.platform.Window;
+import net.minecraftforge.eventbus.api.Event;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraftforge.fml.common.eventhandler.Event;
-
 public class CyberwareHudEvent extends Event
 {
-	private List<IHudElement> elements = new ArrayList<>();
+	private final List<IHudElement> elements = new ArrayList<>();
 	private boolean hudjackAvailable;
-	private ScaledResolution scaledResolution;
+	private final Window window;
 
-	public CyberwareHudEvent(ScaledResolution scaledResolution, boolean hudjackAvailable)
+	public CyberwareHudEvent(Window window, boolean hudjackAvailable)
 	{
 		super();
-		this.scaledResolution = scaledResolution;
+		this.window = window;
 		this.hudjackAvailable = hudjackAvailable;
 	}
-	
-	public ScaledResolution getResolution()
+
+	public Window getWindow()
 	{
-		return scaledResolution;
+		return window;
 	}
-	
+
 	public boolean isHudjackAvailable()
 	{
 		return hudjackAvailable;
 	}
-	
+
 	public void setHudjackAvailable(boolean hudjackAvailable)
 	{
 		this.hudjackAvailable = hudjackAvailable;
 	}
-	
+
 	public List<IHudElement> getElements()
 	{
 		return elements;
 	}
-	
+
 	public void addElement(IHudElement element)
 	{
 		elements.add(element);

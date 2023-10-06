@@ -1,101 +1,97 @@
 package flaxbeard.cyberware.common.item;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.MobEffects;
-import net.minecraft.item.EnumAction;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.PotionEffect;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.api.item.IMenuItem;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import net.minecraft.item.EnumAction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+
+import java.util.*;
 
 public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 {
+	public static final int META_LIVER_FILTER = 0;
+	public static final int META_METABOLIC_GENERATOR = 1;
+	public static final int META_BATTERY = 2;
+	public static final int META_ADRENALINE_PUMP = 3;
 
-	public static final int META_LIVER_FILTER              = 0;
-	public static final int META_METABOLIC_GENERATOR       = 1;
-	public static final int META_BATTERY                   = 2;
-	public static final int META_ADRENALINE_PUMP           = 3;
-	
 	public ItemLowerOrgansUpgrade(String name, EnumSlot slot, String[] subnames)
 	{
 		super(name, slot, subnames);
 		MinecraftForge.EVENT_BUS.register(this);
 	}
-	
-	private static Map<UUID, Collection<PotionEffect>> mapPotions = new HashMap<>();
+
+	private static Map<UUID, Collection<MobEffect>> mapPotions = new HashMap<>();
 
 	@SubscribeEvent
 	public void handleEatFoodTick(LivingEntityUseItemEvent.Tick event)
 	{
-		EntityLivingBase entityLivingBase = event.getEntityLiving();
-		if (!(entityLivingBase instanceof EntityPlayer)) return;
-		EntityPlayer entityPlayer = (EntityPlayer) entityLivingBase;
+		LivingEntity entityLivingBase = event.getEntity();
+		if (!(entityLivingBase instanceof Player)) return;
+		Player entityPlayer = (Player) entityLivingBase;
 		ItemStack stack = event.getItem();
-		
-		if ( !stack.isEmpty()
-		  && ( stack.getItem().getItemUseAction(stack) == EnumAction.EAT
-		    || stack.getItem().getItemUseAction(stack) == EnumAction.DRINK ) )
+
+		if (!stack.isEmpty()
+			&& (stack.getItem().getItemUseAction(stack) == EnumAction.EAT
+			|| stack.getItem().getItemUseAction(stack) == EnumAction.DRINK))
 		{
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-			if ( cyberwareUserData != null
-			  && cyberwareUserData.isCyberwareInstalled(getCachedStack(META_LIVER_FILTER)))
+			if (cyberwareUserData != null
+				&& cyberwareUserData.isCyberwareInstalled(getCachedStack(META_LIVER_FILTER)))
 			{
-				mapPotions.put(entityPlayer.getUniqueID(), new ArrayList<>(entityPlayer.getActivePotionEffects()));
+				mapPotions.put(entityPlayer.getUUID(), new ArrayList<>(entityPlayer.getActivePotionEffects()));
 			}
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void handleEatFoodEnd(LivingEntityUseItemEvent.Finish event)
 	{
-		EntityLivingBase entityLivingBase = event.getEntityLiving();
-		if (!(entityLivingBase instanceof EntityPlayer)) return;
-		EntityPlayer entityPlayer = (EntityPlayer) entityLivingBase;
+		LivingEntity entityLivingBase = event.getEntity();
+		if (!(entityLivingBase instanceof Player)) return;
+		Player entityPlayer = (Player) entityLivingBase;
 		ItemStack stack = event.getItem();
-		
-		if ( !stack.isEmpty()
-		  && ( stack.getItem().getItemUseAction(stack) == EnumAction.EAT
-		    || stack.getItem().getItemUseAction(stack) == EnumAction.DRINK ) )
+
+		if (!stack.isEmpty()
+			&& (stack.getItem().getItemUseAction(stack) == EnumAction.EAT
+			|| stack.getItem().getItemUseAction(stack) == EnumAction.DRINK))
 		{
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-			if ( cyberwareUserData != null
-			  && cyberwareUserData.isCyberwareInstalled(getCachedStack(META_LIVER_FILTER)))
+			if (cyberwareUserData != null
+				&& cyberwareUserData.isCyberwareInstalled(getCachedStack(META_LIVER_FILTER)))
 			{
-				Collection<PotionEffect> potionEffectsRemoved = new ArrayList<>(entityPlayer.getActivePotionEffects());
-				for (PotionEffect potionEffect : potionEffectsRemoved)
+				Collection<MobEffect> potionEffectsRemoved = new ArrayList<>(entityPlayer.getActivePotionEffects());
+				for (MobEffect potionEffect : potionEffectsRemoved)
 				{
 					if (potionEffect.getPotion().isBadEffect())
 					{
 						entityPlayer.removePotionEffect(potionEffect.getPotion());
 					}
 				}
-				
-				Collection<PotionEffect> potionEffectsToAdd = mapPotions.get(entityPlayer.getUniqueID());
+
+				Collection<MobEffect> potionEffectsToAdd = mapPotions.get(entityPlayer.getUUID());
 				if (potionEffectsToAdd != null)
 				{
-					for (PotionEffect potionEffectToAdd : potionEffectsToAdd)
+					for (MobEffect potionEffectToAdd : potionEffectsToAdd)
 					{
-						for (PotionEffect potionEffectRemoved : potionEffectsRemoved)
+						for (MobEffect potionEffectRemoved : potionEffectsRemoved)
 						{
 							if (potionEffectRemoved.getPotion() == potionEffectToAdd.getPotion())
 							{
-								entityPlayer.addPotionEffect(potionEffectToAdd);
+								entityPlayer.addEffect(potionEffectToAdd);
 								break;
 							}
 						}
@@ -104,47 +100,55 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 			}
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void handleLivingUpdate(CyberwareUpdateEvent event)
 	{
-		EntityLivingBase entityLivingBase = event.getEntityLiving();
-		if (entityLivingBase.ticksExisted % 20 != 0) return;
-		
+		LivingEntity entityLivingBase = event.getEntity();
+		if (entityLivingBase.tickCount % 20 != 0) return;
+
 		ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
-		
-		ItemStack itemStackMetabolicGenerator = cyberwareUserData.getCyberware(getCachedStack(META_METABOLIC_GENERATOR));
-		if ( !itemStackMetabolicGenerator.isEmpty()
-		  && EnableDisableHelper.isEnabled(itemStackMetabolicGenerator)
-		  && !cyberwareUserData.isAtCapacity(itemStackMetabolicGenerator, getPowerProduction(itemStackMetabolicGenerator)) )
+
+		ItemStack itemStackMetabolicGenerator =
+			cyberwareUserData.getCyberware(getCachedStack(META_METABOLIC_GENERATOR));
+		if (!itemStackMetabolicGenerator.isEmpty()
+			&& EnableDisableHelper.isEnabled(itemStackMetabolicGenerator)
+			&& !cyberwareUserData.isAtCapacity(
+			itemStackMetabolicGenerator,
+			getPowerProduction(itemStackMetabolicGenerator)
+		))
 		{
-			if (entityLivingBase instanceof EntityPlayer)
+			if (entityLivingBase instanceof Player)
 			{
-				EntityPlayer entityPlayer = (EntityPlayer) entityLivingBase;
-				if ( entityPlayer.getFoodStats().getFoodLevel() > 0
-				  || entityPlayer.isCreative() )
+				Player entityPlayer = (Player) entityLivingBase;
+				if (entityPlayer.getFoodData().getFoodLevel() > 0
+					|| entityPlayer.isCreative())
 				{
 					int toRemove = getTicksTilRemove(itemStackMetabolicGenerator);
 					if (!entityPlayer.isCreative() && toRemove <= 0)
 					{
-						entityPlayer.getFoodStats().addExhaustion(6.0F);
+						entityPlayer.getFoodData().addExhaustion(6.0F);
 						toRemove = LibConstants.METABOLIC_USES;
-					}
-					else if (toRemove > 0)
+					} else if (toRemove > 0)
 					{
 						toRemove--;
 					}
-					CyberwareAPI.getCyberwareNBT(itemStackMetabolicGenerator).setInteger("toRemove", toRemove);
-					
-					cyberwareUserData.addPower(getPowerProduction(itemStackMetabolicGenerator), itemStackMetabolicGenerator);
+					CyberwareAPI.getCyberwareNBT(itemStackMetabolicGenerator).putInt("toRemove", toRemove);
+
+					cyberwareUserData.addPower(
+						getPowerProduction(itemStackMetabolicGenerator),
+						itemStackMetabolicGenerator
+					);
 				}
-			}
-			else
+			} else
 			{
-				cyberwareUserData.addPower(getPowerProduction(itemStackMetabolicGenerator) / 10, itemStackMetabolicGenerator);
+				cyberwareUserData.addPower(
+					getPowerProduction(itemStackMetabolicGenerator) / 10,
+					itemStackMetabolicGenerator
+				);
 			}
 		}
-		
+
 		ItemStack itemStackAdrenalinePump = cyberwareUserData.getCyberware(getCachedStack(META_ADRENALINE_PUMP));
 		if (!itemStackAdrenalinePump.isEmpty())
 		{
@@ -154,34 +158,36 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 			{
 				isBelow = true;
 
-				if ( !wasBelow
-				  && cyberwareUserData.usePower(itemStackAdrenalinePump, this.getPowerConsumption(itemStackAdrenalinePump), false) )
+				if (!wasBelow
+					&& cyberwareUserData.usePower(itemStackAdrenalinePump,
+					this.getPowerConsumption(itemStackAdrenalinePump), false
+				))
 				{
-					entityLivingBase.addPotionEffect(new PotionEffect(MobEffects.SPEED, 600, 0, true, false));
-					entityLivingBase.addPotionEffect(new PotionEffect(MobEffects.STRENGTH, 600, 0, true, false));
+					entityLivingBase.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 600, 0, true, false));
+					entityLivingBase.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 0, true, false));
 				}
 			}
-			
-			CyberwareAPI.getCyberwareNBT(itemStackAdrenalinePump).setBoolean("wasBelow", isBelow);
+
+			CyberwareAPI.getCyberwareNBT(itemStackAdrenalinePump).putBoolean("wasBelow", isBelow);
 		}
 	}
-	
+
 	private int getTicksTilRemove(ItemStack stack)
 	{
-		NBTTagCompound data = CyberwareAPI.getCyberwareNBT(stack);
-		if (!data.hasKey("toRemove"))
+		CompoundTag data = CyberwareAPI.getCyberwareNBT(stack);
+		if (!data.contains("toRemove"))
 		{
-			data.setInteger("toRemove", LibConstants.METABOLIC_USES);
+			data.putInt("toRemove", LibConstants.METABOLIC_USES);
 		}
-		return data.getInteger("toRemove");
+		return data.getInt("toRemove");
 	}
-	
+
 	private boolean wasBelow(ItemStack stack)
 	{
-		NBTTagCompound data = CyberwareAPI.getCyberwareNBT(stack);
-		if (!data.hasKey("wasBelow"))
+		CompoundTag data = CyberwareAPI.getCyberwareNBT(stack);
+		if (!data.contains("wasBelow"))
 		{
-			data.setBoolean("wasBelow", false);
+			data.putBoolean("wasBelow", false);
 		}
 		return data.getBoolean("wasBelow");
 	}
@@ -189,32 +195,33 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 	@Override
 	public int getCapacity(ItemStack wareStack)
 	{
-		return wareStack.getItemDamage() == META_METABOLIC_GENERATOR ? LibConstants.METABOLIC_PRODUCTION :
-		       wareStack.getItemDamage() == META_BATTERY ? LibConstants.BATTERY_CAPACITY * wareStack.getCount() : 0;
+		return CyberwareItemMetadata.get(wareStack) == META_METABOLIC_GENERATOR ? LibConstants.METABOLIC_PRODUCTION :
+			CyberwareItemMetadata.get(wareStack) == META_BATTERY ?
+				LibConstants.BATTERY_CAPACITY * wareStack.getCount() : 0;
 	}
-	
+
 	@Override
 	public int installedStackSize(ItemStack stack)
 	{
-		return stack.getItemDamage() == META_BATTERY ? 4 : 1;
+		return CyberwareItemMetadata.get(stack) == META_BATTERY ? 4 : 1;
 	}
-	
+
 	@Override
 	public int getPowerProduction(ItemStack stack)
 	{
-		return stack.getItemDamage() == META_METABOLIC_GENERATOR ? LibConstants.METABOLIC_PRODUCTION : 0;
+		return CyberwareItemMetadata.get(stack) == META_METABOLIC_GENERATOR ? LibConstants.METABOLIC_PRODUCTION : 0;
 	}
-	
+
 	@Override
 	public int getPowerConsumption(ItemStack stack)
 	{
-		return stack.getItemDamage() == META_ADRENALINE_PUMP ? LibConstants.ADRENALINE_CONSUMPTION : 0;
+		return CyberwareItemMetadata.get(stack) == META_ADRENALINE_PUMP ? LibConstants.ADRENALINE_CONSUMPTION : 0;
 	}
-	
+
 	@Override
 	protected int getUnmodifiedEssenceCost(ItemStack stack)
 	{
-		if (stack.getItemDamage() == META_BATTERY)
+		if (CyberwareItemMetadata.get(stack) == META_BATTERY)
 		{
 			switch (stack.getCount())
 			{
@@ -234,7 +241,7 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 	@Override
 	public boolean hasMenu(ItemStack stack)
 	{
-		return stack.getItemDamage() == META_METABOLIC_GENERATOR;
+		return CyberwareItemMetadata.get(stack) == META_METABOLIC_GENERATOR;
 	}
 
 	@Override
@@ -249,8 +256,8 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 		return EnableDisableHelper.getUnlocalizedLabel(stack);
 	}
 
-	private static final float[] f = new float[] { 1.0F, 0.0F, 0.0F };
-	
+	private static final float[] f = new float[]{1.0F, 0.0F, 0.0F};
+
 	@Override
 	public float[] getColor(ItemStack stack)
 	{
