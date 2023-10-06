@@ -35,6 +35,11 @@ public class CyberwareItemMetadata
 		return -1;
 	}
 
+	public static boolean has(ItemStack item)
+	{
+		return false;
+	}
+
 	public static CompoundTag of(int metaFlag)
 	{
 		return new CompoundTag();

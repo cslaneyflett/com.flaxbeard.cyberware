@@ -11,6 +11,7 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -19,6 +20,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RangedWrapper;
 import net.minecraftforge.oredict.OreDictionary;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,17 +60,7 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 					return CyberwareAPI.canDeconstruct(stack);
 
 				case 1:
-					int[] idsOreDictionary = OreDictionary.getOreIDs(stack);
-					int idPaper = OreDictionary.getOreID("paper");
-					for (int idOreDictionary : idsOreDictionary)
-					{
-						if (idOreDictionary == idPaper)
-						{
-							return true;
-						}
-					}
-					return false;
-
+					return stack.is(Items.PAPER);
 				case 2:
 					return false;
 			}
@@ -78,7 +70,7 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 
 	public class GuiWrapper implements IItemHandlerModifiable
 	{
-		private ItemStackHandlerScanner slots;
+		private final ItemStackHandlerScanner slots;
 
 		public GuiWrapper(ItemStackHandlerScanner slots)
 		{
@@ -122,6 +114,12 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 		public int getSlotLimit(int slot)
 		{
 			return 64;
+		}
+
+		@Override
+		public boolean isItemValid(int slot, @NotNull ItemStack stack)
+		{
+			return true;
 		}
 	}
 
@@ -290,12 +288,12 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 				if (!level.isClientSide()
 					&& !slots.getStackInSlot(1).isEmpty())
 				{
-					float chance = CyberwareConfig.INSTANCE.SCANNER_CHANCE.get()
+					double chance = CyberwareConfig.INSTANCE.SCANNER_CHANCE.get()
 						+ CyberwareConfig.INSTANCE.SCANNER_CHANCE_ADDL.get() * (slots.getStackInSlot(0).getCount() - 1);
-					if (slots.getStackInSlot(0).isItemStackDamageable())
+					if (slots.getStackInSlot(0).isDamageableItem())
 					{
 						chance =
-							50F * (1F - (slots.getStackInSlot(0).LEVEL_getItemDamage() / (float) slots.getStackInSlot(0).getMaxDamage()));
+							50F * (1F - (slots.getStackInSlot(0).getDamageValue() / (float) slots.getStackInSlot(0).getMaxDamage()));
 					}
 					chance = Math.min(chance, 50F);
 

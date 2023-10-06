@@ -53,7 +53,7 @@ public class ItemCybereyes extends ItemCyberware
 
 		if (cyberwareUserData.isCyberwareInstalled(getCachedStack(0)))
 		{
-			entityLivingBase.removePotionEffect(MobEffects.BLINDNESS);
+			entityLivingBase.removeEffect(MobEffects.BLINDNESS);
 		}
 	}
 

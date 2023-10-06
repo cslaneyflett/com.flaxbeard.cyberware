@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.block.tile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class TileEntitySurgeryChamber extends BlockEntity
@@ -10,9 +11,8 @@ public class TileEntitySurgeryChamber extends BlockEntity
 	public boolean lastOpen;
 	public float openTicks;
 
-	@Override
-	public boolean shouldRefresh(Level world, BlockPos pos, BlockState oldState, BlockState newState)
+	public TileEntitySurgeryChamber(BlockEntityType<TileEntitySurgeryChamber> pType, BlockPos pPos, BlockState pBlockState)
 	{
-		return oldState.getBlock() != newState.getBlock();
+		super(pType, pPos, pBlockState);
 	}
 }

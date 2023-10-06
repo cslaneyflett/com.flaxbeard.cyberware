@@ -4,6 +4,7 @@ import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.item.IBlueprint;
 import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.misc.NNLUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -123,13 +124,13 @@ public class ItemBlueprint extends Item implements IBlueprint
 		if (tagCompound != null
 			&& tagCompound.contains("blueprintItem"))
 		{
-			ItemStack blueprintItem = new ItemStack(tagCompound.getCompound("blueprintItem"));
+			ItemStack blueprintItem = ItemStack.of(tagCompound.getCompound("blueprintItem"));
 			if (!blueprintItem.isEmpty())
 			{
 				return I18n.get("item.cyberware.blueprint.not_blank.name", blueprintItem.getDisplayName()).trim();
 			}
 		}
-		return ("" + I18n.get(this.getUnlocalizedNameInefficiently(stack) + ".name")).trim();
+		return ("" + I18n.get(this.getName(stack) + ".name")).trim();
 	}
 
 	@Override
@@ -139,22 +140,26 @@ public class ItemBlueprint extends Item implements IBlueprint
 		if (tagCompound != null
 			&& tagCompound.contains("blueprintItem"))
 		{
-			ItemStack blueprintItem = new ItemStack(tagCompound.getCompound("blueprintItem"));
+			ItemStack blueprintItem = ItemStack.of(tagCompound.getCompound("blueprintItem"));
 			if (!blueprintItem.isEmpty() && CyberwareAPI.canDeconstruct(blueprintItem))
 			{
 				NonNullList<ItemStack> requiredItems = NNLUtil.copyList(CyberwareAPI.getComponents(blueprintItem));
 				for (ItemStack requiredItem : requiredItems)
 				{
 					ItemStack required = requiredItem.copy();
+
 					boolean satisfied = false;
 					for (ItemStack crafting : craftingItems)
 					{
 						if (!crafting.isEmpty() && !required.isEmpty())
 						{
-							if (crafting.getItem() == required.getItem() && crafting.getItemDamage() == required.getItemDamage() && (!required.hasTagCompound() || (ItemStack.areItemStackTagsEqual(required, crafting))))
+							if (crafting.getItem() == required.getItem() &&
+								CyberwareItemMetadata.identical(crafting, required) &&
+								(!required.hasTag() || ItemStack.tagMatches(required, crafting)))
 							{
 								required.shrink(crafting.getCount());
 							}
+
 							if (required.getCount() <= 0)
 							{
 								satisfied = true;
@@ -162,12 +167,14 @@ public class ItemBlueprint extends Item implements IBlueprint
 							}
 						}
 					}
+
 					if (!satisfied) return ItemStack.EMPTY;
 				}
 
 				return blueprintItem;
 			}
 		}
+		
 		return ItemStack.EMPTY;
 	}
 
@@ -178,7 +185,7 @@ public class ItemBlueprint extends Item implements IBlueprint
 		if (tagCompound != null
 			&& tagCompound.contains("blueprintItem"))
 		{
-			ItemStack blueprintItem = new ItemStack(tagCompound.getCompound("blueprintItem"));
+			ItemStack blueprintItem = ItemStack.of(tagCompound.getCompound("blueprintItem"));
 			if (!blueprintItem.isEmpty() && CyberwareAPI.canDeconstruct(blueprintItem))
 			{
 				NonNullList<ItemStack> requiredItems = NNLUtil.copyList(CyberwareAPI.getComponents(blueprintItem));
@@ -192,7 +199,9 @@ public class ItemBlueprint extends Item implements IBlueprint
 						ItemStack crafting = newCrafting.get(c);
 						if (!crafting.isEmpty() && !required.isEmpty())
 						{
-							if (crafting.getItem() == required.getItem() && crafting.getItemDamage() == required.getItemDamage() && (!required.hasTagCompound() || (ItemStack.areItemStackTagsEqual(required, crafting))))
+							if (crafting.getItem() == required.getItem() &&
+								CyberwareItemMetadata.identical(crafting, required) &&
+								(!required.hasTag() || ItemStack.tagMatches(required, crafting)))
 							{
 								int toSubtract = Math.min(required.getCount(), crafting.getCount());
 								required.shrink(toSubtract);
@@ -224,7 +233,7 @@ public class ItemBlueprint extends Item implements IBlueprint
 		if (tagCompound != null
 			&& tagCompound.contains("blueprintItem"))
 		{
-			ItemStack blueprintItem = new ItemStack(tagCompound.getCompound("blueprintItem"));
+			ItemStack blueprintItem = ItemStack.of(tagCompound.getCompound("blueprintItem"));
 			if (!blueprintItem.isEmpty() && CyberwareAPI.canDeconstruct(blueprintItem))
 			{
 				return CyberwareAPI.getComponents(blueprintItem);
@@ -241,7 +250,7 @@ public class ItemBlueprint extends Item implements IBlueprint
 		if (tagCompound != null
 			&& tagCompound.contains("blueprintItem"))
 		{
-			return new ItemStack(tagCompound.getCompound("blueprintItem"));
+			return ItemStack.of(tagCompound.getCompound("blueprintItem"));
 		}
 
 		return ItemStack.EMPTY;

@@ -10,11 +10,13 @@ import flaxbeard.cyberware.common.lib.LibConstants;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
@@ -26,18 +28,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class TileEntityBeacon extends BlockEntity implements ITickable
+public class TileEntityBeacon extends BlockEntity
 {
 	private static final List<Integer> tiers = new CopyOnWriteArrayList<>();
-	private static final Map<Integer, Map<Integer, Map<BlockPos, Integer>>> mapBeaconPositionByTierDimension =
-		new HashMap<>();
+	private static final Map<Integer, Map<ResourceKey<Level>, Map<BlockPos, Integer>>> mapBeaconPositionByTierDimension = new HashMap<>();
 	private boolean wasWorking = false;
 	private int count = 0;
 	private static int TIER = 2;
 
-	private static Map<Integer, Map<BlockPos, Integer>> getBeaconPositionsForTier(int tier)
+	public TileEntityBeacon(BlockEntityType<TileEntityBeacon> pType, BlockPos pPos, BlockState pBlockState)
 	{
-		Map<Integer, Map<BlockPos, Integer>> mapBeaconPositionByDimension = mapBeaconPositionByTierDimension.get(tier);
+		super(pType, pPos, pBlockState);
+	}
+
+	private static Map<ResourceKey<Level>, Map<BlockPos, Integer>> getBeaconPositionsForTier(int tier)
+	{
+		Map<ResourceKey<Level>, Map<BlockPos, Integer>> mapBeaconPositionByDimension = mapBeaconPositionByTierDimension.get(tier);
 		if (mapBeaconPositionByDimension == null)
 		{
 			mapBeaconPositionByDimension = new HashMap<>();
@@ -55,17 +61,18 @@ public class TileEntityBeacon extends BlockEntity implements ITickable
 
 	public static Map<BlockPos, Integer> getBeaconPositionsForTierAndDimension(int tier, @Nonnull Level level)
 	{
-		Map<Integer, Map<BlockPos, Integer>> mapBeaconPositionByDimension = getBeaconPositionsForTier(tier);
-		// TODO: dimension id?
-		int idDimension = level.dimension();
+		Map<ResourceKey<Level>, Map<BlockPos, Integer>> mapBeaconPositionByDimension = getBeaconPositionsForTier(tier);
+		ResourceKey<Level> idDimension = level.dimension();
+
 		return mapBeaconPositionByDimension.computeIfAbsent(idDimension, k -> new HashMap<>());
 	}
 
-	@Override
+	//	@Override
 	public void update()
 	{
 		// TODO: power?
-		boolean working = level.isBlockPowered(worldPosition);
+		assert level != null;
+		boolean working = level.hasNeighborSignal(worldPosition);
 
 		if (!wasWorking && working)
 		{
@@ -109,27 +116,27 @@ public class TileEntityBeacon extends BlockEntity implements ITickable
 						float backOffsetZ = (backwards ? .4F : -.4F);
 
 						// TODO
-						//						clientLevel.spawnParticle(ParticleTypes.SMOKE,
-						//								worldPosition.getX() + .5F + (ns ? xOffset + backOffsetX :
-						//								backOffsetZ),
-						//								worldPosition.getY() + .5F + yOffset,
-						//								worldPosition.getZ() + .5F + (ns ? backOffsetZ : xOffset +
-						//								backOffsetX),
-						//								ns ? xSpeed : 0,
-						//								ySpeed,
-						//								ns ? 0 : xSpeed,
-						//								255, 255, 255);
+						// clientLevel.spawnParticle(ParticleTypes.SMOKE,
+						// 		worldPosition.getX() + .5F + (ns ? xOffset + backOffsetX :
+						// 		backOffsetZ),
+						// 		worldPosition.getY() + .5F + yOffset,
+						// 		worldPosition.getZ() + .5F + (ns ? backOffsetZ : xOffset +
+						// 		backOffsetX),
+						// 		ns ? xSpeed : 0,
+						// 		ySpeed,
+						// 		ns ? 0 : xSpeed,
+						// 		255, 255, 255);
 						//
-						//						clientLevel.spawnParticle(ParticleTypes.SMOKE,
-						//								worldPosition.getX() + .5F + (ns ? -xOffset + backOffsetX :
-						//								backOffsetZ),
-						//								worldPosition.getY() + .5F + yOffset,
-						//								worldPosition.getZ() + .5F + (ns ? backOffsetZ : -xOffset +
-						//								backOffsetX),
-						//								ns ? -xSpeed : 0,
-						//								ySpeed,
-						//								ns ? 0 : -xSpeed,
-						//								255, 255, 255);
+						// clientLevel.spawnParticle(ParticleTypes.SMOKE,
+						// 		worldPosition.getX() + .5F + (ns ? -xOffset + backOffsetX :
+						// 		backOffsetZ),
+						// 		worldPosition.getY() + .5F + yOffset,
+						// 		worldPosition.getZ() + .5F + (ns ? backOffsetZ : -xOffset +
+						// 		backOffsetX),
+						// 		ns ? -xSpeed : 0,
+						// 		ySpeed,
+						// 		ns ? 0 : -xSpeed,
+						// 		255, 255, 255);
 
 						degrees += 18;
 					}

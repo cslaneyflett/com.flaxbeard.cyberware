@@ -26,7 +26,6 @@ import net.minecraftforge.client.event.RenderBlockOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,13 +82,14 @@ public class ItemCybereyeUpgrade extends ItemCyberware implements IMenuItem, IHu
 				&& EnableDisableHelper.isEnabled(itemStackTargeting);
 			if (cache_isHighlighting)
 			{
+				var pos = entityPlayer.position();
 				cache_aabbHighlight = new AABB(
-					entityPlayer.posX - HIGHLIGHT_RANGE,
-					entityPlayer.posY - HIGHLIGHT_RANGE,
-					entityPlayer.posZ - HIGHLIGHT_RANGE,
-					entityPlayer.posX + entityPlayer.width + HIGHLIGHT_RANGE,
-					entityPlayer.posY + entityPlayer.height + HIGHLIGHT_RANGE,
-					entityPlayer.posZ + entityPlayer.width + HIGHLIGHT_RANGE
+					pos.x - HIGHLIGHT_RANGE,
+					pos.y - HIGHLIGHT_RANGE,
+					pos.z - HIGHLIGHT_RANGE,
+					pos.x + entityPlayer.getBbWidth() + HIGHLIGHT_RANGE,
+					pos.y + entityPlayer.getBbHeight() + HIGHLIGHT_RANGE,
+					pos.z + entityPlayer.getBbWidth() + HIGHLIGHT_RANGE
 				);
 			}
 		}
@@ -200,7 +200,7 @@ public class ItemCybereyeUpgrade extends ItemCyberware implements IMenuItem, IHu
 	public void tickStart(TickEvent.ClientTickEvent event)
 	{
 		Minecraft mc = Minecraft.getInstance();
-		if (event.phase == Phase.START)
+		if (event.phase == TickEvent.Phase.START)
 		{
 			wasInUse = inUse;
 
@@ -272,6 +272,8 @@ public class ItemCybereyeUpgrade extends ItemCyberware implements IMenuItem, IHu
 
 			if (!inUse && wasInUse)
 			{
+
+				// TODO: ForgeHooksClient.getFieldOfViewModifier
 				mc.gameSettings.fovSetting = fov;
 				mc.gameSettings.mouseSensitivity = sensitivity;
 			}

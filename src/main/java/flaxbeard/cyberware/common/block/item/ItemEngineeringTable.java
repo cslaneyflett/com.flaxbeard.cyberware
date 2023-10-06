@@ -46,22 +46,22 @@ public class ItemEngineeringTable extends BlockItem implements ICyberwareTabItem
 		}
 	}
 
-	public static void placeDoor(Level worldIn, BlockPos pos, Direction facing, Block door)
-	{
-		BlockPos blockpos2 = pos.above();
-
-		BlockState iblockstate = door.defaultBlockState().setValue(BlockEngineeringTable.FACING, facing);
-		worldIn.setBlockState(pos, iblockstate.setValue(
-			BlockEngineeringTable.HALF,
-			BlockEngineeringTable.EnumEngineeringHalf.LOWER
-		), 2);
-		worldIn.setBlockState(blockpos2, iblockstate.setValue(
-			BlockEngineeringTable.HALF,
-			BlockEngineeringTable.EnumEngineeringHalf.UPPER
-		), 2);
-		worldIn.updateNeighborsAt(pos, door);
-		worldIn.updateNeighborsAt(blockpos2, door);
-	}
+//	public static void placeDoor(Level worldIn, BlockPos pos, Direction facing, Block door)
+//	{
+//		BlockPos blockpos2 = pos.above();
+//
+//		BlockState iblockstate = door.defaultBlockState().setValue(BlockEngineeringTable.FACING, facing);
+//		worldIn.setBlockState(pos, iblockstate.setValue(
+//			BlockEngineeringTable.HALF,
+//			BlockEngineeringTable.EnumEngineeringHalf.LOWER
+//		), 2);
+//		worldIn.setBlockState(blockpos2, iblockstate.setValue(
+//			BlockEngineeringTable.HALF,
+//			BlockEngineeringTable.EnumEngineeringHalf.UPPER
+//		), 2);
+//		worldIn.updateNeighborsAt(pos, door);
+//		worldIn.updateNeighborsAt(blockpos2, door);
+//	}
 
 	@Override
 	@OnlyIn(Dist.CLIENT)

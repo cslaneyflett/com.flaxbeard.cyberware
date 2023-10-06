@@ -4,13 +4,15 @@ import com.google.common.collect.HashMultimap;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -31,18 +33,18 @@ public class ItemBoneUpgrade extends ItemCyberware
 	}
 
 	private static final UUID idBoneHealthAttribute = UUID.fromString("8bce997a-4c3a-11e6-beb8-9e71128cae77");
-	private static final HashMap<Integer, HashMultimap<String, AttributeModifier>> multimapBoneHealthAttributes =
+	private static final HashMap<Integer, HashMultimap<Attribute, AttributeModifier>> multimapBoneHealthAttributes =
 		new HashMap<>(MAX_STACK_SIZE_LACING + 1);
 
-	private static HashMultimap<String, AttributeModifier> getBoneHealthAttribute(int stackSize)
+	private static HashMultimap<Attribute, AttributeModifier> getBoneHealthAttribute(int stackSize)
 	{
-		HashMultimap<String, AttributeModifier> multimapBoneHealthAttribute =
+		HashMultimap<Attribute, AttributeModifier> multimapBoneHealthAttribute =
 			multimapBoneHealthAttributes.get(stackSize);
 		if (multimapBoneHealthAttribute == null)
 		{
 			multimapBoneHealthAttribute = HashMultimap.create();
 			multimapBoneHealthAttribute.put(Attributes.MAX_HEALTH, new AttributeModifier(idBoneHealthAttribute, "Bone " +
-				"hp upgrade", 4F * stackSize, 0));
+				"hp upgrade", 4F * stackSize, AttributeModifier.Operation.ADDITION));
 			multimapBoneHealthAttributes.put(stackSize, multimapBoneHealthAttribute);
 		}
 		return multimapBoneHealthAttribute;
@@ -53,7 +55,7 @@ public class ItemBoneUpgrade extends ItemCyberware
 	{
 		if (CyberwareItemMetadata.get(stack) == META_LACING)
 		{
-			entityLivingBase.getAttributeMap().applyAttributeModifiers(getBoneHealthAttribute(stack.getCount()));
+			entityLivingBase.getAttributes().addTransientAttributeModifiers(getBoneHealthAttribute(stack.getCount()));
 		}
 	}
 
@@ -62,15 +64,14 @@ public class ItemBoneUpgrade extends ItemCyberware
 	{
 		if (CyberwareItemMetadata.get(stack) == META_LACING)
 		{
-			entityLivingBase.getAttributeMap().removeAttributeModifiers(getBoneHealthAttribute(stack.getCount()));
+			entityLivingBase.getAttributes().removeAttributeModifiers(getBoneHealthAttribute(stack.getCount()));
 		}
 	}
 
 	@SubscribeEvent
-	public void handleJoinWorld(EntityJoinWorldEvent event)
+	public void handleJoinWorld(EntityJoinLevelEvent event)
 	{
-		if (!(event.getEntity() instanceof LivingEntity)) return;
-		LivingEntity entityLivingBase = (LivingEntity) event.getEntity();
+		if (!(event.getEntity() instanceof LivingEntity entityLivingBase)) return;
 		if (entityLivingBase.tickCount % 20 != 0) return;
 
 		ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
@@ -112,21 +113,23 @@ public class ItemBoneUpgrade extends ItemCyberware
 
 	public int getCapacity(ItemStack wareStack)
 	{
-		return wareStack.getItemDamage() == META_BATTERY ? LibConstants.BONE_BATTERY_CAPACITY * wareStack.getCount()
+		return CyberwareItemMetadata.matches(wareStack, META_BATTERY)
+			? LibConstants.BONE_BATTERY_CAPACITY * wareStack.getCount()
 			: 0;
 	}
 
 	@Override
 	public int installedStackSize(ItemStack stack)
 	{
-		return CyberwareItemMetadata.get(stack) == META_LACING ? MAX_STACK_SIZE_LACING
-			: CyberwareItemMetadata.get(stack) == META_BATTERY ? 4 : 1;
+		return CyberwareItemMetadata.matches(stack, META_LACING)
+			? MAX_STACK_SIZE_LACING
+			: CyberwareItemMetadata.matches(stack, META_BATTERY) ? 4 : 1;
 	}
 
 	@Override
 	protected int getUnmodifiedEssenceCost(ItemStack stack)
 	{
-		if (CyberwareItemMetadata.get(stack) == META_LACING)
+		if (CyberwareItemMetadata.matches(stack, META_LACING))
 		{
 			switch (stack.getCount())
 			{

@@ -26,6 +26,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
@@ -371,7 +372,7 @@ public final class CyberwareAPI
 	public static ICyberwareUserData getCapabilityOrNull(@Nullable Entity targetEntity)
 	{
 		if (targetEntity == null) return null;
-		return (ICyberwareUserData) targetEntity.getCapability(CYBERWARE_CAPABILITY, Direction.EAST);
+		return targetEntity.getCapability(CYBERWARE_CAPABILITY, Direction.EAST).resolve().orElse(null);
 	}
 
 	/**

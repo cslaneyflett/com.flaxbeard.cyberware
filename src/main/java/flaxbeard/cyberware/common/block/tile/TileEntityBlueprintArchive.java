@@ -129,6 +129,7 @@ public class TileEntityBlueprintArchive extends BlockEntity
 
 	public boolean isUsableByPlayer(Player entityPlayer)
 	{
+		assert this.level != null;
 		return this.level.getBlockEntity(worldPosition) == this
 			&& entityPlayer.position().distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
 			worldPosition.getZ() + 0.5D

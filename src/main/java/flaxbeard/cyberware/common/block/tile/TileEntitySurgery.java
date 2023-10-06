@@ -29,6 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.items.ItemStackHandler;
 
@@ -82,7 +83,7 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 					ItemStack toPut = cyberwares.get(indexSlot).copy();
 
 					// If there's a new item, don't set it to discard by default unless it conflicts
-					if (!ItemStack.areItemStacksEqual(
+					if (!ItemStack.tagMatches(
 						toPut,
 						slotsPlayer.getStackInSlot(slot.ordinal() * LibConstants.WARE_PER_SLOT + indexSlot)
 					))
@@ -446,8 +447,14 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 
 				if (progressTicks > 20 && progressTicks < 60)
 				{
-					targetEntity.posX = pos.getX() + .5F;
-					targetEntity.posZ = pos.getZ() + .5F;
+					targetEntity.setPos(
+						targetEntity
+							.position()
+							.add(new Vec3(pos.getX() + .5F, 0, pos.getZ() + .5F))
+					);
+
+					// targetEntity.posX = pos.getX() + .5F;
+					// targetEntity.posZ = pos.getZ() + .5F;
 				}
 
 				if (progressTicks >= 20 && progressTicks <= 60 && progressTicks % 5 == 0)
@@ -515,6 +522,7 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 
 	public void processUpdate(ICyberwareUserData cyberwareUserData)
 	{
+		assert level != null;
 		updatePlayerSlots(targetEntity, cyberwareUserData);
 
 		for (int indexCyberSlot = 0; indexCyberSlot < EnumSlot.values().length; indexCyberSlot++)
@@ -549,8 +557,7 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 
 					if (!itemStackPlayer.isEmpty())
 					{
-						itemStackPlayer = CyberwareAPI.sanitize(itemStackPlayer);
-
+						CyberwareAPI.sanitize(itemStackPlayer);
 						addItemStack(targetEntity, itemStackPlayer);
 					}
 
@@ -560,8 +567,7 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 				{
 					if (discardSlots[indexCyberware])
 					{
-						itemStackPlayer = CyberwareAPI.sanitize(itemStackPlayer);
-
+						CyberwareAPI.sanitize(itemStackPlayer);
 						addItemStack(targetEntity, itemStackPlayer);
 					} else
 					{
@@ -578,9 +584,11 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 				!isEssentialMissing[indexCyberSlot * 2 + 1]
 			);
 		}
+
 		cyberwareUserData.setTolerance(targetEntity, essence);
 		cyberwareUserData.updateCapacity();
 		cyberwareUserData.setImmune();
+
 		if (!level.isClientSide())
 		{
 			CyberwareAPI.updateData(targetEntity);

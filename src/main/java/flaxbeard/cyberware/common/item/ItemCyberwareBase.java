@@ -31,12 +31,12 @@ public class ItemCyberwareBase extends Item
 	@Override
 	public String getTranslationKey(ItemStack itemstack)
 	{
-		int damage = itemstack.getItemDamage();
-		if (damage >= subnames.length)
+		int flag = CyberwareItemMetadata.get(itemstack);
+		if (flag >= subnames.length)
 		{
 			return super.getTranslationKey();
 		}
-		return super.getTranslationKey(itemstack) + "." + subnames[damage];
+		return super.getTranslationKey(itemstack) + "." + subnames[flag];
 	}
 
 	public void getSubItems(@Nonnull CreativeModeTab tab, @Nonnull NonNullList<ItemStack> list)

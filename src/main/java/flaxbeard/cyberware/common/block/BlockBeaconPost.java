@@ -16,15 +16,18 @@ import net.minecraft.item.ItemLead;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumHand;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.LevelReader;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
@@ -40,20 +43,20 @@ public class BlockBeaconPost extends Block
 	/**
 	 * Whether this fence connects in the northern direction
 	 */
-	public static final PropertyBool NORTH = PropertyBool.create("north");
+	public static final BooleanProperty NORTH = BooleanProperty.create("north");
 	/**
 	 * Whether this fence connects in the eastern direction
 	 */
-	public static final PropertyBool EAST = PropertyBool.create("east");
+	public static final BooleanProperty EAST = BooleanProperty.create("east");
 	/**
 	 * Whether this fence connects in the southern direction
 	 */
-	public static final PropertyBool SOUTH = PropertyBool.create("south");
+	public static final BooleanProperty SOUTH = BooleanProperty.create("south");
 	/**
 	 * Whether this fence connects in the western direction
 	 */
-	public static final PropertyBool WEST = PropertyBool.create("west");
-	public static final PropertyInteger TRANSFORMED = PropertyInteger.create("transformed", 0, 2);
+	public static final BooleanProperty WEST = BooleanProperty.create("west");
+	public static final IntegerProperty TRANSFORMED = IntegerProperty.create("transformed", 0, 2);
 	protected static final AABB[] BOUNDING_BOXES = new AABB[]{new AABB(0.375D, 0.0D, 0.375D, 0.625D, 1.0D, 0.625D),
 		new AABB(0.375D, 0.0D, 0.375D, 0.625D, 1.0D, 1.0D), new AABB(0.0D, 0.0D, 0.375D, 0.625D, 1.0D, 0.625D),
 		new AABB(0.0D, 0.0D, 0.375D, 0.625D, 1.0D, 1.0D), new AABB(0.375D, 0.0D, 0.0D, 0.625D, 1.0D, 0.625D),
@@ -98,11 +101,11 @@ public class BlockBeaconPost extends Block
 
 		CyberwareContent.blocks.add(this);
 
-		GameRegistry.registerTileEntity(TileEntityBeaconPost.class, new ResourceLocation(Cyberware.MODID, name));
-		GameRegistry.registerTileEntity(TileEntityBeaconPostMaster.class, new ResourceLocation(
-			Cyberware.MODID,
-			name + "_master"
-		));
+//		GameRegistry.registerTileEntity(TileEntityBeaconPost.class, new ResourceLocation(Cyberware.MODID, name));
+//		GameRegistry.registerTileEntity(TileEntityBeaconPostMaster.class, new ResourceLocation(
+//			Cyberware.MODID,
+//			name + "_master"
+//		));
 
 		setDefaultState(blockState.getBaseState()
 			.withProperty(TRANSFORMED, 0)
@@ -124,7 +127,7 @@ public class BlockBeaconPost extends Block
 			{
 				for (int z = -1; z <= 1; z++)
 				{
-					BlockPos start = blockPos.add(x, y, z);
+					BlockPos start = blockPos.offset(x, y, z);
 
 					boolean isCompleted = complete(world, start);
 					if (isCompleted)
@@ -150,7 +153,7 @@ public class BlockBeaconPost extends Block
 						continue;
 					}
 
-					BlockPos newPos = start.add(x, y, z);
+					BlockPos newPos = start.offset(x, y, z);
 
 					BlockState state = world.getBlockState(newPos);
 					Block block = state.getBlock();
@@ -231,7 +234,7 @@ public class BlockBeaconPost extends Block
 	@SuppressWarnings("deprecation")
 	@Nonnull
 	@Override
-	public AABB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos)
+	public AABB getBoundingBox(BlockState state, LevelReader source, BlockPos pos)
 	{
 		state = this.getActualState(state, source, pos);
 		return BOUNDING_BOXES[getBoundingBoxIdx(state)];
@@ -284,12 +287,12 @@ public class BlockBeaconPost extends Block
 		return false;
 	}
 
-	public boolean isPassable(IBlockAccess worldIn, BlockPos pos)
+	public boolean isPassable(LevelReader worldIn, BlockPos pos)
 	{
 		return false;
 	}
 
-	public boolean canConnectTo(IBlockAccess worldIn, BlockPos pos)
+	public boolean canConnectTo(LevelReader worldIn, BlockPos pos)
 	{
 		BlockState iblockstate = worldIn.getBlockState(pos);
 		Block block = iblockstate.getBlock();
@@ -302,7 +305,7 @@ public class BlockBeaconPost extends Block
 	@OnlyIn(Dist.CLIENT)
 	@SuppressWarnings("deprecation")
 	@Override
-	public boolean shouldSideBeRendered(BlockState blockState, @Nonnull IBlockAccess blockAccess,
+	public boolean shouldSideBeRendered(BlockState blockState, @Nonnull LevelReader blockAccess,
 										@Nonnull BlockPos pos, Direction side)
 	{
 		return true;
@@ -333,7 +336,7 @@ public class BlockBeaconPost extends Block
 	@SuppressWarnings("deprecation")
 	@Nonnull
 	@Override
-	public BlockState getActualState(BlockState state, IBlockAccess worldIn, BlockPos pos)
+	public BlockState getActualState(BlockState state, LevelReader worldIn, BlockPos pos)
 	{
 		return state.withProperty(NORTH, this.canConnectTo(worldIn, pos.north()))
 			.withProperty(EAST, this.canConnectTo(worldIn, pos.east()))
@@ -454,7 +457,7 @@ public class BlockBeaconPost extends Block
 	}
 
 	@Override
-	public boolean isLadder(BlockState state, IBlockAccess world, BlockPos pos, LivingEntity entityLivingBase)
+	public boolean isLadder(BlockState state, LevelReader world, BlockPos pos, LivingEntity entityLivingBase)
 	{
 		return state.getValue(TRANSFORMED) > 0;
 	}

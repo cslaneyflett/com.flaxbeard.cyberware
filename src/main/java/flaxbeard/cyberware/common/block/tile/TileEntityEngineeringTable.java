@@ -481,10 +481,10 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 					break;
 			}
 
-			if (slots.getStackInSlot(0).isItemStackDamageable()) // Damaged items yield less
+			if (slots.getStackInSlot(0).isDamageableItem()) // Damaged items yield less
 			{
 				float percent =
-					(slots.getStackInSlot(0).getItemDamage() * 1F / slots.getStackInSlot(0).getMaxDamage());
+					(slots.getStackInSlot(0).getDamageValue() * 1F / slots.getStackInSlot(0).getMaxDamage());
 				int addl = (int) (random.size() * percent);
 				addl = Math.max(0, addl - 1);
 				numToRemove += addl;
@@ -561,7 +561,7 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 
 				if (!level.isClientSide())
 				{
-					if (doBlueprint && getLevel().getRandom().nextFloat() < (CyberwareConfig.INSTANCE.ENGINEERING_CHANCE.get() / 100F))
+					if (doBlueprint && level.getRandom().nextFloat() < (CyberwareConfig.INSTANCE.ENGINEERING_CHANCE.get() / 100F))
 					{
 						ItemStack blue = ItemBlueprint.getBlueprintForItem(toDestroy);
 						random.add(blue);
@@ -605,8 +605,8 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 					current.shrink(1);
 					if (current.getCount() <= 0 || current.isEmpty())
 					{
-						world.notifyBlockUpdate(pos, world.getBlockState(worldPosition),
-							world.getBlockState(worldPosition), 2
+						level.notifyBlockUpdate(pos, level.getBlockState(worldPosition),
+							level.getBlockState(worldPosition), 2
 						);
 
 						current = ItemStack.EMPTY;
@@ -624,7 +624,8 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 	@Override
 	public void update()
 	{
-		if (level.isBlockPowered(worldPosition) || level.isBlockPowered(worldPosition.offset(0, -1, 0)))
+		assert level != null;
+		if (level.hasNeighborSignal(worldPosition) || level.hasNeighborSignal(worldPosition.offset(0, -1, 0)))
 		{
 			if (time == 0)
 			{

@@ -87,14 +87,16 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 		}
 
 		float range = 25F;
+		var pos = entityLivingBase.position();
 		List<LivingEntity> entitiesInRange = entityLivingBase.level.getEntitiesOfClass(
 			LivingEntity.class,
-			new AABB(entityLivingBase.posX - range, entityLivingBase.posY - range, entityLivingBase.posZ - range,
-				entityLivingBase.posX + entityLivingBase.width + range,
-				entityLivingBase.posY + entityLivingBase.height + range,
-				entityLivingBase.posZ + entityLivingBase.width + range
+			new AABB(pos.x - range, pos.y - range, pos.z - range,
+				pos.x + entityLivingBase.getBbWidth() + range,
+				pos.y + entityLivingBase.getBbHeight() + range,
+				pos.z + entityLivingBase.getBbWidth() + range
 			)
 		);
+
 		for (LivingEntity entityInRange : entitiesInRange)
 		{
 			if (entityLivingBase.distanceTo(entityInRange) <= range)

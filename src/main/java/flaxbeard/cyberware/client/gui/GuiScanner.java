@@ -3,6 +3,7 @@ package flaxbeard.cyberware.client.gui;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.common.block.tile.TileEntityScanner;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.language.I18n;
@@ -79,19 +80,19 @@ public class GuiScanner extends GuiContainer
 		this.fontRenderer.drawString(s, 6, 7, 0x1DA9C1);
 
 
-		float chance = 0F;
+		double chance = 0D;
 		if (!scanner.slots.getStackInSlot(0).isEmpty())
 		{
 			chance =
 				CyberwareConfig.INSTANCE.SCANNER_CHANCE.get() + (CyberwareConfig.INSTANCE.SCANNER_CHANCE_ADDL.get() * (scanner.slots.getStackInSlot(0).getCount() - 1));
-			if (scanner.slots.getStackInSlot(0).isItemStackDamageable())
+			if (CyberwareItemMetadata.has(scanner.slots.getStackInSlot(0)))
 			{
 				chance =
-					50F * (1F - (scanner.slots.getStackInSlot(0).getItemDamage() * 1F / scanner.slots.getStackInSlot(0).getMaxDamage()));
+					50F * (1F - (CyberwareItemMetadata.get(scanner.slots.getStackInSlot(0)) * 1F / scanner.slots.getStackInSlot(0).getMaxDamage()));
 			}
 			chance = Math.min(chance, 50F);
 		}
-		String num = Float.toString(Math.round(chance * 100F) / 100F) + "%";
+		String num = (Math.round(chance * 100F) / 100F) + "%";
 		s = I18n.get("cyberware.gui.percent", num);
 		this.fontRenderer.drawString(s, this.xSize - 6 - fontRenderer.getStringWidth(s), 7, 0x1DA9C1);
 

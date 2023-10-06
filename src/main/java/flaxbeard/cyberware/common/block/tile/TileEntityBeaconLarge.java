@@ -22,10 +22,10 @@ public class TileEntityBeaconLarge extends TileEntityBeacon implements ITickable
 	{
 		BlockState master = level.getBlockState(worldPosition.offset(0, -10, 0));
 
-		boolean powered = level.isBlockPowered(worldPosition.offset(1, -10, 0))
-			|| level.isBlockPowered(worldPosition.offset(-1, -10, 0))
-			|| level.isBlockPowered(worldPosition.offset(0, -10, 1))
-			|| level.isBlockPowered(worldPosition.offset(0, -10, -1));
+		boolean powered = level.hasNeighborSignal(worldPosition.offset(1, -10, 0))
+			|| level.hasNeighborSignal(worldPosition.offset(-1, -10, 0))
+			|| level.hasNeighborSignal(worldPosition.offset(0, -10, 1))
+			|| level.hasNeighborSignal(worldPosition.offset(0, -10, -1));
 		boolean working =
 			!powered && master.getBlock() == CyberwareContent.radioPost && master.getValue(BlockBeaconPost.TRANSFORMED) == 2;
 

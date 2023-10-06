@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -22,14 +23,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class ItemSurgeryChamber extends Item implements ICyberwareTabItem
+public class ItemSurgeryChamber extends BlockItem implements ICyberwareTabItem
 {
-	private Block block;
 	private String[] tt;
 
 	public ItemSurgeryChamber(Block block, String... tooltip)
 	{
-		this.block = block;
+		super(block, new Properties());
 		this.tt = tooltip;
 	}
 
@@ -47,22 +47,22 @@ public class ItemSurgeryChamber extends Item implements ICyberwareTabItem
 		}
 	}
 
-	public static void placeDoor(Level worldIn, BlockPos pos, Direction facing, Block door)
-	{
-		BlockPos blockpos2 = pos.above();
-
-		BlockState iblockstate = door.defaultBlockState().setValue(BlockSurgeryChamber.FACING, facing);
-		worldIn.setBlockState(pos, iblockstate.setValue(
-			BlockSurgeryChamber.HALF,
-			BlockSurgeryChamber.EnumChamberHalf.LOWER
-		), 2);
-		worldIn.setBlockState(blockpos2, iblockstate.setValue(
-			BlockSurgeryChamber.HALF,
-			BlockSurgeryChamber.EnumChamberHalf.UPPER
-		), 2);
-		worldIn.updateNeighborsAt(pos, door);
-		worldIn.updateNeighborsAt(blockpos2, door);
-	}
+//	public static void placeDoor(Level worldIn, BlockPos pos, Direction facing, Block door)
+//	{
+//		BlockPos blockpos2 = pos.above();
+//
+//		BlockState iblockstate = door.defaultBlockState().setValue(BlockSurgeryChamber.FACING, facing);
+//		worldIn.setBlockState(pos, iblockstate.setValue(
+//			BlockSurgeryChamber.HALF,
+//			BlockSurgeryChamber.EnumChamberHalf.LOWER
+//		), 2);
+//		worldIn.setBlockState(blockpos2, iblockstate.setValue(
+//			BlockSurgeryChamber.HALF,
+//			BlockSurgeryChamber.EnumChamberHalf.UPPER
+//		), 2);
+//		worldIn.updateNeighborsAt(pos, door);
+//		worldIn.updateNeighborsAt(blockpos2, door);
+//	}
 
 	@Override
 	@OnlyIn(Dist.CLIENT)
