@@ -7,6 +7,7 @@ import flaxbeard.cyberware.common.item.ItemBlueprint;
 import flaxbeard.cyberware.common.misc.SpecificWrapper;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.ScannerSmashPacket;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -14,24 +15,22 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ITickable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RangedWrapper;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -41,8 +40,22 @@ import java.util.List;
 
 public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 {
+	public TileEntityEngineeringTable(BlockPos pPos, BlockState pBlockState)
+	{
+		super(BlockEntities.ENGINEERING_TABLE.get(), pPos, pBlockState);
+	}
+
+	public TileEntityEngineeringTable(BlockEntityType<? extends TileEntityEngineeringTable> pType, BlockPos pPos, BlockState pBlockState)
+	{
+		super(pType, pPos, pBlockState);
+	}
+
 	public static class TileEntityEngineeringDummy extends BlockEntity
 	{
+		public TileEntityEngineeringDummy(BlockPos pPos, BlockState pBlockState)
+		{
+			super(BlockEntities.ENGINEERING_TABLE_DUMMY.get(), pPos, pBlockState);
+		}
 
 		//		@Override
 		//		public boolean hasCapability(Capability<?> capability, Direction facing)
@@ -82,21 +95,23 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		}
 
 		@Override
-		public void setStackInSlot(int slot, ItemStack stack)
+		public void setStackInSlot(int slot, @Nonnull ItemStack stack)
 		{
-			boolean check = false;
-			if (slot == 0 && this.getStackInSlot(0).isEmpty() && !level.isClientSide())
-			{
-				check = true;
-			}
+			assert level != null && table.level != null;
+			boolean check = slot == 0 && this.getStackInSlot(0).isEmpty() && !level.isClientSide();
 
 			super.setStackInSlot(slot, stack);
 
 			if (check)
 			{
-				table.level.setBlockState(worldPosition, table.level.getBlockState(worldPosition), 2);
-				table.level.notifyBlockUpdate(worldPosition, table.level.getBlockState(worldPosition),
-					table.level.getBlockState(worldPosition), 2
+				table.level.getChunk(worldPosition)
+					.setBlockState(worldPosition, table.level.getBlockState(worldPosition), false);
+
+				table.level.sendBlockUpdated(
+					worldPosition,
+					table.level.getBlockState(worldPosition),
+					table.level.getBlockState(worldPosition),
+					2
 				);
 			}
 
@@ -108,22 +123,18 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 
 		@Nonnull
 		@Override
-		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate)
+		public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate)
 		{
 			if (!isItemValidForSlot(slot, stack)) return stack;
+			assert table.level != null && level != null;
 
-			boolean check = false;
-			if (slot == 0 && this.getStackInSlot(0).isEmpty() && !simulate && !level.isClientSide())
-			{
-				check = true;
-			}
+			boolean check = slot == 0 && this.getStackInSlot(0).isEmpty() && !simulate && !level.isClientSide();
 
 			ItemStack result = super.insertItem(slot, stack, simulate);
-
 			if (check)
 			{
-				table.level.setBlockState(worldPosition, table.level.getBlockState(worldPosition), 2);
-				table.level.notifyBlockUpdate(worldPosition, table.level.getBlockState(worldPosition),
+				table.level.getChunk(worldPosition).setBlockState(worldPosition, table.level.getBlockState(worldPosition), false);
+				table.level.sendBlockUpdated(worldPosition, table.level.getBlockState(worldPosition),
 					table.level.getBlockState(worldPosition), 2
 				);
 			}
@@ -160,31 +171,25 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		{
 			if (overrideExtract) return true;
 			if (!getStackInSlot(8).isEmpty() && (slot >= 2 && slot <= 7)) return false;
-			if (slot == 1 || slot == 8) return false;
-			return true;
+			return slot != 1 && slot != 8;
 		}
 
 		public boolean isItemValidForSlot(int slot, ItemStack stack)
 		{
-			switch (slot)
+			return switch (slot)
 			{
-				case 0:
-					return CyberwareAPI.canDeconstruct(stack);
-				case 1:
-					return stack.is(Items.PAPER);
-				case 8:
-					return !stack.isEmpty() && stack.getItem() instanceof IBlueprint;
-				case 9:
-					return false;
-				default:
-					return overrideExtract || !CyberwareAPI.canDeconstruct(stack);
-			}
+				case 0 -> CyberwareAPI.canDeconstruct(stack);
+				case 1 -> stack.is(Items.PAPER);
+				case 8 -> !stack.isEmpty() && stack.getItem() instanceof IBlueprint;
+				case 9 -> false;
+				default -> overrideExtract || !CyberwareAPI.canDeconstruct(stack);
+			};
 		}
 	}
 
 	public class GuiWrapper implements IItemHandlerModifiable
 	{
-		private ItemStackHandlerEngineering slots;
+		private final ItemStackHandlerEngineering slots;
 
 		public GuiWrapper(ItemStackHandlerEngineering slots)
 		{
@@ -206,7 +211,7 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 
 		@Nonnull
 		@Override
-		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate)
+		public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate)
 		{
 			slots.overrideExtract = true;
 			ItemStack res = slots.insertItem(slot, stack, simulate);
@@ -225,7 +230,7 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		}
 
 		@Override
-		public void setStackInSlot(int slot, ItemStack stack)
+		public void setStackInSlot(int slot, @Nonnull ItemStack stack)
 		{
 			slots.overrideExtract = true;
 			slots.setStackInSlot(slot, stack);
@@ -239,7 +244,7 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		}
 
 		@Override
-		public boolean isItemValid(int slot, @NotNull ItemStack stack)
+		public boolean isItemValid(int slot, @Nonnull ItemStack stack)
 		{
 			return true;
 		}
@@ -282,9 +287,9 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag tagCompound)
+	public void load(@Nonnull CompoundTag tagCompound)
 	{
-		super.readFromNBT(tagCompound);
+		super.load(tagCompound);
 
 		slots.deserializeNBT(tagCompound.getCompound("inv"));
 
@@ -309,11 +314,10 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		}
 	}
 
-	@Nonnull
 	@Override
-	public CompoundTag writeToNBT(CompoundTag tagCompound)
+	public void saveAdditional(@Nonnull CompoundTag tagCompound)
 	{
-		tagCompound = super.writeToNBT(tagCompound);
+		super.saveAdditional(tagCompound);
 
 		tagCompound.put("inv", this.slots.serializeNBT());
 
@@ -335,33 +339,23 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 			list.add(entry);
 		}
 		tagCompound.put("playerArchive", list);
-		return tagCompound;
-	}
-
-	@Override
-	public void onDataPacket(Connection net, SPacketUpdateTileEntity pkt)
-	{
-		CompoundTag data = pkt.getNbtCompound();
-		this.readFromNBT(data);
-	}
-
-	@Override
-	public SPacketUpdateTileEntity getUpdatePacket()
-	{
-		CompoundTag data = new CompoundTag();
-		this.writeToNBT(data);
-		return new SPacketUpdateTileEntity(worldPosition, 0, data);
 	}
 
 	@Nonnull
 	@Override
 	public CompoundTag getUpdateTag()
 	{
-		return writeToNBT(new CompoundTag());
+		var tag = new CompoundTag();
+		saveAdditional(tag);
+		return tag;
 	}
+
+	@Override
+	public void handleUpdateTag(CompoundTag tag) {load(tag);}
 
 	public boolean isUsableByPlayer(Player entityPlayer)
 	{
+		assert this.level != null;
 		return this.level.getBlockEntity(worldPosition) == this
 			&& entityPlayer.position().distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
 			worldPosition.getZ() + 0.5D
@@ -383,7 +377,7 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		this.customName = name;
 	}
 
-	@Override
+	//	@Override
 	public Component getDisplayName()
 	{
 		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());
@@ -392,9 +386,8 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 	public void updateRecipe()
 	{
 		ItemStack blueprintStack = slots.getStackInSlot(8);
-		if (!blueprintStack.isEmpty() && blueprintStack.getItem() instanceof IBlueprint)
+		if (!blueprintStack.isEmpty() && blueprintStack.getItem() instanceof IBlueprint blueprint)
 		{
-			IBlueprint blueprint = (IBlueprint) blueprintStack.getItem();
 			NonNullList<ItemStack> toCheck = NonNullList.create();
 			for (int indexSlot = 0; indexSlot < 6; indexSlot++)
 			{
@@ -415,9 +408,8 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 	public void subtractResources()
 	{
 		ItemStack blueprintStack = slots.getStackInSlot(8);
-		if (!blueprintStack.isEmpty() && blueprintStack.getItem() instanceof IBlueprint)
+		if (!blueprintStack.isEmpty() && blueprintStack.getItem() instanceof IBlueprint blueprint)
 		{
-			IBlueprint blueprint = (IBlueprint) blueprintStack.getItem();
 			NonNullList<ItemStack> toCheck = NonNullList.create();
 			for (int indexSlot = 0; indexSlot < 6; indexSlot++)
 			{
@@ -462,24 +454,12 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 				}
 			}
 
-			int numToRemove = 1;
-			switch (level.getDifficulty())
+			assert level != null;
+			int numToRemove = switch (level.getDifficulty())
 			{
-				case EASY:
-					numToRemove = 1;
-					break;
-				case HARD:
-					numToRemove = 2;
-					break;
-				case NORMAL:
-					numToRemove = 2;
-					break;
-				case PEACEFUL:
-					numToRemove = 1;
-					break;
-				default:
-					break;
-			}
+				case PEACEFUL, EASY -> 1;
+				case NORMAL, HARD -> 2;
+			};
 
 			if (slots.getStackInSlot(0).isDamageableItem()) // Damaged items yield less
 			{
@@ -551,11 +531,12 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 			{
 				if (pkt)
 				{
-					CyberwarePacketHandler.INSTANCE.sendToAllAround(
-						new ScannerSmashPacket(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ()),
-						new TargetPoint(level.provider.getDimension(), worldPosition.getX(), worldPosition.getY(),
-							worldPosition.getZ(), 25
-						)
+					CyberwarePacketHandler.INSTANCE.send(
+						PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
+							worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(),
+							25, level.dimension()
+						)),
+						new ScannerSmashPacket(worldPosition)
 					);
 				}
 
@@ -605,7 +586,7 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 					current.shrink(1);
 					if (current.getCount() <= 0 || current.isEmpty())
 					{
-						level.notifyBlockUpdate(pos, level.getBlockState(worldPosition),
+						level.sendBlockUpdated(worldPosition, level.getBlockState(worldPosition),
 							level.getBlockState(worldPosition), 2
 						);
 
@@ -646,14 +627,16 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		assert level != null;
 		level.playSound(player, worldPosition, SoundEvents.PISTON_EXTEND, SoundSource.BLOCKS, 1F, 1F);
 		level.playSound(player, worldPosition, SoundEvents.ITEM_BREAK, SoundSource.BLOCKS, 1F, .5F);
-		for (int index = 0; index < 10; index++)
-		{
-			// TODO: particles
-			//			world.spawnParticle(EnumParticleTypes.ITEM_CRACK,
-			//			                    x + .5F, y, z + .5F,
-			//			                    .25F * (world.rand.nextFloat() - .5F), .1F, .25F * (world.rand.nextFloat()
-			//			                    - .5F),
-			//			                    Item.getIdFromItem(slots.getStackInSlot(0).getItem()));
-		}
+		// TODO: particles
+
+		//		for (int index = 0; index < 10; index++)
+		//		{
+		//			level.spawnParticle(EnumParticleTypes.ITEM_CRACK,
+		//				x + .5F, y, z + .5F,
+		//				.25F * (level.getRandom().nextFloat() - .5F), .1F, .25F * (level.getRandom().nextFloat()
+		//					- .5F),
+		//				Item.getIdFromItem(slots.getStackInSlot(0).getItem())
+		//			);
+		//		}
 	}
 }

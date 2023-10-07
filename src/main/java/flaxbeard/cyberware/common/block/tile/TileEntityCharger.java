@@ -3,14 +3,14 @@ package flaxbeard.cyberware.common.block.tile;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.ITickable;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.capabilities.Capability;
@@ -22,57 +22,44 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-// TODO: EnergyStorage
-public class TileEntityCharger extends BlockEntity implements ITickable, IEnergyStorage
+public class TileEntityCharger extends BlockEntity implements IEnergyStorage
 {
 	private final PowerContainer container = new PowerContainer();
-	private final LazyOptional<PowerContainer> lazyContainer = LazyOptional.of(() -> this.container);
+	//	private final LazyOptional<PowerContainer> lazyContainer = LazyOptional.of(() -> this.container);
 	private final LazyOptional<TileEntityCharger> lazySelf = LazyOptional.of(() -> this);
 	private boolean last = false;
 
-	public TileEntityCharger(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState)
+	public TileEntityCharger(BlockPos pPos, BlockState pBlockState)
 	{
-		super(pType, pPos, pBlockState);
+		super(BlockEntities.CHARGER.get(), pPos, pBlockState);
 	}
 
-	//	@Override
-	//	public void readFromNBT(CompoundTag tagCompound)
-	//	{
-	//		super.readFromNBT(tagCompound);
-	//
-	//		container.deserializeNBT(tagCompound.getCompound("power"));
-	//	}
-	//
-	//	@Nonnull
-	//	@Override
-	//	public CompoundTag writeToNBT(CompoundTag tagCompound)
-	//	{
-	//		tagCompound = super.writeToNBT(tagCompound);
-	//		tagCompound.put("power", container.serializeNBT());
-	//		return tagCompound;
-	//	}
-	//
-	//	@Override
-	//	public void onDataPacket(Connection net, SPacketUpdateTileEntity pkt)
-	//	{
-	//		CompoundTag data = pkt.getNbtCompound();
-	//		this.readFromNBT(data);
-	//	}
-	//
-	//	@Override
-	//	public SPacketUpdateTileEntity getUpdatePacket()
-	//	{
-	//		CompoundTag data = new CompoundTag();
-	//		this.writeToNBT(data);
-	//		return new SPacketUpdateTileEntity(pos, 0, data);
-	//	}
+	@Override
+	public void load(@Nonnull CompoundTag tagCompound)
+	{
+		super.load(tagCompound);
+
+		container.deserializeNBT(tagCompound.getCompound("power"));
+	}
+
+	@Override
+	public void saveAdditional(@Nonnull CompoundTag tagCompound)
+	{
+		super.saveAdditional(tagCompound);
+		tagCompound.put("power", container.serializeNBT());
+	}
 
 	@Nonnull
 	@Override
 	public CompoundTag getUpdateTag()
 	{
-		return writeToNBT(new CompoundTag());
+		var tag = new CompoundTag();
+		saveAdditional(tag);
+		return tag;
 	}
+
+	@Override
+	public void handleUpdateTag(CompoundTag tag) {load(tag);}
 
 	@Override
 	public @Nonnull <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability,
@@ -94,13 +81,13 @@ public class TileEntityCharger extends BlockEntity implements ITickable, IEnergy
 	//		return super.hasCapability(capability, facing);
 	//	}
 
-	@Override
-	public void update()
+	public static void tick(Level level, BlockPos pos, BlockState state, TileEntityCharger blockEntity)
 	{
+		assert level != null;
 		List<LivingEntity> entitiesInRange = level.getEntitiesOfClass(
 			LivingEntity.class,
-			new AABB(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(),
-				worldPosition.getX() + 1F, worldPosition.getY() + 2.5F, worldPosition.getZ() + 1F
+			new AABB(pos.getX(), pos.getY(), pos.getZ(),
+				pos.getX() + 1F, pos.getY() + 2.5F, pos.getZ() + 1F
 			)
 		);
 		for (LivingEntity entityInRange : entitiesInRange)
@@ -108,43 +95,48 @@ public class TileEntityCharger extends BlockEntity implements ITickable, IEnergy
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityInRange);
 			if (cyberwareUserData != null
 				&& !cyberwareUserData.isAtCapacity(ItemStack.EMPTY, 20)
-				&& (container.getStoredPower() >= CyberwareConfig.INSTANCE.TESLA_PER_POWER.get()))
+				&& (blockEntity.container.getStoredPower() >= CyberwareConfig.INSTANCE.TESLA_PER_POWER.get()))
 			{
 				if (!level.isClientSide())
 				{
-					container.takePower(CyberwareConfig.INSTANCE.TESLA_PER_POWER.get(), false);
+					blockEntity.container.takePower(CyberwareConfig.INSTANCE.TESLA_PER_POWER.get(), false);
 				}
 				cyberwareUserData.addPower(20, ItemStack.EMPTY);
 
-				if (entityInRange.tickCount % 5 == 0)
-				{
-					// TODO: particles
-					//					world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
-					//					.5F,worldPosition.getY() + 1F, worldPosition.getZ() + .5F, 0F, .05F, 0F, 255,
-					//					150, 255);
-					//					world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
-					//					.5F,worldPosition.getY() + 1F, worldPosition.getZ() + .5F, .04F, .05F, .04F,
-					//					255, 150, 255);
-					//					world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
-					//					.5F,worldPosition.getY() + 1F, worldPosition.getZ() + .5F, -.04F, .05F, .04F,
-					//					255, 150, 255);
-					//					world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
-					//					.5F,worldPosition.getY() + 1F, worldPosition.getZ() + .5F, .04F, .05F, -.04F,
-					//					255, 150, 255);
-					//					world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
-					//					.5F,worldPosition.getY() + 1F, worldPosition.getZ() + .5F, -.04F, .05F, -.04F,
-					//					255, 150, 255);
-				}
+				// TODO: particles
+
+				//				if (entityInRange.tickCount % 5 == 0)
+				//				{
+				//					level.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
+				//							.5F, worldPosition.getY() + 1F, worldPosition.getZ() + .5F, 0F, .05F, 0F, 255,
+				//						150, 255
+				//					);
+				//					level.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
+				//							.5F, worldPosition.getY() + 1F, worldPosition.getZ() + .5F, .04F, .05F, .04F,
+				//						255, 150, 255
+				//					);
+				//					level.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
+				//							.5F, worldPosition.getY() + 1F, worldPosition.getZ() + .5F, -.04F, .05F, .04F,
+				//						255, 150, 255
+				//					);
+				//					level.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
+				//							.5F, worldPosition.getY() + 1F, worldPosition.getZ() + .5F, .04F, .05F, -.04F,
+				//						255, 150, 255
+				//					);
+				//					level.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, worldPosition.getX() +
+				//							.5F, worldPosition.getY() + 1F, worldPosition.getZ() + .5F, -.04F, .05F, -.04F,
+				//						255, 150, 255
+				//					);
+				//				}
 			}
 		}
 
-		boolean hasPower = (container.getStoredPower() >= CyberwareConfig.INSTANCE.TESLA_PER_POWER.get());
-		if (hasPower != last && !level.isClientSide())
+		boolean hasPower = (blockEntity.container.getStoredPower() >= CyberwareConfig.INSTANCE.TESLA_PER_POWER.get());
+		if (hasPower != blockEntity.last && !level.isClientSide())
 		{
-			BlockState state = level.getBlockState(worldPosition);
-			level.markAndNotifyBlock(worldPosition, level.getChunkAt(worldPosition), state, state, 2, 0); // TODO: not
-			// sure if right
-			last = hasPower;
+			level.markAndNotifyBlock(pos, level.getChunkAt(pos), state, state, 2, 0);
+			// TODO: not sure if right
+			blockEntity.last = hasPower;
 		}
 	}
 

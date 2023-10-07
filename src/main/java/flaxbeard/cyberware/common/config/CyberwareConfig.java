@@ -1,5 +1,7 @@
 package flaxbeard.cyberware.common.config;
 
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -20,7 +22,7 @@ public class CyberwareConfig
 		INSTANCE_SPEC = pair.getRight();
 	}
 
-	public final ForgeConfigSpec.ConfigValue<List<? extends Integer>> MOBS_DIMENSION_IDS;
+	public final ForgeConfigSpec.ConfigValue<List<? extends ResourceKey<Level>>> MOBS_DIMENSION_IDS;
 	public final ForgeConfigSpec.BooleanValue MOBS_ENABLE_CYBER_ZOMBIES;
 	public final ForgeConfigSpec.IntValue MOBS_CYBER_ZOMBIE_WEIGHT;
 	public final ForgeConfigSpec.IntValue MOBS_CYBER_ZOMBIE_MIN_PACK;

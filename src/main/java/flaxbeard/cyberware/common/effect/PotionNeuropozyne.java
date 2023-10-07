@@ -8,11 +8,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class PotionNeuropozyne extends MobEffectInstance
+public class PotionNeuropozyne extends MobEffect
 {
 	private static final ResourceLocation resource = new ResourceLocation(Cyberware.MODID + ":textures/gui/potions" +
 		".png");

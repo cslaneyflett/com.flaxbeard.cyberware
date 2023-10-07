@@ -1,14 +1,15 @@
 package flaxbeard.cyberware.common.block.tile;
 
 import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.registry.BlockEntities;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -19,6 +20,11 @@ import javax.annotation.Nullable;
 
 public class TileEntityComponentBox extends BlockEntity
 {
+	public TileEntityComponentBox(BlockPos pPos, BlockState pBlockState)
+	{
+		super(BlockEntities.COMPONENT_BOX.get(), pPos, pBlockState);
+	}
+
 	public static class ItemStackHandlerComponent extends ItemStackHandler
 	{
 		public ItemStackHandlerComponent(int size)
@@ -43,7 +49,8 @@ public class TileEntityComponentBox extends BlockEntity
 		}
 	}
 
-	public LazyOptional<ItemStackHandler> slots = LazyOptional.of(() -> new ItemStackHandlerComponent(18));
+	public final ItemStackHandler slots = new ItemStackHandlerComponent(18);
+	public LazyOptional<ItemStackHandler> lazySlots = LazyOptional.of(() -> slots);
 	public String customName = null;
 	public boolean doDrop = true;
 
@@ -62,16 +69,16 @@ public class TileEntityComponentBox extends BlockEntity
 	{
 		if (capability == ForgeCapabilities.ITEM_HANDLER)
 		{
-			return slots.cast();
+			return lazySlots .cast();
 		}
 
 		return super.getCapability(capability, facing);
 	}
 
 	@Override
-	public void readFromNBT(@Nonnull CompoundTag tagCompound)
+	public void load(@Nonnull CompoundTag tagCompound)
 	{
-		super.readFromNBT(tagCompound);
+		super.load(tagCompound);
 
 		slots.deserializeNBT(tagCompound.getCompound("inv"));
 
@@ -81,11 +88,10 @@ public class TileEntityComponentBox extends BlockEntity
 		}
 	}
 
-	@Nonnull
 	@Override
-	public CompoundTag writeToNBT(@Nonnull CompoundTag tagCompound)
+	public void saveAdditional(@Nonnull CompoundTag tagCompound)
 	{
-		tagCompound = super.writeToNBT(tagCompound);
+		super.saveAdditional(tagCompound);
 
 		tagCompound.put("inv", slots.serializeNBT());
 
@@ -93,31 +99,19 @@ public class TileEntityComponentBox extends BlockEntity
 		{
 			tagCompound.putString("CustomName", customName);
 		}
-
-		return tagCompound;
-	}
-
-	@Override
-	public void onDataPacket(Connection networkManager, SPacketUpdateTileEntity packetUpdateTileEntity)
-	{
-		CompoundTag tagCompound = packetUpdateTileEntity.getNbtCompound();
-		readFromNBT(tagCompound);
-	}
-
-	@Override
-	public SPacketUpdateTileEntity getUpdatePacket()
-	{
-		CompoundTag tagCompound = new CompoundTag();
-		writeToNBT(tagCompound);
-		return new SPacketUpdateTileEntity(worldPosition, 0, tagCompound);
 	}
 
 	@Nonnull
 	@Override
 	public CompoundTag getUpdateTag()
 	{
-		return writeToNBT(new CompoundTag());
+		var tag = new CompoundTag();
+		saveAdditional(tag);
+		return tag;
 	}
+
+	@Override
+	public void handleUpdateTag(CompoundTag tag) {load(tag);}
 
 	public boolean isUsableByPlayer(Player entityPlayer)
 	{
@@ -143,7 +137,7 @@ public class TileEntityComponentBox extends BlockEntity
 		customName = name;
 	}
 
-	@Override
+//	@Override
 	public Component getDisplayName()
 	{
 		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());

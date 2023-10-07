@@ -8,7 +8,7 @@ import flaxbeard.cyberware.common.handler.EssentialsMissingHandler;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -82,7 +82,7 @@ public class ItemCybereyes extends ItemCyberware
 
 		if (isBlind)
 		{
-			entityLivingBase.addEffect(new MobEffect(MobEffects.BLINDNESS, 40));
+			entityLivingBase.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40));
 		}
 	}
 

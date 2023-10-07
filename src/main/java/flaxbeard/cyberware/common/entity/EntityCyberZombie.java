@@ -73,8 +73,10 @@ public class EntityCyberZombie extends Zombie
 			if (isBrute())
 			{
 				// TODO: permanent or transient modifier?
-				Objects.requireNonNull(getAttribute(Attributes.MAX_HEALTH)).addPermanentModifier(new AttributeModifier("Brute Bonus", 6D, AttributeModifier.Operation.ADDITION));
-				Objects.requireNonNull(getAttribute(Attributes.ATTACK_DAMAGE)).addPermanentModifier(new AttributeModifier("Brute Bonus", 1D, AttributeModifier.Operation.ADDITION));
+				Objects.requireNonNull(getAttribute(Attributes.MAX_HEALTH))
+					.addPermanentModifier(new AttributeModifier("Brute Bonus", 6D, AttributeModifier.Operation.ADDITION));
+				Objects.requireNonNull(getAttribute(Attributes.ATTACK_DAMAGE))
+					.addPermanentModifier(new AttributeModifier("Brute Bonus", 1D, AttributeModifier.Operation.ADDITION));
 			}
 			setHealth(getMaxHealth());
 			hasRandomWare = true;
@@ -201,11 +203,11 @@ public class EntityCyberZombie extends Zombie
 
 		if (hasRandomWare)
 		{
-			float rarity = Math.min(
-				100.0F,
+			double rarity = Math.min(
+				100.0D,
 				CyberwareConfig.INSTANCE.MOBS_CYBER_ZOMBIE_DROP_RARITY.get() + lootingModifier * 5.0F
 			);
-			if (level.rand.nextFloat() < (rarity / 100.0F))
+			if (level.getRandom().nextFloat() < (rarity / 100.0F))
 			{
 				List<ItemStack> allWares = new ArrayList<>();
 				for (EnumSlot slot : EnumSlot.values())
@@ -223,7 +225,7 @@ public class EntityCyberZombie extends Zombie
 				allWares.removeAll(Collections.singleton(ItemStack.EMPTY));
 
 				// Sanity check for corrupted NBT
-				if (allWares.size() == 0)
+				if (allWares.isEmpty())
 				{
 					Cyberware.logger.error(String.format("Invalid cyberzombie with hasRandomWare %s with actually no " +
 							"implants: %s",
@@ -239,7 +241,7 @@ public class EntityCyberZombie extends Zombie
 					|| drop.getItem() == CyberwareContent.creativeBattery
 					|| drop.getItem() == CyberwareContent.bodyPart))
 				{
-					int random = level.rand.nextInt(allWares.size());
+					int random = level.getRandom().nextInt(allWares.size());
 					drop = allWares.get(random).copy();
 					drop = CyberwareAPI.sanitize(drop);
 					drop = CyberwareAPI.getCyberware(drop).setQuality(drop, CyberwareAPI.QUALITY_SCAVENGED);

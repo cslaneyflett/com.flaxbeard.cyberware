@@ -1,18 +1,15 @@
 package flaxbeard.cyberware.common.block.tile;
 
 import flaxbeard.cyberware.api.item.IBlueprint;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -24,12 +21,12 @@ import javax.annotation.Nullable;
 
 public class TileEntityBlueprintArchive extends BlockEntity
 {
-	public TileEntityBlueprintArchive(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState)
+	public TileEntityBlueprintArchive(BlockPos pPos, BlockState pBlockState)
 	{
-		super(pType, pPos, pBlockState);
+		super(BlockEntities.BLUEPRINT_ARCHIVE.get(), pPos, pBlockState);
 	}
 
-	public class ItemStackHandlerBlueprint extends ItemStackHandler
+	public static class ItemStackHandlerBlueprint extends ItemStackHandler
 	{
 		public ItemStackHandlerBlueprint(int i)
 		{
@@ -38,10 +35,9 @@ public class TileEntityBlueprintArchive extends BlockEntity
 
 		@Nonnull
 		@Override
-		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate)
+		public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate)
 		{
 			if (!isItemValidForSlot(slot, stack)) return stack;
-
 			return super.insertItem(slot, stack, simulate);
 		}
 
@@ -52,7 +48,8 @@ public class TileEntityBlueprintArchive extends BlockEntity
 		}
 	}
 
-	public LazyOptional<ItemStackHandler> slots = LazyOptional.of(() -> new ItemStackHandlerBlueprint(18));
+	public ItemStackHandler slots = new ItemStackHandlerBlueprint(18);
+	public LazyOptional<ItemStackHandler> lazySlots = LazyOptional.of(() -> slots);
 	public String customName = null;
 
 	//	@Override
@@ -70,16 +67,16 @@ public class TileEntityBlueprintArchive extends BlockEntity
 	{
 		if (capability == ForgeCapabilities.ITEM_HANDLER)
 		{
-			return slots.cast();
+			return lazySlots.cast();
 		}
 
 		return super.getCapability(capability, facing);
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag tagCompound)
+	public void load(@Nonnull CompoundTag tagCompound)
 	{
-		super.readFromNBT(tagCompound);
+		super.load(tagCompound);
 
 		slots.deserializeNBT(tagCompound.getCompound("inv"));
 
@@ -89,11 +86,10 @@ public class TileEntityBlueprintArchive extends BlockEntity
 		}
 	}
 
-	@Nonnull
 	@Override
-	public CompoundTag writeToNBT(CompoundTag tagCompound)
+	public void saveAdditional(@Nonnull CompoundTag tagCompound)
 	{
-		tagCompound = super.writeToNBT(tagCompound);
+		super.saveAdditional(tagCompound);
 
 		tagCompound.put("inv", this.slots.serializeNBT());
 
@@ -101,31 +97,19 @@ public class TileEntityBlueprintArchive extends BlockEntity
 		{
 			tagCompound.putString("CustomName", customName);
 		}
-
-		return tagCompound;
-	}
-
-	@Override
-	public void onDataPacket(Connection net, SPacketUpdateTileEntity pkt)
-	{
-		CompoundTag data = pkt.getNbtCompound();
-		this.readFromNBT(data);
-	}
-
-	@Override
-	public SPacketUpdateTileEntity getUpdatePacket()
-	{
-		CompoundTag data = new CompoundTag();
-		this.writeToNBT(data);
-		return new SPacketUpdateTileEntity(pos, 0, data);
 	}
 
 	@Nonnull
 	@Override
 	public CompoundTag getUpdateTag()
 	{
-		return writeToNBT(new CompoundTag());
+		var tag = new CompoundTag();
+		saveAdditional(tag);
+		return tag;
 	}
+
+	@Override
+	public void handleUpdateTag(CompoundTag tag) {load(tag);}
 
 	public boolean isUsableByPlayer(Player entityPlayer)
 	{
@@ -151,15 +135,9 @@ public class TileEntityBlueprintArchive extends BlockEntity
 		this.customName = name;
 	}
 
-	@Override
+//	@Override
 	public Component getDisplayName()
 	{
 		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());
-	}
-
-	@Override
-	public boolean shouldRefresh(Level world, BlockPos pos, BlockState oldState, BlockState newState)
-	{
-		return (oldState.getBlock() != newState.getBlock());
 	}
 }

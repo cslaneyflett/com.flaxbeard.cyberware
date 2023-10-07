@@ -18,6 +18,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,31 +27,11 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import javax.annotation.Nonnull;
 
-public class BlockSurgery extends Block
+public class BlockSurgery extends Block implements EntityBlock
 {
-	public BlockSurgery()
+	public BlockSurgery(Properties pProperties)
 	{
-		super(Material.IRON);
-		setHardness(5.0F);
-		setResistance(10.0F);
-		setSoundType(SoundType.METAL);
-
-		String name = "surgery";
-
-		setRegistryName(name);
-		// ForgeRegistries.BLOCKS.register(this);
-
-		ItemBlock itemBlock = new ItemBlockCyberware(this, "cyberware.tooltip.surgery.0", "cyberware.tooltip.surgery" +
-			".1");
-		itemBlock.setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(itemBlock);
-
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		setCreativeTab(Cyberware.creativeTab);
-		GameRegistry.registerTileEntity(TileEntitySurgery.class, new ResourceLocation(Cyberware.MODID, name));
-
-		CyberwareContent.blocks.add(this);
+		super(pProperties);
 	}
 
 	@Override

@@ -1,41 +1,29 @@
 package flaxbeard.cyberware.common.block;
 
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
-import net.minecraft.block.BlockBed;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.init.Biomes;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import javax.annotation.Nullable;
 
-public class BlockSurgeryTable extends Block
+public class BlockSurgeryTable extends BedBlock
 {
-	public BlockSurgeryTable()
+	public BlockSurgeryTable(Properties pProperties)
 	{
-		String name = "surgeryTable";
-
-		setRegistryName(name);
-		// ForgeRegistries.BLOCKS.register(this);
-
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		GameRegistry.registerTileEntity(TileEntitySurgery.class, new ResourceLocation(Cyberware.MODID, name));
-
-		MinecraftForge.EVENT_BUS.register(this);
+		super(DyeColor.WHITE, pProperties);
 	}
 
 	@Override
@@ -48,9 +36,9 @@ public class BlockSurgeryTable extends Block
 			return true;
 		}
 
-		if (blockState.getValue(PART) != BlockBed.EnumPartType.HEAD)
+		if (blockState.getValue(PART) != BedPart.HEAD)
 		{
-			pos = pos.offset(blockState.getValue(FACING));
+			pos = pos.relative(blockState.getValue(FACING));
 			blockState = world.getBlockState(pos);
 
 			if (blockState.getBlock() != this)
@@ -59,8 +47,7 @@ public class BlockSurgeryTable extends Block
 			}
 		}
 
-		if (world.provider.canRespawnHere()
-			&& world.getBiome(pos) != Biomes.HELL)
+		if (world.dimensionType().bedWorks())
 		{
 			if (blockState.getValue(OCCUPIED))
 			{
@@ -72,23 +59,23 @@ public class BlockSurgeryTable extends Block
 					return true;
 				}
 
-				blockState = blockState.withProperty(OCCUPIED, Boolean.FALSE);
+				blockState = blockState.setValue(OCCUPIED, Boolean.FALSE);
 				world.setBlockState(pos, blockState, 4);
 			}
 
-			Player.SleepResult entityplayer$sleepresult = entityPlayer.trySleep(pos);
+			Player.BedSleepingProblem entityplayer$sleepresult = entityPlayer.trySleep(pos);
 
-			if (entityplayer$sleepresult == Player.SleepResult.OK)
+			if (entityplayer$sleepresult == Player.BedSleepingProblem.OK)
 			{
-				blockState = blockState.withProperty(OCCUPIED, Boolean.TRUE);
+				blockState = blockState.setValue(OCCUPIED, Boolean.TRUE);
 				world.setBlockState(pos, blockState, 4);
 				return true;
 			} else
 			{
-				if (entityplayer$sleepresult == Player.SleepResult.NOT_POSSIBLE_NOW)
+				if (entityplayer$sleepresult == Player.BedSleepingProblem.NOT_POSSIBLE_NOW)
 				{
 					entityPlayer.sendMessage(new TextComponentTranslation("tile.bed.noSleep"));
-				} else if (entityplayer$sleepresult == Player.SleepResult.NOT_SAFE)
+				} else if (entityplayer$sleepresult == Player.BedSleepingProblem.NOT_SAFE)
 				{
 					entityPlayer.sendMessage(new TextComponentTranslation("tile.bed.notSafe"));
 				}
@@ -97,16 +84,16 @@ public class BlockSurgeryTable extends Block
 			}
 		} else
 		{
-			world.setBlockToAir(pos);
+			world.removeBlock(pos, false);
 			BlockPos blockpos = pos.offset(blockState.getValue(FACING).getOpposite());
 
 			if (world.getBlockState(blockpos).getBlock() == this)
 			{
-				world.setBlockToAir(blockpos);
+				world.removeBlock(blockpos, false);
 			}
 
-			world.newExplosion(null, (double) pos.getX() + 0.5D, (double) pos.getY() + 0.5D,
-				(double) pos.getZ() + 0.5D, 5.0F, true, true
+			world.explode(null, (double) pos.getX() + 0.5D, (double) pos.getY() + 0.5D,
+				(double) pos.getZ() + 0.5D, 5.0F, true, Explosion.BlockInteraction.BREAK
 			);
 			return true;
 		}
@@ -115,9 +102,9 @@ public class BlockSurgeryTable extends Block
 	@Nullable
 	private Player getPlayerInBed(Level worldIn, BlockPos pos)
 	{
-		for (Player entityplayer : worldIn.playerEntities)
+		for (Player entityplayer : worldIn.players())
 		{
-			if (entityplayer.isPlayerSleeping() && entityplayer.getPosition().equals(pos))
+			if (entityplayer.isSleeping() && entityplayer.getSleepingPos().orElseThrow().equals(pos))
 			{
 				return entityplayer;
 			}
@@ -127,7 +114,7 @@ public class BlockSurgeryTable extends Block
 	}
 
 	@Override
-	public boolean isBed(BlockState state, IBlockAccess world, BlockPos pos, Entity player)
+	public boolean isBed(BlockState state, LevelReader world, BlockPos pos, Entity player)
 	{
 		return true;
 	}

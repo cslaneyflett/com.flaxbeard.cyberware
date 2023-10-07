@@ -105,16 +105,22 @@ public class ItemHeartUpgrade extends ItemCyberware
 
 					CyberwareAPI.updateData(entityLivingBase);
 				}
-				entityLivingBase.setHealth(entityLivingBase.getMaxHealth() / 3F);
-				CyberwarePacketHandler.INSTANCE.sendToAllAround(
-					new ParticlePacket(1, (float) entityLivingBase.posX,
-						(float) entityLivingBase.posY + entityLivingBase.height / 2F,
-						(float) entityLivingBase.posZ
+
+				var pos = entityLivingBase.position();
+				CyberwarePacketHandler.INSTANCE.send(
+					PacketDistributor.NEAR.with(() ->
+						new PacketDistributor.TargetPoint(
+							pos.x, pos.y, pos.z,
+							20, entityLivingBase.level.dimension()
+						)
 					),
-					new TargetPoint(entityLivingBase.level.provider.getDimension(), entityLivingBase.posX,
-						entityLivingBase.posY, entityLivingBase.posZ, 20
+					new ParticlePacket(
+						1,
+						pos.add(0, entityLivingBase.getBbHeight() / 2F, 0)
 					)
 				);
+
+				entityLivingBase.setHealth(entityLivingBase.getMaxHealth() / 3F);
 				event.setCanceled(true);
 			}
 		}
@@ -190,14 +196,17 @@ public class ItemHeartUpgrade extends ItemCyberware
 				if (t >= 100
 					&& damageMedkit.get(entityLivingBase.getUUID()) > 0F)
 				{
-					CyberwarePacketHandler.INSTANCE.sendToAllAround(
-						new ParticlePacket(0, (float) entityLivingBase.posX,
-							(float) entityLivingBase.posY + entityLivingBase.height / 2F,
-							(float) entityLivingBase.posZ
+					var pos = entityLivingBase.position();
+					CyberwarePacketHandler.INSTANCE.send(
+						PacketDistributor.NEAR.with(() ->
+							new PacketDistributor.TargetPoint(
+								pos.x, pos.y, pos.z,
+								20, entityLivingBase.level.dimension()
+							)
 						),
-						new PacketDistributor.TargetPoint(entityLivingBase.level.provider.getDimension(),
-							entityLivingBase.posX, entityLivingBase.posY,
-							entityLivingBase.posZ, 20
+						new ParticlePacket(
+							0,
+							pos.add(0, entityLivingBase.getBbHeight() / 2F, 0)
 						)
 					);
 
@@ -268,11 +277,11 @@ public class ItemHeartUpgrade extends ItemCyberware
 	// Stolen from EntityLivingBase
 	protected float applyArmorCalculations(LivingEntity entityLivingBase, DamageSource source, float damage)
 	{
-		if (!source.isUnblockable())
+		if (!source.isBypassMagic())
 		{
 			damage = CombatRules.getDamageAfterAbsorb(
 				damage,
-				(float) entityLivingBase.getTotalArmorValue(),
+				(float) entityLivingBase.getArmorValue(),
 				(float) Objects.requireNonNull(entityLivingBase.getAttribute(Attributes.ARMOR_TOUGHNESS)).getValue()
 			);
 		}
@@ -302,8 +311,8 @@ public class ItemHeartUpgrade extends ItemCyberware
 				return 0.0F;
 			} else
 			{
-				int k = EnchantmentHelper.getEnchantmentModifierDamage(
-					entityLivingBase.getArmorInventoryList(),
+				int k = EnchantmentHelper.getDamageProtection(
+					entityLivingBase.getArmorSlots(),
 					source
 				);
 

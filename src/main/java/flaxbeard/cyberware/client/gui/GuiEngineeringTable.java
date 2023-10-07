@@ -7,6 +7,7 @@ import flaxbeard.cyberware.common.block.tile.TileEntityBlueprintArchive;
 import flaxbeard.cyberware.common.block.tile.TileEntityComponentBox;
 import flaxbeard.cyberware.common.block.tile.TileEntityEngineeringTable;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.EngineeringDestroyPacket;
 import flaxbeard.cyberware.common.network.EngineeringSwitchArchivePacket;
@@ -204,7 +205,7 @@ public class GuiEngineeringTable extends GuiContainer
 			String[] tooltip;
 			if (!tileEntityEngineeringTable.slots.getStackInSlot(1).isEmpty())
 			{
-				float chance = CyberwareConfig.INSTANCE.ENGINEERING_CHANCE.get();
+				double chance = CyberwareConfig.INSTANCE.ENGINEERING_CHANCE.get();
 				if (!tileEntityEngineeringTable.slots.getStackInSlot(0).isEmpty()
 					&& tileEntityEngineeringTable.slots.getStackInSlot(0).isItemStackDamageable())
 				{
@@ -262,9 +263,9 @@ public class GuiEngineeringTable extends GuiContainer
 							ItemStack crafting = tileEntityEngineeringTable.slots.getStackInSlot(indexSlot);
 							if (!crafting.isEmpty()
 								&& crafting.getItem() == requiredItem.getItem()
-								&& crafting.getItemDamage() == requiredItem.getItemDamage()
-								&& (!requiredItem.hasTagCompound()
-								|| ItemStack.areItemStackTagsEqual(requiredItem, crafting)))
+								&& CyberwareItemMetadata.identical(crafting, requiredItem)
+								&& (!requiredItem.hasTag()
+								|| ItemStack.tagMatches(requiredItem, crafting)))
 							{
 								requiredItem.setCount(Math.max(0, requiredItem.getCount() - crafting.getCount()));
 							}

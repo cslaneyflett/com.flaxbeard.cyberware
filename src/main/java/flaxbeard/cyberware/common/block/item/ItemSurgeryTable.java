@@ -1,6 +1,5 @@
 package flaxbeard.cyberware.common.block.item;
 
-import flaxbeard.cyberware.Cyberware;
 import net.minecraft.world.item.Item;
 
 public class ItemSurgeryTable extends Item
@@ -57,13 +56,13 @@ public class ItemSurgeryTable extends Item
 				if (flag2 && flag3 && worldIn.getBlockState(pos.down()).isFullyOpaque() && worldIn.getBlockState
 				(blockpos.down()).isFullyOpaque())
 				{
-					BlockState iblockstate1 = CyberwareContent.surgeryTable.getDefaultState().withProperty
-					(BlockSurgeryTable.OCCUPIED, Boolean.valueOf(false)).withProperty(BlockSurgeryTable.FACING,
-					enumfacing).withProperty(BlockSurgeryTable.PART, BlockBed.EnumPartType.FOOT);
+					BlockState iblockstate1 = CyberwareContent.surgeryTable.defaultBlockState().setValue
+					(BlockSurgeryTable.OCCUPIED, Boolean.valueOf(false)).setValue(BlockSurgeryTable.FACING,
+					enumfacing).setValue(BlockSurgeryTable.PART, BlockBed.EnumPartType.FOOT);
 
 					if (worldIn.setBlockState(pos, iblockstate1, 11))
 					{
-						BlockState iblockstate2 = iblockstate1.withProperty(BlockSurgeryTable.PART, BlockBed
+						BlockState iblockstate2 = iblockstate1.setValue(BlockSurgeryTable.PART, BlockBed
 						.EnumPartType.HEAD);
 						worldIn.setBlockState(blockpos, iblockstate2, 11);
 					}

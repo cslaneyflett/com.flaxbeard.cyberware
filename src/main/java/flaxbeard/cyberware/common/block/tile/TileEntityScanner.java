@@ -3,31 +3,35 @@ package flaxbeard.cyberware.common.block.tile;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.item.ItemBlueprint;
+import flaxbeard.cyberware.common.registry.BlockEntities;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.util.ITickable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.RangedWrapper;
-import net.minecraftforge.oredict.OreDictionary;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class TileEntityScanner extends BlockEntity implements ITickable
+public class TileEntityScanner extends BlockEntity
 {
-	public class ItemStackHandlerScanner extends ItemStackHandler
+	public TileEntityScanner(BlockPos pPos, BlockState pBlockState)
+	{
+		super(BlockEntities.SCANNER.get(), pPos, pBlockState);
+	}
+
+	public static class ItemStackHandlerScanner extends ItemStackHandler
 	{
 		public ItemStackHandlerScanner(int size)
 		{
@@ -54,21 +58,17 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 		{
 			validateSlotIndex(slot);
 
-			switch (slot)
+			return switch (slot)
 			{
-				case 0:
-					return CyberwareAPI.canDeconstruct(stack);
-
-				case 1:
-					return stack.is(Items.PAPER);
-				case 2:
-					return false;
-			}
-			return true;
+				case 0 -> CyberwareAPI.canDeconstruct(stack);
+				case 1 -> stack.is(Items.PAPER);
+				case 2 -> false;
+				default -> true;
+			};
 		}
 	}
 
-	public class GuiWrapper implements IItemHandlerModifiable
+	public static class GuiWrapper implements IItemHandlerModifiable
 	{
 		private final ItemStackHandlerScanner slots;
 
@@ -117,7 +117,7 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 		}
 
 		@Override
-		public boolean isItemValid(int slot, @NotNull ItemStack stack)
+		public boolean isItemValid(int slot, @Nonnull ItemStack stack)
 		{
 			return true;
 		}
@@ -171,9 +171,9 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag tagCompound)
+	public void load(@Nonnull CompoundTag tagCompound)
 	{
-		super.readFromNBT(tagCompound);
+		super.load(tagCompound);
 
 		slots.deserializeNBT(tagCompound.getCompound("inv"));
 
@@ -185,11 +185,10 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 		ticks = tagCompound.getInt("ticks");
 	}
 
-	@Nonnull
 	@Override
-	public CompoundTag writeToNBT(CompoundTag tagCompound)
+	public void saveAdditional(@Nonnull CompoundTag tagCompound)
 	{
-		tagCompound = super.writeToNBT(tagCompound);
+		super.saveAdditional(tagCompound);
 
 		tagCompound.put("inv", slots.serializeNBT());
 
@@ -199,34 +198,23 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 		}
 
 		tagCompound.putInt("ticks", ticks);
-
-		return tagCompound;
-	}
-
-	@Override
-	public void onDataPacket(Connection networkManager, @Nonnull SPacketUpdateTileEntity packetUpdateTileEntity)
-	{
-		CompoundTag tagCompound = packetUpdateTileEntity.getNbtCompound();
-		readFromNBT(tagCompound);
-	}
-
-	@Override
-	public SPacketUpdateTileEntity getUpdatePacket()
-	{
-		CompoundTag tagCompound = new CompoundTag();
-		writeToNBT(tagCompound);
-		return new SPacketUpdateTileEntity(pos, 0, tagCompound);
 	}
 
 	@Nonnull
 	@Override
 	public CompoundTag getUpdateTag()
 	{
-		return writeToNBT(new CompoundTag());
+		var tag = new CompoundTag();
+		saveAdditional(tag);
+		return tag;
 	}
+
+	@Override
+	public void handleUpdateTag(CompoundTag tag) {load(tag);}
 
 	public boolean isUsableByPlayer(Player entityPlayer)
 	{
+		assert level != null;
 		return level.getBlockEntity(worldPosition) == this
 			&& entityPlayer.position().distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
 			worldPosition.getZ() + 0.5D
@@ -248,80 +236,79 @@ public class TileEntityScanner extends BlockEntity implements ITickable
 		customName = name;
 	}
 
-	@Override
+	//	@Override
 	public Component getDisplayName()
 	{
 		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());
 	}
 
-	@Override
-	public void update()
+	public static void tick(Level level, BlockPos pos, BlockState state, TileEntityScanner blockEntity)
 	{
-		ItemStack toDestroy = slots.getStackInSlot(0);
+		ItemStack toDestroy = blockEntity.slots.getStackInSlot(0);
 		if (CyberwareAPI.canDeconstruct(toDestroy)
 			&& toDestroy.getCount() > 0
-			&& slots.getStackInSlot(2).isEmpty())
+			&& blockEntity.slots.getStackInSlot(2).isEmpty())
 		{
-			ticks++;
+			blockEntity.ticks++;
 			assert level != null;
 
-			if (ticksMove > ticks
-				|| (ticks - ticksMove > Math.max(Math.abs(lastX - x) * 3, Math.abs(lastZ - z) * 3) + 10))
+			if (blockEntity.ticksMove > blockEntity.ticks
+				|| (blockEntity.ticks - blockEntity.ticksMove > Math.max(Math.abs(blockEntity.lastX - blockEntity.x) * 3, Math.abs(blockEntity.lastZ - blockEntity.z) * 3) + 10))
 			{
-				ticksMove = ticks;
-				lastX = x;
-				lastZ = z;
-				while (x == lastX)
+				blockEntity.ticksMove = blockEntity.ticks;
+				blockEntity.lastX = blockEntity.x;
+				blockEntity.lastZ = blockEntity.z;
+				while (blockEntity.x == blockEntity.lastX)
 				{
-					x = level.getRandom().nextInt(11);
+					blockEntity.x = level.getRandom().nextInt(11);
 				}
-				while (z == lastZ)
+				while (blockEntity.z == blockEntity.lastZ)
 				{
-					z = world.getRandom().nextInt(11);
+					blockEntity.z = level.getRandom().nextInt(11);
 				}
 			}
-			if (ticks > CyberwareConfig.INSTANCE.SCANNER_TIME.get())
+			if (blockEntity.ticks > CyberwareConfig.INSTANCE.SCANNER_TIME.get())
 			{
-				ticks = 0;
-				ticksMove = 0;
+				blockEntity.ticks = 0;
+				blockEntity.ticksMove = 0;
 
 				if (!level.isClientSide()
-					&& !slots.getStackInSlot(1).isEmpty())
+					&& !blockEntity.slots.getStackInSlot(1).isEmpty())
 				{
 					double chance = CyberwareConfig.INSTANCE.SCANNER_CHANCE.get()
-						+ CyberwareConfig.INSTANCE.SCANNER_CHANCE_ADDL.get() * (slots.getStackInSlot(0).getCount() - 1);
-					if (slots.getStackInSlot(0).isDamageableItem())
+						+ CyberwareConfig.INSTANCE.SCANNER_CHANCE_ADDL.get() * (blockEntity.slots.getStackInSlot(0).getCount() - 1);
+					if (blockEntity.slots.getStackInSlot(0).isDamageableItem())
 					{
 						chance =
-							50F * (1F - (slots.getStackInSlot(0).getDamageValue() / (float) slots.getStackInSlot(0).getMaxDamage()));
+							50F * (1F - (blockEntity.slots.getStackInSlot(0).getDamageValue() / (float) blockEntity.slots.getStackInSlot(0).getMaxDamage()));
 					}
 					chance = Math.min(chance, 50F);
 
 					if (level.getRandom().nextFloat() < (chance / 100F))
 					{
 						ItemStack stackBlueprint = ItemBlueprint.getBlueprintForItem(toDestroy);
-						slots.setStackInSlot(2, stackBlueprint);
-						ItemStack current = slots.getStackInSlot(1);
+						blockEntity.slots.setStackInSlot(2, stackBlueprint);
+						ItemStack current = blockEntity.slots.getStackInSlot(1);
 						current.shrink(1);
 						if (current.getCount() <= 0)
 						{
 							current = ItemStack.EMPTY;
 						}
-						slots.setStackInSlot(1, current);
-						level.notifyBlockUpdate(worldPosition, level.getBlockState(worldPosition),
-							level.getBlockState(worldPosition), 2
+						blockEntity.slots.setStackInSlot(1, current);
+						level.sendBlockUpdated(pos, level.getBlockState(pos),
+							state, 2
 						);
 					}
 				}
 			}
-			markDirty();
+			blockEntity.setChanged();
 		} else
 		{
-			x = lastX = z = lastZ = 0;
-			if (ticks != 0)
+			blockEntity.x = blockEntity.lastX = blockEntity.z = blockEntity.lastZ = 0;
+			if (blockEntity.ticks != 0)
 			{
-				ticks = 0;
-				markDirty();
+				blockEntity.ticks = 0;
+				blockEntity.setChanged();
 			}
 		}
 	}

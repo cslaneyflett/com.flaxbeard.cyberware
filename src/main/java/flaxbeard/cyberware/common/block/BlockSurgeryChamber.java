@@ -5,11 +5,7 @@ import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.item.ItemSurgeryChamber;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgeryChamber;
-import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.EnumPushReaction;
-import net.minecraft.block.properties.PropertyBool;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -25,9 +21,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -36,43 +37,23 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class BlockSurgeryChamber extends Block
+public class BlockSurgeryChamber extends Block implements EntityBlock
 {
-	public static final PropertyDirection FACING = BlockHorizontal.FACING;
-	public static final PropertyBool OPEN = PropertyBool.create("open");
-	public static final PropertyEnum<EnumChamberHalf> HALF = PropertyEnum.create("half", EnumChamberHalf.class);
+	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+	public static final BooleanProperty OPEN = BooleanProperty.create("open");
+	public static final EnumProperty<EnumChamberHalf> HALF = EnumProperty.create("half", EnumChamberHalf.class);
 	public final Item itemBlock;
 
-	public BlockSurgeryChamber()
+	public BlockSurgeryChamber(Properties pProperties)
 	{
-		super(Material.IRON);
-		this.setDefaultState(this.blockState.getBaseState()
-			.withProperty(FACING, Direction.NORTH)
-			.withProperty(OPEN, Boolean.FALSE)
-			.withProperty(HALF, EnumChamberHalf.LOWER));
-
-		setHardness(5.0F);
-		setResistance(10.0F);
-		setSoundType(SoundType.METAL);
-
-		String name = "surgery_chamber";
-
-		setRegistryName(name);
-		// ForgeRegistries.BLOCKS.register(this);
-
-		itemBlock = new ItemSurgeryChamber(this, "cyberware.tooltip.surgery_chamber.0", "cyberware.tooltip" +
-			".surgery_chamber.1");
-		itemBlock.setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(itemBlock);
-
-		setTranslationKey(Cyberware.MODID + "." + name);
-		itemBlock.setTranslationKey(Cyberware.MODID + "." + name);
-
-		itemBlock.setCreativeTab(Cyberware.creativeTab);
-
-		GameRegistry.registerTileEntity(TileEntitySurgeryChamber.class, new ResourceLocation(Cyberware.MODID, name));
-
-		CyberwareContent.items.add(itemBlock);
+		super(pProperties);
+//		this.setDefaultState(this.blockState.getBaseState()
+//			.setValue(FACING, Direction.NORTH)
+//			.setValue(OPEN, Boolean.FALSE)
+//			.setValue(HALF, EnumChamberHalf.LOWER));
+//
+//		itemBlock = new ItemSurgeryChamber(this, "cyberware.tooltip.surgery_chamber.0", "cyberware.tooltip" +
+//			".surgery_chamber.1");
 	}
 
 	private static final AABB top = new AABB(0F, 15F / 16F, 0F, 1F, 1F, 1F);
@@ -255,10 +236,10 @@ public class BlockSurgeryChamber extends Block
 	@Override
 	public BlockState getStateFromMeta(int metadata)
 	{
-		return this.getDefaultState()
-			.withProperty(HALF, (metadata & 1) > 0 ? EnumChamberHalf.UPPER : EnumChamberHalf.LOWER)
-			.withProperty(OPEN, (metadata & 2) > 0)
-			.withProperty(FACING, Direction.byHorizontalIndex(metadata >> 2));
+		return this.defaultBlockState()
+			.setValue(HALF, (metadata & 1) > 0 ? EnumChamberHalf.UPPER : EnumChamberHalf.LOWER)
+			.setValue(OPEN, (metadata & 2) > 0)
+			.setValue(FACING, Direction.byHorizontalIndex(metadata >> 2));
 	}
 
 	@Override

@@ -4,12 +4,10 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.block.BlockBeaconLarge;
 import flaxbeard.cyberware.common.item.ItemBrainUpgrade;
 import flaxbeard.cyberware.common.lib.LibConstants;
-import net.minecraft.client.multiplayer.ClientLevel;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -36,7 +34,12 @@ public class TileEntityBeacon extends BlockEntity
 	private int count = 0;
 	private static int TIER = 2;
 
-	public TileEntityBeacon(BlockEntityType<TileEntityBeacon> pType, BlockPos pPos, BlockState pBlockState)
+	public TileEntityBeacon(BlockPos pPos, BlockState pBlockState)
+	{
+		super(BlockEntities.BEACON.get(), pPos, pBlockState);
+	}
+
+	public TileEntityBeacon(BlockEntityType<? extends TileEntityBeacon> pType, BlockPos pPos, BlockState pBlockState)
 	{
 		super(pType, pPos, pBlockState);
 	}
@@ -67,92 +70,95 @@ public class TileEntityBeacon extends BlockEntity
 		return mapBeaconPositionByDimension.computeIfAbsent(idDimension, k -> new HashMap<>());
 	}
 
-	//	@Override
-	public void update()
+	public static void tick(Level level, BlockPos pos, BlockState state, TileEntityBeacon blockEntity)
 	{
-		// TODO: power?
 		assert level != null;
-		boolean working = level.hasNeighborSignal(worldPosition);
+		boolean working = level.hasNeighborSignal(pos);
 
-		if (!wasWorking && working)
+		if (!blockEntity.wasWorking && working)
 		{
-			enable();
+			blockEntity.enable();
 		}
 
-		if (wasWorking && !working)
+		if (blockEntity.wasWorking && !working)
 		{
-			disable();
+			blockEntity.disable();
 		}
 
-		wasWorking = working;
+		blockEntity.wasWorking = working;
 
-		if (level.isClientSide() && working)
-		{
-			ClientLevel clientLevel = (ClientLevel) level;
-			count = (count + 1) % 20;
-			if (count == 0)
-			{
-				BlockState state = clientLevel.getBlockState(worldPosition);
-				if (state.getBlock() == CyberwareContent.radio)
-				{
-					boolean ns = state.getValue(BlockBeaconLarge.FACING) == Direction.NORTH
-						|| state.getValue(BlockBeaconLarge.FACING) == Direction.SOUTH;
-					boolean backwards = state.getValue(BlockBeaconLarge.FACING) == Direction.SOUTH
-						|| state.getValue(BlockBeaconLarge.FACING) == Direction.EAST;
+		// TODO particle
 
-					float dist = .2F;
-					float speedMod = .08F;
-					int degrees = 45;
-
-					for (int index = 0; index < 5; index++)
-					{
-						float sin = (float) Math.sin(Math.toRadians(degrees));
-						float cos = (float) Math.cos(Math.toRadians(degrees));
-						float xOffset = dist * sin;
-						float yOffset = .2F + dist * cos;
-						float xSpeed = speedMod * sin;
-						float ySpeed = speedMod * cos;
-						float backOffsetX = (backwards ^ ns ? -.3F : .3F);
-						float backOffsetZ = (backwards ? .4F : -.4F);
-
-						// TODO
-						// clientLevel.spawnParticle(ParticleTypes.SMOKE,
-						// 		worldPosition.getX() + .5F + (ns ? xOffset + backOffsetX :
-						// 		backOffsetZ),
-						// 		worldPosition.getY() + .5F + yOffset,
-						// 		worldPosition.getZ() + .5F + (ns ? backOffsetZ : xOffset +
-						// 		backOffsetX),
-						// 		ns ? xSpeed : 0,
-						// 		ySpeed,
-						// 		ns ? 0 : xSpeed,
-						// 		255, 255, 255);
-						//
-						// clientLevel.spawnParticle(ParticleTypes.SMOKE,
-						// 		worldPosition.getX() + .5F + (ns ? -xOffset + backOffsetX :
-						// 		backOffsetZ),
-						// 		worldPosition.getY() + .5F + yOffset,
-						// 		worldPosition.getZ() + .5F + (ns ? backOffsetZ : -xOffset +
-						// 		backOffsetX),
-						// 		ns ? -xSpeed : 0,
-						// 		ySpeed,
-						// 		ns ? 0 : -xSpeed,
-						// 		255, 255, 255);
-
-						degrees += 18;
-					}
-				}
-			}
-		}
+		//		if (level.isClientSide() && working)
+		//		{
+		//			ClientLevel clientLevel = (ClientLevel) level;
+		//			count = (count + 1) % 20;
+		//			if (count == 0)
+		//			{
+		//				BlockState state = clientLevel.getBlockState(worldPosition);
+		//				if (state.getBlock() == CyberwareContent.radio)
+		//				{
+		//					boolean ns = state.getValue(BlockBeaconLarge.FACING) == Direction.NORTH
+		//						|| state.getValue(BlockBeaconLarge.FACING) == Direction.SOUTH;
+		//					boolean backwards = state.getValue(BlockBeaconLarge.FACING) == Direction.SOUTH
+		//						|| state.getValue(BlockBeaconLarge.FACING) == Direction.EAST;
+		//
+		//					float dist = .2F;
+		//					float speedMod = .08F;
+		//					int degrees = 45;
+		//
+		//					for (int index = 0; index < 5; index++)
+		//					{
+		//						float sin = (float) Math.sin(Math.toRadians(degrees));
+		//						float cos = (float) Math.cos(Math.toRadians(degrees));
+		//						float xOffset = dist * sin;
+		//						float yOffset = .2F + dist * cos;
+		//						float xSpeed = speedMod * sin;
+		//						float ySpeed = speedMod * cos;
+		//						float backOffsetX = (backwards ^ ns ? -.3F : .3F);
+		//						float backOffsetZ = (backwards ? .4F : -.4F);
+		//
+		//						 clientLevel.spawnParticle(ParticleTypes.SMOKE,
+		//							 worldPosition.getX() + .5F + (ns ? xOffset + backOffsetX :
+		//								 backOffsetZ),
+		//							 worldPosition.getY() + .5F + yOffset,
+		//							 worldPosition.getZ() + .5F + (ns ? backOffsetZ : xOffset +
+		//								 backOffsetX),
+		//							 ns ? xSpeed : 0,
+		//							 ySpeed,
+		//							 ns ? 0 : xSpeed,
+		//							 255, 255, 255
+		//						 );
+		//
+		//						clientLevel.spawnParticle(ParticleTypes.SMOKE,
+		//							worldPosition.getX() + .5F + (ns ? -xOffset + backOffsetX :
+		//								backOffsetZ),
+		//							worldPosition.getY() + .5F + yOffset,
+		//							worldPosition.getZ() + .5F + (ns ? backOffsetZ : -xOffset +
+		//								backOffsetX),
+		//							ns ? -xSpeed : 0,
+		//							ySpeed,
+		//							ns ? 0 : -xSpeed,
+		//							255, 255, 255
+		//						);
+		//
+		//						degrees += 18;
+		//					}
+		//				}
+		//			}
+		//		}
 	}
 
 	private void disable()
 	{
+		assert level != null;
 		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, level);
 		mapBeaconPosition.remove(getBlockPos());
 	}
 
 	private void enable()
 	{
+		assert level != null;
 		Map<BlockPos, Integer> mapBeaconPosition = getBeaconPositionsForTierAndDimension(TIER, level);
 		if (!mapBeaconPosition.containsKey(getBlockPos()))
 		{
@@ -160,7 +166,6 @@ public class TileEntityBeacon extends BlockEntity
 		}
 	}
 
-	// TODO
 	//	@Override
 	//	public void invalidate() {
 	//		disable();

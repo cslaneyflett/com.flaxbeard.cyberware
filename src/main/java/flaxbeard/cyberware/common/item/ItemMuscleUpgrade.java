@@ -8,11 +8,11 @@ import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.api.item.IMenuItem;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.SwitchHeldItemAndRotationPacket;
-import net.minecraft.item.ItemSword;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.CombatEntry;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.damagesource.IndirectEntityDamageSource;
 import net.minecraft.world.entity.Entity;
@@ -24,9 +24,11 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -46,12 +48,12 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 		multimapMuscleSpeedAttribute = HashMultimap.create();
 		multimapMuscleSpeedAttribute.put(Attributes.ATTACK_SPEED, new AttributeModifier(idMuscleSpeedAttribute,
 			"Muscle speed upgrade", 1.5F,
-			0
+			AttributeModifier.Operation.ADDITION
 		));
 		multimapMuscleDamageAttribute = HashMultimap.create();
 		multimapMuscleDamageAttribute.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(idMuscleDamageAttribute,
 			"Muscle damage upgrade", 3F,
-			0
+			AttributeModifier.Operation.ADDITION
 		));
 	}
 
@@ -66,10 +68,10 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 	{
 		if (CyberwareItemMetadata.get(stack) == META_WIRED_REFLEXES)
 		{
-			entityLivingBase.getAttributeMap().applyAttributeModifiers(multimapMuscleSpeedAttribute);
+			entityLivingBase.getAttributes().addTransientAttributeModifiers(multimapMuscleSpeedAttribute);
 		} else if (CyberwareItemMetadata.get(stack) == META_MUSCLE_REPLACEMENTS)
 		{
-			entityLivingBase.getAttributeMap().applyAttributeModifiers(multimapMuscleDamageAttribute);
+			entityLivingBase.getAttributes().addTransientAttributeModifiers(multimapMuscleDamageAttribute);
 		}
 	}
 
@@ -102,41 +104,44 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 
 		ItemStack itemStackWiredReflexes = cyberwareUserData.getCyberware(getCachedStack(META_WIRED_REFLEXES));
 		int rank = itemStackWiredReflexes.getCount();
-		if (rank > 1
-			&& EnableDisableHelper.isEnabled(itemStackWiredReflexes)
-			&& setIsStrengthPowered.contains(entityLivingBase.getUUID()))
+		if (rank > 1 &&
+			EnableDisableHelper.isEnabled(itemStackWiredReflexes) &&
+			setIsStrengthPowered.contains(entityLivingBase.getUUID()) &&
+			entityLivingBase instanceof ServerPlayer entityPlayer)
 		{
-			Player entityPlayer = (Player) entityLivingBase;
-			if (event.getSource() instanceof EntityDamageSource
+			if (event.getSource() instanceof EntityDamageSource source
 				&& !(event.getSource() instanceof IndirectEntityDamageSource))
 			{
-				EntityDamageSource source = (EntityDamageSource) event.getSource();
 				Entity attacker = source.getEntity();
-				int lastAttacked = entityPlayer.getCombatTracker().lastDamageTime;
+
+				// Last attacked or right now if never attacked.
+				CombatEntry lastAttack = entityPlayer.getCombatTracker().getLastEntry();
+				int lastAttacked = lastAttack != null ? lastAttack.getTime() : entityPlayer.tickCount;
 
 				if (entityPlayer.tickCount - lastAttacked > 120)
 				{
-					int indexWeapon = -1;
-					ItemStack itemMainhand = entityPlayer.getMainHandItem();
-					if (!itemMainhand.isEmpty())
+					ItemStack indexWeapon = null;
+					ItemStack mainHandItem = entityPlayer.getMainHandItem();
+					if (!mainHandItem.isEmpty())
 					{
-						if (entityPlayer.getItemInUseCount() > 0
-							|| itemMainhand.getItem() instanceof ItemSword
-							|| itemMainhand.getItem().getAttributeModifiers(EquipmentSlot.MAINHAND, itemMainhand).containsKey(Attributes.ATTACK_DAMAGE))
+						if (entityPlayer.isUsingItem() ||
+							mainHandItem.is(Tags.Items.TOOLS_SWORDS) ||
+							mainHandItem.getItem().getAttributeModifiers(EquipmentSlot.MAINHAND, mainHandItem).containsKey(Attributes.ATTACK_DAMAGE))
 						{
-							indexWeapon = entityPlayer.inventory.currentItem;
+							indexWeapon = entityPlayer.getUseItem();
 						}
 					}
 
-					if (indexWeapon == -1)
+					if (indexWeapon == null)
 					{
 						double mostDamage = 0F;
 
 						for (int indexHotbar = 0; indexHotbar < 10; indexHotbar++)
 						{
-							if (indexHotbar != entityPlayer.inventory.currentItem)
+							// Skip the currently selected item, since if it's the best, no point in comparing
+							if (indexHotbar != entityPlayer.getInventory().selected)
 							{
-								ItemStack potentialWeapon = entityPlayer.inventory.mainInventory.get(indexHotbar);
+								ItemStack potentialWeapon = entityPlayer.getInventory().getItem(indexHotbar);
 								if (!potentialWeapon.isEmpty())
 								{
 									Multimap<Attribute, AttributeModifier> modifiers =
@@ -149,10 +154,10 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 										double damage =
 											modifiers.get(Attributes.ATTACK_DAMAGE).iterator().next().getAmount();
 
-										if (damage > mostDamage || indexWeapon == -1)
+										if (damage > mostDamage || indexWeapon == null)
 										{
 											mostDamage = damage;
-											indexWeapon = indexHotbar;
+											indexWeapon = potentialWeapon;
 										}
 									}
 								}
@@ -160,37 +165,25 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 						}
 					}
 
-					if (indexWeapon != -1)
+					if (indexWeapon != null)
 					{
-						entityPlayer.inventory.currentItem = indexWeapon;
+						var slot = entityPlayer.getInventory().findSlotMatchingItem(indexWeapon);
+						entityPlayer.getInventory().pickSlot(slot);
 
-						CyberwarePacketHandler.INSTANCE.sendTo(
-							new SwitchHeldItemAndRotationPacket(indexWeapon, entityPlayer.getId(),
-								rank > 2 && attacker != null ? attacker.getId()
-									: -1
-							),
-							(ServerPlayer) entityPlayer
+						CyberwarePacketHandler.INSTANCE.send(
+							PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entityPlayer),
+							new SwitchHeldItemAndRotationPacket(
+								slot, entityPlayer.getId(),
+								rank > 2 && attacker != null ? attacker.getId() : -1
+							)
 						);
-
-						ServerLevel worldServer = (ServerLevel) entityPlayer.level;
-
-						for (Player trackingPlayer : worldServer.getEntityTracker().getTrackingPlayers(entityPlayer))
-						{
-							CyberwarePacketHandler.INSTANCE.sendTo(
-								new SwitchHeldItemAndRotationPacket(indexWeapon, entityPlayer.getId(),
-									rank > 2 && attacker != null ?
-										attacker.getId() : -1
-								),
-								(ServerPlayer) trackingPlayer
-							);
-						}
 					}
 				}
 			}
 		}
 	}
 
-	private Set<UUID> setIsStrengthPowered = new HashSet<>();
+	private final Set<UUID> setIsStrengthPowered = new HashSet<>();
 
 	@SubscribeEvent(priority = EventPriority.NORMAL)
 	public void handleLivingUpdate(CyberwareUpdateEvent event)
@@ -211,15 +204,16 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 				: wasPowered;
 			if (isPowered)
 			{
-				if (!entityLivingBase.isInWater()
-					&& entityLivingBase.isOnGround()
-					&& Math.abs(entityLivingBase.moveStrafing) + Math.abs(entityLivingBase.moveForward) > 0.0F
-					&& Math.abs(entityLivingBase.motionX) + Math.abs(entityLivingBase.motionZ) > 0.0F)
+				if (!entityLivingBase.isInWater() &&
+					entityLivingBase.isOnGround() &&
+					entityLivingBase.getDeltaMovement().horizontalDistance() > 0.0F)
 				{
 					// increase maximum horizontal motion by 70% (0.118 -> 0.200)
 					float boost = 0.51F;
-					entityLivingBase.moveRelative(entityLivingBase.moveStrafing * boost, 0.0F,
-						entityLivingBase.moveForward * boost, 0.075F
+					// TODO: this correct?
+					entityLivingBase.moveRelative(
+						(float) (entityLivingBase.getDeltaMovement().horizontalDistance() * boost),
+						entityLivingBase.getForward()
 					);
 				}
 

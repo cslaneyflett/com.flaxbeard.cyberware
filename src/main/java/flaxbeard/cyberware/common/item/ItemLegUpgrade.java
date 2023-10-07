@@ -4,6 +4,7 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.misc.NNLUtil;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.damagesource.DamageSource;
@@ -57,22 +58,22 @@ public class ItemLegUpgrade extends ItemCyberware
 			{
 				if (entityLivingBase.isShiftKeyDown())
 				{
-					Vec3 vector = entityLivingBase.getLook(0.5F);
+					Vec3 vector = entityLivingBase.getViewVector(0.5F);
 					double total = Math.abs(vector.z + vector.x);
+
+					// TODO: did i fuck this up? this looks broken
 					double jump = 0;
 					if (jump >= 1)
 					{
 						jump = (jump + 2D) / 4D;
 					}
 
-					double y = vector.y < total ? total : vector.y;
+					double y = Math.max(vector.y, total);
 
-					entityLivingBase.motionY += (numLegs * ((jump + 1) * y)) / 3F;
-					entityLivingBase.motionZ += (jump + 1) * vector.z * numLegs;
-					entityLivingBase.motionX += (jump + 1) * vector.x * numLegs;
+					entityLivingBase.push((jump + 1) * vector.x * numLegs, (numLegs * ((jump + 1) * y)) / 3F, (jump + 1) * vector.z * numLegs);
 				} else
 				{
-					entityLivingBase.motionY += numLegs * (0.2750000059604645D / 2D);
+					entityLivingBase.push(0, numLegs * (0.2750000059604645D / 2D), 0);
 				}
 			}
 		}
@@ -101,6 +102,6 @@ public class ItemLegUpgrade extends ItemCyberware
 	@Override
 	public int getPowerConsumption(ItemStack stack)
 	{
-		return CyberwareItemMetadata.get(stack) == META_JUMP_BOOST ? LibConstants.JUMPBOOST_CONSUMPTION : 0;
+		return CyberwareItemMetadata.matches(stack, META_JUMP_BOOST) ? LibConstants.JUMPBOOST_CONSUMPTION : 0;
 	}
 }

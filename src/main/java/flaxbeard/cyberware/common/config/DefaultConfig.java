@@ -1,5 +1,8 @@
 package flaxbeard.cyberware.common.config;
 
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +18,7 @@ public class DefaultConfig
 	public static int MOBS_CYBER_ZOMBIE_WEIGHT = 15;
 	public static int MOBS_CYBER_ZOMBIE_MIN_PACK = 1;
 	public static int MOBS_CYBER_ZOMBIE_MAX_PACK = 1;
-	public static List<Integer> MOBS_DIMENSION_IDS = new ArrayList<>();
+	public static List<ResourceKey<Level>> MOBS_DIMENSION_IDS = new ArrayList<>();
 	public static boolean MOBS_IS_DIMENSION_BLACKLIST = true;
 	public static boolean MOBS_APPLY_DIMENSION_TO_SPAWNING = true;
 	public static boolean MOBS_APPLY_DIMENSION_TO_BEACON = true;

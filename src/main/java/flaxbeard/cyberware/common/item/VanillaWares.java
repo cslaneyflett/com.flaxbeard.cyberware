@@ -11,6 +11,7 @@ import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -78,7 +79,7 @@ public class VanillaWares
 			ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
 			if (cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 			{
-				entityLivingBase.addEffect(new MobEffect(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, -53, true,
+				entityLivingBase.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, -53, true,
 					false
 				));
 			} else

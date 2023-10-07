@@ -11,18 +11,19 @@ import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.DodgePacket;
-import net.minecraft.item.ItemSword;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
@@ -33,6 +34,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.PacketDistributor;
 import org.apache.commons.lang3.ArrayUtils;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -124,7 +126,7 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 		{
 			Player entityPlayerOriginal = event.getOriginal();
 
-			if (entityPlayerOriginal.level.getGameRules().getBoolean("keepInventory"))
+			if (entityPlayerOriginal.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY))
 			{
 				return;
 			}
@@ -169,11 +171,10 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 			&& !entityPlayer.isShiftKeyDown())
 		{
 			BlockState state = event.getState();
-			ItemStack tool = entityPlayer.getHeldItem(EnumHand.MAIN_HAND);
+			ItemStack tool = entityPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
-			if (!tool.isEmpty()
-				&& (tool.getItem() instanceof ItemSword
-				|| tool.getItem().getTranslationKey().contains("sword")))
+			if (!tool.isEmpty() &&
+				tool.is(Tags.Items.TOOLS_SWORDS))
 			{
 				return;
 			}
@@ -277,19 +278,20 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 		return isMatrixWorking.get(entityLivingBase.getUUID());
 	}
 
-	public boolean isToolEffective(ItemStack tool, BlockState state)
+	public boolean isToolEffective(@Nonnull ItemStack tool, BlockState state)
 	{
-		if (!tool.isEmpty())
-		{
-			for (String toolType : tool.getItem().getToolClasses(tool))
-			{
-				if (state.getBlock().isToolEffective(toolType, state))
-				{
-					return true;
-				}
-			}
-		}
-		return false;
+		return !tool.isEmpty() && tool.getItem().isCorrectToolForDrops(tool, state);
+//		if (!tool.isEmpty())
+//		{
+//			for (String toolType : tool.getItem().getToolClasses(tool))
+//			{
+//				if (state.getBlock().isToolEffective(toolType, state))
+//				{
+//					return true;
+//				}
+//			}
+//		}
+//		return false;
 	}
 
 	@SubscribeEvent

@@ -5,13 +5,12 @@ import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.handler.EssentialsMissingHandler;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-
-;
 
 public class ItemCyberheart extends ItemCyberware
 {
@@ -45,10 +44,10 @@ public class ItemCyberheart extends ItemCyberware
 		{
 			if (!cyberwareUserData.usePower(itemStackCyberheart, getPowerConsumption(itemStackCyberheart)))
 			{
-				entityLivingBase.attackEntityFrom(EssentialsMissingHandler.heartless, Integer.MAX_VALUE);
+				entityLivingBase.hurt(EssentialsMissingHandler.heartless, Integer.MAX_VALUE);
 			} else if (entityLivingBase.hasEffect(MobEffects.WEAKNESS))
 			{
-				entityLivingBase.removePotionEffect(MobEffects.WEAKNESS);
+				entityLivingBase.removeEffect(MobEffects.WEAKNESS);
 			}
 		}
 	}

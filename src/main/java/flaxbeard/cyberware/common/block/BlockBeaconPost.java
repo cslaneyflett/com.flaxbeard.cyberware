@@ -6,17 +6,13 @@ import flaxbeard.cyberware.common.block.item.ItemBlockCyberware;
 import flaxbeard.cyberware.common.block.tile.TileEntityBeaconPost;
 import flaxbeard.cyberware.common.block.tile.TileEntityBeaconPost.TileEntityBeaconPostMaster;
 import net.minecraft.block.BlockFenceGate;
-import net.minecraft.block.properties.PropertyBool;
-import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemLead;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumHand;
-import net.minecraft.world.LevelReader;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -32,13 +28,12 @@ import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class BlockBeaconPost extends Block
+public class BlockBeaconPost extends Block implements EntityBlock
 {
 	/**
 	 * Whether this fence connects in the northern direction
@@ -72,47 +67,17 @@ public class BlockBeaconPost extends Block
 	public static final AABB NORTH_AABB = new AABB(0.375D, 0.0D, 0.0D, 0.625D, 1D, 0.375D);
 	public static final AABB EAST_AABB = new AABB(0.625D, 0.0D, 0.375D, 1.0D, 1D, 0.625D);
 
-	public BlockBeaconPost()
+	public BlockBeaconPost(Properties pProperties)
 	{
-		super(Material.IRON);
+		super(pProperties);
 
-		setHardness(5.0F);
-		setResistance(10.0F);
-		setSoundType(SoundType.METAL);
-
-		String name = "radio_post";
-
-		setRegistryName(name);
-		// ForgeRegistries.BLOCKS.register(this);
-
-
-		ItemBlock itemBlock = new ItemBlockCyberware(
-			this,
-			"cyberware.tooltip.beacon_post.0",
-			"cyberware.tooltip.beacon_post.1",
-			"cyberware.tooltip.beacon_post.2"
-		);
-		itemBlock.setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(itemBlock);
-
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		setCreativeTab(Cyberware.creativeTab);
-
-		CyberwareContent.blocks.add(this);
-
-//		GameRegistry.registerTileEntity(TileEntityBeaconPost.class, new ResourceLocation(Cyberware.MODID, name));
-//		GameRegistry.registerTileEntity(TileEntityBeaconPostMaster.class, new ResourceLocation(
-//			Cyberware.MODID,
-//			name + "_master"
-//		));
-
-		setDefaultState(blockState.getBaseState()
-			.withProperty(TRANSFORMED, 0)
-			.withProperty(NORTH, Boolean.FALSE)
-			.withProperty(EAST, Boolean.FALSE)
-			.withProperty(SOUTH, Boolean.FALSE)
-			.withProperty(WEST, Boolean.FALSE));
+		// TODO
+		// setDefaultState(blockState.getBaseState()
+		// 	.setValue(TRANSFORMED, 0)
+		// 	.setValue(NORTH, Boolean.FALSE)
+		// 	.setValue(EAST, Boolean.FALSE)
+		// 	.setValue(SOUTH, Boolean.FALSE)
+		// 	.setValue(WEST, Boolean.FALSE));
 	}
 
 	@Override
@@ -181,10 +146,10 @@ public class BlockBeaconPost extends Block
 
 					if (newPos.equals(start))
 					{
-						world.setBlockState(newPos, world.getBlockState(newPos).withProperty(TRANSFORMED, 2), 2);
+						world.setBlockState(newPos, world.getBlockState(newPos).setValue(TRANSFORMED, 2), 2);
 					} else
 					{
-						world.setBlockState(newPos, world.getBlockState(newPos).withProperty(TRANSFORMED, 1), 2);
+						world.setBlockState(newPos, world.getBlockState(newPos).setValue(TRANSFORMED, 1), 2);
 
 						TileEntityBeaconPost post = (TileEntityBeaconPost) world.getBlockEntity(newPos);
 						post.setMasterLoc(start);
@@ -330,7 +295,7 @@ public class BlockBeaconPost extends Block
 	@Override
 	public BlockState getStateFromMeta(int metadata)
 	{
-		return this.getDefaultState().withProperty(TRANSFORMED, metadata);
+		return this.defaultBlockState().setValue(TRANSFORMED, metadata);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -338,10 +303,10 @@ public class BlockBeaconPost extends Block
 	@Override
 	public BlockState getActualState(BlockState state, LevelReader worldIn, BlockPos pos)
 	{
-		return state.withProperty(NORTH, this.canConnectTo(worldIn, pos.north()))
-			.withProperty(EAST, this.canConnectTo(worldIn, pos.east()))
-			.withProperty(SOUTH, this.canConnectTo(worldIn, pos.south()))
-			.withProperty(WEST, this.canConnectTo(worldIn, pos.west()));
+		return state.setValue(NORTH, this.canConnectTo(worldIn, pos.north()))
+			.setValue(EAST, this.canConnectTo(worldIn, pos.east()))
+			.setValue(SOUTH, this.canConnectTo(worldIn, pos.south()))
+			.setValue(WEST, this.canConnectTo(worldIn, pos.west()));
 	}
 
 	@SuppressWarnings("deprecation")
@@ -352,20 +317,20 @@ public class BlockBeaconPost extends Block
 		switch (rotation)
 		{
 			case CLOCKWISE_180:
-				return blockState.withProperty(NORTH, blockState.getValue(SOUTH)).withProperty(
+				return blockState.setValue(NORTH, blockState.getValue(SOUTH)).setValue(
 					EAST,
 					blockState.getValue(WEST)
-				).withProperty(SOUTH, blockState.getValue(NORTH)).withProperty(WEST, blockState.getValue(EAST));
+				).setValue(SOUTH, blockState.getValue(NORTH)).setValue(WEST, blockState.getValue(EAST));
 			case COUNTERCLOCKWISE_90:
-				return blockState.withProperty(NORTH, blockState.getValue(EAST)).withProperty(
+				return blockState.setValue(NORTH, blockState.getValue(EAST)).setValue(
 					EAST,
 					blockState.getValue(SOUTH)
-				).withProperty(SOUTH, blockState.getValue(WEST)).withProperty(WEST, blockState.getValue(NORTH));
+				).setValue(SOUTH, blockState.getValue(WEST)).setValue(WEST, blockState.getValue(NORTH));
 			case CLOCKWISE_90:
-				return blockState.withProperty(NORTH, blockState.getValue(WEST)).withProperty(
+				return blockState.setValue(NORTH, blockState.getValue(WEST)).setValue(
 					EAST,
 					blockState.getValue(NORTH)
-				).withProperty(SOUTH, blockState.getValue(EAST)).withProperty(WEST, blockState.getValue(SOUTH));
+				).setValue(SOUTH, blockState.getValue(EAST)).setValue(WEST, blockState.getValue(SOUTH));
 			default:
 				return blockState;
 		}
@@ -379,12 +344,12 @@ public class BlockBeaconPost extends Block
 		switch (mirrorIn)
 		{
 			case LEFT_RIGHT:
-				return blockState.withProperty(NORTH, blockState.getValue(SOUTH)).withProperty(
+				return blockState.setValue(NORTH, blockState.getValue(SOUTH)).setValue(
 					SOUTH,
 					blockState.getValue(NORTH)
 				);
 			case FRONT_BACK:
-				return blockState.withProperty(EAST, blockState.getValue(WEST)).withProperty(
+				return blockState.setValue(EAST, blockState.getValue(WEST)).setValue(
 					WEST,
 					blockState.getValue(EAST)
 				);

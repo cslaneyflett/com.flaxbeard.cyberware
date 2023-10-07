@@ -111,7 +111,7 @@ public class ItemSkinUpgrade extends ItemCyberware
 					&& entityLivingBase.tickCount % 100 == 0
 					&& !entityLivingBase.hasEffect(CyberwareContent.neuropozyneEffect))
 				{
-					entityLivingBase.attackEntityFrom(EssentialsMissingHandler.lowessence, 2.0F);
+					entityLivingBase.hurt(EssentialsMissingHandler.lowessence, 2.0F);
 				}
 			}
 
@@ -215,7 +215,7 @@ public class ItemSkinUpgrade extends ItemCyberware
 				if (EnchantmentThorns.shouldHit(3, random)
 					&& attacker != null)
 				{
-					attacker.attackEntityFrom(
+					attacker.hurt(
 						DamageSource.causeThornsDamage(entityLivingBase),
 						(float) EnchantmentThorns.getDamage(2, random)
 					);

@@ -202,10 +202,11 @@ public class ItemHandUpgrade extends ItemCyberware implements IMenuItem
 			&& entityPlayer.getMainHandItem().isEmpty())
 		{
 			ItemStack itemStackTool = getItemStackTool();
-			if (itemStackTool.canHarvestBlock(event.getTargetBlock()))
-			{
-				event.setCanHarvest(true);
-			}
+			// TODO
+//			if (event.getTargetBlock() itemStackTool.canHarvestBlock(event.getTargetBlock()))
+//			{
+//				event.setCanHarvest(true);
+//			}
 		}
 	}
 

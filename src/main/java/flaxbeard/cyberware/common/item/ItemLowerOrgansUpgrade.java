@@ -6,15 +6,15 @@ import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.api.item.IMenuItem;
 import flaxbeard.cyberware.common.lib.LibConstants;
-import net.minecraft.item.EnumAction;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -34,25 +34,24 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
-	private static Map<UUID, Collection<MobEffect>> mapPotions = new HashMap<>();
+	private static final Map<UUID, Collection<MobEffectInstance>> mapPotions = new HashMap<>();
 
 	@SubscribeEvent
 	public void handleEatFoodTick(LivingEntityUseItemEvent.Tick event)
 	{
 		LivingEntity entityLivingBase = event.getEntity();
-		if (!(entityLivingBase instanceof Player)) return;
-		Player entityPlayer = (Player) entityLivingBase;
-		ItemStack stack = event.getItem();
+		if (!(entityLivingBase instanceof Player entityPlayer)) return;
 
-		if (!stack.isEmpty()
-			&& (stack.getItem().getItemUseAction(stack) == EnumAction.EAT
-			|| stack.getItem().getItemUseAction(stack) == EnumAction.DRINK))
+		ItemStack stack = event.getItem();
+		if (!stack.isEmpty() && (
+			stack.getItem().getUseAnimation(stack) == UseAnim.EAT ||
+				stack.getItem().getUseAnimation(stack) == UseAnim.DRINK))
 		{
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
 			if (cyberwareUserData != null
 				&& cyberwareUserData.isCyberwareInstalled(getCachedStack(META_LIVER_FILTER)))
 			{
-				mapPotions.put(entityPlayer.getUUID(), new ArrayList<>(entityPlayer.getActivePotionEffects()));
+				mapPotions.put(entityPlayer.getUUID(), new ArrayList<>(entityPlayer.getActiveEffects()));
 			}
 		}
 	}
@@ -61,35 +60,35 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 	public void handleEatFoodEnd(LivingEntityUseItemEvent.Finish event)
 	{
 		LivingEntity entityLivingBase = event.getEntity();
-		if (!(entityLivingBase instanceof Player)) return;
-		Player entityPlayer = (Player) entityLivingBase;
-		ItemStack stack = event.getItem();
+		if (!(entityLivingBase instanceof Player entityPlayer)) return;
 
+		ItemStack stack = event.getItem();
 		if (!stack.isEmpty()
-			&& (stack.getItem().getItemUseAction(stack) == EnumAction.EAT
-			|| stack.getItem().getItemUseAction(stack) == EnumAction.DRINK))
+			&& (stack.getItem().getUseAnimation(stack) == UseAnim.EAT
+			|| stack.getItem().getUseAnimation(stack) == UseAnim.DRINK))
 		{
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+
 			if (cyberwareUserData != null
 				&& cyberwareUserData.isCyberwareInstalled(getCachedStack(META_LIVER_FILTER)))
 			{
-				Collection<MobEffect> potionEffectsRemoved = new ArrayList<>(entityPlayer.getActivePotionEffects());
-				for (MobEffect potionEffect : potionEffectsRemoved)
+				Collection<MobEffectInstance> potionEffectsRemoved = new ArrayList<>(entityPlayer.getActiveEffects());
+				for (MobEffectInstance potionEffect : potionEffectsRemoved)
 				{
-					if (potionEffect.getPotion().isBadEffect())
+					if (!potionEffect.getEffect().isBeneficial())
 					{
-						entityPlayer.removePotionEffect(potionEffect.getPotion());
+						entityPlayer.removeEffect(potionEffect.getEffect());
 					}
 				}
 
-				Collection<MobEffect> potionEffectsToAdd = mapPotions.get(entityPlayer.getUUID());
+				Collection<MobEffectInstance> potionEffectsToAdd = mapPotions.get(entityPlayer.getUUID());
 				if (potionEffectsToAdd != null)
 				{
-					for (MobEffect potionEffectToAdd : potionEffectsToAdd)
+					for (MobEffectInstance potionEffectToAdd : potionEffectsToAdd)
 					{
-						for (MobEffect potionEffectRemoved : potionEffectsRemoved)
+						for (MobEffectInstance potionEffectRemoved : potionEffectsRemoved)
 						{
-							if (potionEffectRemoved.getPotion() == potionEffectToAdd.getPotion())
+							if (potionEffectRemoved.getEffect() == potionEffectToAdd.getEffect())
 							{
 								entityPlayer.addEffect(potionEffectToAdd);
 								break;
@@ -118,9 +117,8 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 			getPowerProduction(itemStackMetabolicGenerator)
 		))
 		{
-			if (entityLivingBase instanceof Player)
+			if (entityLivingBase instanceof Player entityPlayer)
 			{
-				Player entityPlayer = (Player) entityLivingBase;
 				if (entityPlayer.getFoodData().getFoodLevel() > 0
 					|| entityPlayer.isCreative())
 				{

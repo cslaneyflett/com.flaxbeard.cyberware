@@ -2,8 +2,8 @@ package flaxbeard.cyberware.common.network;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -11,9 +11,9 @@ import java.util.function.Supplier;
 public class ParticlePacket
 {
 	private final int effectId;
-	private final BlockPos pos;
+	private final Vec3 pos;
 
-	public ParticlePacket(int effectId, BlockPos pos)
+	public ParticlePacket(int effectId, Vec3 pos)
 	{
 		this.effectId = effectId;
 		this.pos = pos;
@@ -22,12 +22,14 @@ public class ParticlePacket
 	public static void encode(ParticlePacket packet, FriendlyByteBuf buf)
 	{
 		buf.writeInt(packet.effectId);
-		buf.writeBlockPos(packet.pos);
+		buf.writeDouble(packet.pos.x);
+		buf.writeDouble(packet.pos.y);
+		buf.writeDouble(packet.pos.z);
 	}
 
 	public static ParticlePacket decode(FriendlyByteBuf buf)
 	{
-		return new ParticlePacket(buf.readInt(), buf.readBlockPos());
+		return new ParticlePacket(buf.readInt(), new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble()));
 	}
 
 	public static class ParticlePacketHandler
@@ -39,7 +41,7 @@ public class ParticlePacket
 		}
 	}
 
-	private record DoSync(int effectId, BlockPos pos) implements Runnable
+	private record DoSync(int effectId, Vec3 pos) implements Runnable
 	{
 		@Override
 		public void run()

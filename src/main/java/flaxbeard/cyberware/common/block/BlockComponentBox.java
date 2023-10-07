@@ -1,228 +1,132 @@
 package flaxbeard.cyberware.common.block;
 
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.block.item.ItemComponentBox;
 import flaxbeard.cyberware.common.block.tile.TileEntityComponentBox;
-import net.minecraft.block.BlockHorizontal;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.Mirror;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nonnull;
-import java.util.Random;
+import javax.annotation.Nullable;
+import java.util.Objects;
 
-public class BlockComponentBox extends Block
+public class BlockComponentBox extends Block implements EntityBlock, SimpleWaterloggedBlock
 {
-	public static final PropertyDirection FACING = BlockHorizontal.FACING;
-	public ItemBlock itemBlock;
+	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+	private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+	public BlockItem itemBlock;
 
-	public BlockComponentBox()
+	public BlockComponentBox(Properties pProperties)
 	{
-		super(Material.IRON);
-		setHardness(5.0F);
-		setResistance(10.0F);
-		setSoundType(SoundType.METAL);
+		super(pProperties);
 
-		String name = "component_box";
-
-		setRegistryName(name);
-		// ForgeRegistries.BLOCKS.register(this);
-
-		itemBlock = new ItemComponentBox(this);
-		itemBlock.setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(itemBlock);
-
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		setCreativeTab(Cyberware.creativeTab);
-		GameRegistry.registerTileEntity(TileEntityComponentBox.class, new ResourceLocation(Cyberware.MODID, name));
-
-		CyberwareContent.items.add(itemBlock);
-
-		setDefaultState(blockState.getBaseState().withProperty(FACING, Direction.NORTH));
+		this.registerDefaultState(
+			this.stateDefinition.any()
+				.setValue(FACING, Direction.NORTH)
+				.setValue(WATERLOGGED, false)
+		);
 	}
 
-	private static final AABB ns = new AABB(4F / 16F, 0F, 1F / 16F, 12F / 16F, 10F / 16F, 15F / 16F);
-	private static final AABB ew = new AABB(1F / 16F, 0F, 4F / 16F, 15F / 16F, 10F / 16F, 12F / 16F);
+	@Nullable
+	@Override
+	public BlockEntity newBlockEntity(@Nonnull BlockPos pPos, @Nonnull BlockState pState)
+	{
+		return new TileEntityComponentBox(pPos, pState);
+	}
 
-	@SuppressWarnings("deprecation")
+	private static final VoxelShape eastWest = Shapes.create(
+		new AABB(1F / 16F, 0F, 4F / 16F, 15F / 16F, 10F / 16F, 12F / 16F)
+	);
+	private static final VoxelShape northSouth = Shapes.create(
+		new AABB(4F / 16F, 0F, 1F / 16F, 12F / 16F, 10F / 16F, 15F / 16F)
+	);
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
 	@Nonnull
 	@Override
-	public AABB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos)
+	public VoxelShape getShape(@Nonnull BlockState state, @Nonnull BlockGetter level, @Nonnull BlockPos pos,
+							   @Nonnull CollisionContext context)
 	{
-		EnumFacing face = state.getValue(FACING);
-		if (face == EnumFacing.NORTH || face == EnumFacing.SOUTH)
-		{
-			return ew;
-		} else
-		{
-			return ns;
-		}
+		Direction facing = state.getValue(FACING);
+		return facing == Direction.NORTH || facing == Direction.SOUTH
+			? eastWest
+			: northSouth;
 	}
 
-	@SuppressWarnings("deprecation")
+	@Nullable
 	@Override
-	public boolean isOpaqueCube(BlockState state)
+	public BlockState getStateForPlacement(@Nonnull BlockPlaceContext context)
 	{
-		return false;
+		var fluidState = context.getLevel().getFluidState(context.getClickedPos());
+
+		return Objects.requireNonNull(super.getStateForPlacement(context))
+			.setValue(FACING, context.getHorizontalDirection().getOpposite())
+			.setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public boolean isFullCube(BlockState state)
-	{
-		return false;
-	}
-
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
 	@Nonnull
 	@Override
-	public BlockState getStateForPlacement(Level world, BlockPos pos, EnumFacing facing, float hitX, float hitY,
-										   float hitZ, int meta, LivingEntity placer)
+	public InteractionResult use(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos,
+								 @Nonnull Player player, @Nonnull InteractionHand hand, @Nonnull BlockHitResult hit)
 	{
-		return this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
-	}
-
-	@Override
-	public BlockEntity createNewTileEntity(@Nonnull Level world, int metadata)
-	{
-		return new TileEntityComponentBox();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public EnumBlockRenderType getRenderType(BlockState state)
-	{
-		return EnumBlockRenderType.MODEL;
-	}
-
-	@Override
-	public void onBlockPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack)
-	{
-		worldIn.setBlockState(pos, state.withProperty(FACING, placer.getHorizontalFacing().getOpposite()), 2);
-		if (stack.hasDisplayName())
+		if (level.getBlockEntity(pos) instanceof TileEntityComponentBox blockEntity)
 		{
-			BlockEntity tileentity = worldIn.getBlockEntity(pos);
-
-			if (tileentity instanceof TileEntityComponentBox)
+			if (player.isShiftKeyDown())
 			{
-				((TileEntityComponentBox) tileentity).setCustomInventoryName(stack.getDisplayName());
-			}
-		}
-		if (stack.hasTag())
-		{
-			assert stack.getTag() != null;
-			if (stack.getTag().contains("contents"))
-			{
-				BlockEntity tileentity = worldIn.getBlockEntity(pos);
+				ItemStack toDrop = this.getStack(blockEntity);
+				Inventory inventory = player.getInventory();
 
-				if (tileentity instanceof TileEntityComponentBox)
+				if (inventory.getSelected().isEmpty())
 				{
-					((TileEntityComponentBox) tileentity).slots.deserializeNBT(stack.getTag().getCompound("contents"));
+					inventory.add(inventory.selected, toDrop);
+				} else if (!inventory.add(toDrop))
+				{
+					var entity = new ItemEntity(
+						level,
+						pos.getX() + .5D, pos.getY() + .5D, pos.getZ() + .5D,
+						toDrop
+					);
+					level.addFreshEntity(entity);
 				}
-			}
-		}
-	}
 
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public BlockState getStateFromMeta(int metadata)
-	{
-		EnumFacing enumfacing = EnumFacing.byIndex(metadata);
-
-		if (enumfacing.getAxis() == EnumFacing.Axis.Y)
-		{
-			enumfacing = EnumFacing.NORTH;
-		}
-
-		return this.getDefaultState().withProperty(FACING, enumfacing);
-	}
-
-	@Override
-	public int getMetaFromState(BlockState blockState)
-	{
-		return blockState.getValue(FACING).getIndex();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public BlockState withRotation(@Nonnull BlockState blockState, Rotation rotation)
-	{
-		return blockState.withProperty(FACING, rotation.rotate(blockState.getValue(FACING)));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public BlockState withMirror(@Nonnull BlockState blockState, Mirror mirrorIn)
-	{
-		return blockState.withRotation(mirrorIn.toRotation(blockState.getValue(FACING)));
-	}
-
-	@Nonnull
-	@Override
-	protected BlockStateContainer createBlockState()
-	{
-		return new BlockStateContainer(this, FACING);
-	}
-
-	@Override
-	public boolean onBlockActivated(Level world, BlockPos pos, BlockState blockState,
-									Player entityPlayer, EnumHand hand,
-									EnumFacing side, float hitX, float hitY, float hitZ)
-	{
-		BlockEntity tileentity = world.getBlockEntity(pos);
-
-		if (tileentity instanceof TileEntityComponentBox)
-		{
-			if (entityPlayer.isShiftKeyDown())
-			{
-				TileEntityComponentBox box = (TileEntityComponentBox) tileentity;
-				ItemStack toDrop = this.getStack(box);
-
-				if (entityPlayer.inventory.mainInventory.get(entityPlayer.inventory.currentItem).isEmpty())
-				{
-					entityPlayer.inventory.mainInventory.set(entityPlayer.inventory.currentItem, toDrop);
-				} else
-				{
-					if (!entityPlayer.inventory.addItemStackToInventory(toDrop))
-					{
-						InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(), toDrop);
-					}
-				}
-				box.doDrop = false;
-				world.setBlockToAir(pos);
+				blockEntity.doDrop = false;
+				level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
 			} else
 			{
-				entityPlayer.openGui(Cyberware.INSTANCE, 5, world, pos.getX(), pos.getY(), pos.getZ());
+				// TODO
+				// player.openGui(Cyberware.INSTANCE, 5, world, pos.getX(), pos.getY(), pos.getZ());
 			}
+
+			return InteractionResult.SUCCESS;
 		}
 
-		return true;
+		return InteractionResult.FAIL;
 	}
 
 	private ItemStack getStack(TileEntityComponentBox box)
@@ -235,33 +139,13 @@ public class BlockComponentBox extends Block
 
 		if (box.hasCustomName())
 		{
-			stackToDrop = stackToDrop.setStackDisplayName(box.getName());
+			stackToDrop.setHoverName(Component.literal(box.getName()));
 		}
+
 		return stackToDrop;
 	}
 
-	@Override
-	public void breakBlock(Level world, @Nonnull BlockPos pos, @Nonnull BlockState blockState)
-	{
-		BlockEntity tileentity = world.getBlockEntity(pos);
-
-		if (tileentity instanceof TileEntityComponentBox
-			&& !world.isClientSide())
-		{
-			TileEntityComponentBox box = (TileEntityComponentBox) tileentity;
-			if (box.doDrop)
-			{
-				ItemStack stackToDrop = getStack(box);
-				InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(), stackToDrop);
-			}
-		}
-
-		super.breakBlock(world, pos, blockState);
-	}
-
-	@Override
-	public int quantityDropped(Random random)
-	{
-		return 0;
-	}
+	// TODO
+	// onBlockPlacedBy -> blockEntity.setCustomInventoryName(stack.getDisplayName())
+	// breakBlock -> if (box.doDrop) stackToDrop = getStack(box);
 }

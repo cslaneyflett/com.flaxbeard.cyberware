@@ -4,10 +4,10 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.CyberwareContent;
 import net.minecraft.core.NonNullList;
-import net.minecraft.item.ItemBow;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -36,10 +36,9 @@ public class ItemArmUpgrade extends ItemCyberware
 	public void useBow(LivingEntityUseItemEvent.Tick event)
 	{
 		ItemStack itemStack = event.getItem();
-		// note: we can't use itemStack.getItemUseAction() == EnumAction.BOW because it's use for many other things
-		// unrelated to bows
+
 		if (!itemStack.isEmpty()
-			&& itemStack.getItem() instanceof ItemBow)
+			&& itemStack.is(Tags.Items.TOOLS_BOWS))
 		{
 			LivingEntity entityLivingBase = event.getEntity();
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);

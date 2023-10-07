@@ -15,17 +15,19 @@ import flaxbeard.cyberware.common.handler.EssentialsMissingHandler;
 import flaxbeard.cyberware.common.item.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
+import flaxbeard.cyberware.common.registry.BlockEntities;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.util.ITickable;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -34,9 +36,10 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.List;
 
-public class TileEntitySurgery extends BlockEntity implements ITickable
+public class TileEntitySurgery extends BlockEntity
 {
 	public ItemStackHandler slotsPlayer = new ItemStackHandler(120);
 	public ItemStackHandler slots = new ItemStackHandler(120);
@@ -50,8 +53,14 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 	public int cooldownTicks = 0;
 	public boolean missingPower = false;
 
+	public TileEntitySurgery(BlockPos pPos, BlockState pBlockState)
+	{
+		super(BlockEntities.SURGERY.get(), pPos, pBlockState);
+	}
+
 	public boolean isUsableByPlayer(Player entityPlayer)
 	{
+		assert this.level != null;
 		return this.level.getBlockEntity(worldPosition) == this
 			&& entityPlayer.position().distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
 			worldPosition.getZ() + 0.5D
@@ -60,16 +69,13 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 
 	public void updatePlayerSlots(LivingEntity entityLivingBase, ICyberwareUserData cyberwareUserData)
 	{
-		markDirty();
+		setChanged();
 
 		if (cyberwareUserData != null)
 		{
 			if (entityLivingBase.getId() != lastEntity)
 			{
-				for (int indexEssential = 0; indexEssential < discardSlots.length; indexEssential++)
-				{
-					discardSlots[indexEssential] = false;
-				}
+				Arrays.fill(discardSlots, false);
 				lastEntity = entityLivingBase.getId();
 			}
 			maxEssence = cyberwareUserData.getMaxTolerance(entityLivingBase);
@@ -184,7 +190,7 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 	{
 		// TODO: wrong
 		this.wrongSlot = index;
-		Cyberware.proxy.wrong(this);
+		//		Cyberware.proxy.wrong(this);
 	}
 
 	public void disableDependants(ItemStack stack, EnumSlot slot, int indexSlotToCheck)
@@ -286,7 +292,7 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 		return true;
 	}
 
-	public boolean areRequirementsFulfilled(ItemStack stack, EnumSlot slot, int indexSlotToCheck)
+	public boolean areRequirementsFulfilled(ItemStack stack, EnumSlot ignoredSlot, int indexSlotToCheck)
 	{
 		if (!stack.isEmpty())
 		{
@@ -329,9 +335,9 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag tagCompound)
+	public void load(@Nonnull CompoundTag tagCompound)
 	{
-		super.readFromNBT(tagCompound);
+		super.load(tagCompound);
 
 		slots.deserializeNBT(tagCompound.getCompound("inv"));
 		slotsPlayer.deserializeNBT(tagCompound.getCompound("inv2"));
@@ -348,18 +354,10 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 		this.missingPower = tagCompound.getBoolean("missingPower");
 	}
 
-	@Nonnull
 	@Override
-	public CompoundTag getUpdateTag()
+	public void saveAdditional(@Nonnull CompoundTag tagCompound)
 	{
-		return writeToNBT(new CompoundTag());
-	}
-
-	@Nonnull
-	@Override
-	public CompoundTag writeToNBT(CompoundTag tagCompound)
-	{
-		tagCompound = super.writeToNBT(tagCompound);
+		super.saveAdditional(tagCompound);
 
 		tagCompound.putInt("essence", essence);
 		tagCompound.putInt("maxEssence", maxEssence);
@@ -375,9 +373,19 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 			list.add(ByteTag.valueOf((byte) (discardSlot ? 1 : 0)));
 		}
 		tagCompound.put("discard", list);
-
-		return tagCompound;
 	}
+
+	@Nonnull
+	@Override
+	public CompoundTag getUpdateTag()
+	{
+		var tag = new CompoundTag();
+		saveAdditional(tag);
+		return tag;
+	}
+
+	@Override
+	public void handleUpdateTag(CompoundTag tag) {load(tag);}
 
 	public void updateEssential(EnumSlot slot)
 	{
@@ -431,92 +439,85 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 		return r;
 	}
 
-	@Override
-	public void update()
+	public static void tick(Level level, BlockPos pos, BlockState state, TileEntitySurgery blockEntity)
 	{
 		assert level != null;
 
-		if (inProgress && progressTicks < 80)
+		if (blockEntity.inProgress && blockEntity.progressTicks < 80)
 		{
-			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(targetEntity);
-			if (targetEntity != null
-				&& !targetEntity.isDeadOrDying()
+			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(blockEntity.targetEntity);
+			if (blockEntity.targetEntity != null
+				&& !blockEntity.targetEntity.isDeadOrDying()
 				&& cyberwareUserData != null)
 			{
-				BlockPos pos = worldPosition;
-
-				if (progressTicks > 20 && progressTicks < 60)
+				if (blockEntity.progressTicks > 20 && blockEntity.progressTicks < 60)
 				{
-					targetEntity.setPos(
-						targetEntity
+					blockEntity.targetEntity.setPos(
+						blockEntity.targetEntity
 							.position()
 							.add(new Vec3(pos.getX() + .5F, 0, pos.getZ() + .5F))
 					);
-
-					// targetEntity.posX = pos.getX() + .5F;
-					// targetEntity.posZ = pos.getZ() + .5F;
 				}
 
-				if (progressTicks >= 20 && progressTicks <= 60 && progressTicks % 5 == 0)
+				if (blockEntity.progressTicks >= 20 && blockEntity.progressTicks <= 60 && blockEntity.progressTicks % 5 == 0)
 				{
-					targetEntity.attackEntityFrom(EssentialsMissingHandler.surgery, 2F);
+					blockEntity.targetEntity.hurt(EssentialsMissingHandler.surgery, 2F);
 				}
 
-				if (progressTicks == 60)
+				if (blockEntity.progressTicks == 60)
 				{
-					processUpdate(cyberwareUserData);
+					blockEntity.processUpdate(cyberwareUserData);
 				}
 
-				progressTicks++;
+				blockEntity.progressTicks++;
 
-				if (Cyberware.proxy.workingOnPlayer(targetEntity))
+				if (Minecraft.getInstance().player == blockEntity.targetEntity)
 				{
 					workingOnPlayer = true;
-					playerProgressTicks = progressTicks;
+					playerProgressTicks = blockEntity.progressTicks;
 				}
 			} else
 			{
-				inProgress = false;
-				progressTicks = 0;
-				// TODO: old proxy
-				if (Cyberware.proxy.workingOnPlayer(targetEntity))
+				blockEntity.inProgress = false;
+				blockEntity.progressTicks = 0;
+
+				if (Minecraft.getInstance().player == blockEntity.targetEntity)
 				{
 					workingOnPlayer = false;
 				}
-				targetEntity = null;
+				blockEntity.targetEntity = null;
 
-				BlockState state = level.getBlockState(worldPosition.relative(Direction.DOWN));
-				if (state.getBlock() instanceof BlockSurgeryChamber)
+				BlockState state2 = level.getBlockState(pos.relative(Direction.DOWN));
+				if (state2.getBlock() instanceof BlockSurgeryChamber)
 				{
-					((BlockSurgeryChamber) state.getBlock()).toggleDoor(true, state,
-						worldPosition.relative(Direction.DOWN), level
+					((BlockSurgeryChamber) state2.getBlock()).toggleDoor(true, state2,
+						pos.relative(Direction.DOWN), level
 					);
 				}
 			}
-		} else if (inProgress)
+		} else if (blockEntity.inProgress)
 		{
-			// TODO: old proxy
-			if (Cyberware.proxy.workingOnPlayer(targetEntity))
+			if (Minecraft.getInstance().player == blockEntity.targetEntity)
 			{
 				workingOnPlayer = false;
 			}
-			inProgress = false;
-			progressTicks = 0;
-			targetEntity = null;
-			cooldownTicks = 60;
+			blockEntity.inProgress = false;
+			blockEntity.progressTicks = 0;
+			blockEntity.targetEntity = null;
+			blockEntity.cooldownTicks = 60;
 
-			BlockState state = level.getBlockState(worldPosition.relative(Direction.DOWN));
-			if (state.getBlock() instanceof BlockSurgeryChamber)
+			BlockState state2 = level.getBlockState(pos.relative(Direction.DOWN));
+			if (state2.getBlock() instanceof BlockSurgeryChamber)
 			{
-				((BlockSurgeryChamber) state.getBlock()).toggleDoor(true, state,
-					worldPosition.relative(Direction.DOWN), level
+				((BlockSurgeryChamber) state2.getBlock()).toggleDoor(true, state2,
+					pos.relative(Direction.DOWN), level
 				);
 			}
 		}
 
-		if (cooldownTicks > 0)
+		if (blockEntity.cooldownTicks > 0)
 		{
-			cooldownTicks--;
+			blockEntity.cooldownTicks--;
 		}
 	}
 
@@ -604,10 +605,9 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 		boolean flag = true;
 		assert level != null;
 
-		if (entityLivingBase instanceof Player)
+		if (entityLivingBase instanceof Player entityPlayer)
 		{
-			Player entityPlayer = ((Player) entityLivingBase);
-			flag = !entityPlayer.inventory.addItemStackToInventory(stack);
+			flag = !entityPlayer.getInventory().add(stack);
 		}
 
 		if (flag && !level.isClientSide())
@@ -615,7 +615,7 @@ public class TileEntitySurgery extends BlockEntity implements ITickable
 			ItemEntity item = new ItemEntity(level, worldPosition.getX() + .5F, worldPosition.getY() - 2F,
 				worldPosition.getZ() + .5F, stack
 			);
-			level.spawnEntity(item);
+			level.addFreshEntity(item);
 		}
 	}
 

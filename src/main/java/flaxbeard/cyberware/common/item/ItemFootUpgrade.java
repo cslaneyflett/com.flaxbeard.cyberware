@@ -7,16 +7,17 @@ import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.api.item.IMenuItem;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.misc.NNLUtil;
 import net.minecraft.core.NonNullList;
-import net.minecraft.entity.passive.EntityHorse;
-import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -45,13 +46,12 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 	}
 
 	@SubscribeEvent
-	public void handleHorseMove(LivingUpdateEvent event)
+	public void handleHorseMove(LivingEvent event)
 	{
 		LivingEntity entityLivingBase = event.getEntity();
-		if (entityLivingBase instanceof EntityHorse)
+		if (entityLivingBase instanceof Horse entityHorse)
 		{
 			ItemStack itemStackSpurs = getCachedStack(META_SPURS);
-			EntityHorse entityHorse = (EntityHorse) entityLivingBase;
 			for (Entity entityPassenger : entityHorse.getPassengers())
 			{
 				if (entityPassenger instanceof LivingEntity)
@@ -60,7 +60,7 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 					if (cyberwareUserData != null
 						&& cyberwareUserData.isCyberwareInstalled(itemStackSpurs))
 					{
-						entityHorse.addEffect(new MobEffect(MobEffects.SPEED, 1, 5, true, false));
+						entityHorse.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 1, 5, true, false));
 						break;
 					}
 				}
@@ -136,13 +136,15 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 			{
 				if (!mapStepHeight.containsKey(entityLivingBase.getUUID()))
 				{
+					// TODO attribute STEP_HEIGHT_ADDITION
 					mapStepHeight.put(entityLivingBase.getUUID(), Math.max(entityLivingBase.stepHeight, .6F));
 				}
-				entityLivingBase.stepHeight = 1F;
+				entityLivingBase.getStepHeight() = 1F;
 
 				mapCountdownWheelsPowered.put(entityLivingBase.getUUID(), 10);
 			} else if (mapStepHeight.containsKey(entityLivingBase.getUUID()) && wasPowered)
 			{
+				// TODO attribute STEP_HEIGHT_ADDITION
 				entityLivingBase.stepHeight = mapStepHeight.get(entityLivingBase.getUUID());
 
 				mapCountdownWheelsPowered.put(
@@ -155,6 +157,7 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 			}
 		} else if (mapStepHeight.containsKey(entityLivingBase.getUUID()))
 		{
+			// TODO attribute STEP_HEIGHT_ADDITION
 			entityLivingBase.stepHeight = mapStepHeight.get(entityLivingBase.getUUID());
 
 			int countdownWheelsPowered = getCountdownWheelsPowered(entityLivingBase) - 1;

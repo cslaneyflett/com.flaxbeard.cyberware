@@ -244,7 +244,7 @@ public class ItemCyberware extends ItemCyberwareBase implements ICyberware, ICyb
 
 		boolean hasEssenceCost = false;
 		boolean essenceCostNegative = true;
-		String toAddEssence = "";
+		StringBuilder toAddEssence = new StringBuilder();
 		for (int i = 0; i < installedStackSize(stack); i++)
 		{
 			ItemStack temp = stack.copy();
@@ -261,16 +261,16 @@ public class ItemCyberware extends ItemCyberwareBase implements ICyberware, ICyb
 
 			if (i != 0)
 			{
-				toAddEssence += I18n.get("cyberware.tooltip.joiner");
+				toAddEssence.append(I18n.get("cyberware.tooltip.joiner"));
 			}
 
-			toAddEssence += " " + Math.abs(cost);
+			toAddEssence.append(" ").append(Math.abs(cost));
 		}
 
 		if (hasEssenceCost)
 		{
 			toReturn.add(ChatFormatting.DARK_PURPLE + I18n.get(essenceCostNegative ? "cyberware.tooltip.essence" :
-				"cyberware.tooltip.essence_add", toAddEssence));
+				"cyberware.tooltip.essence_add", toAddEssence.toString()));
 		}
 
 

@@ -12,6 +12,7 @@ import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.config.StartingStacksConfig;
 import flaxbeard.cyberware.common.entity.EntityCyberZombie;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.CyberwareSyncPacket;
 import net.minecraft.core.NonNullList;
@@ -241,7 +242,7 @@ public class CyberwareDataHandler
 							// @TODO: transfer drop chance, see Halloween in Vanilla
 						}
 					}
-					event.getLevel().spawnEntity(entityCyberZombie);
+					event.getLevel().addFreshEntity(entityCyberZombie);
 					entityLiving.deathTime = 19;
 					entityLiving.setHealth(0F);
 
@@ -346,7 +347,7 @@ public class CyberwareDataHandler
 			// Ensure we get a unique item
 			do
 			{
-				randomItem = WeightedRandom.getRandomItem(cyberZombie.level.random, items).stack.copy();
+				randomItem = WeightedRandom.getRandomItem(cyberZombie.level.random, items).orElseThrow().stack.copy();
 				randomWare = CyberwareAPI.getCyberware(randomItem);
 				randomItem.setCount(randomWare.installedStackSize(randomItem));
 				tries++;
@@ -416,7 +417,7 @@ public class CyberwareDataHandler
 			if (!check.isEmpty()
 				&& !needle.isEmpty()
 				&& check.getItem() == needle.getItem()
-				&& CyberwareItemMetadata.get(check) == CyberwareItemMetadata.get(needle))
+				&& CyberwareItemMetadata.identical(check, needle))
 			{
 				return true;
 			}
@@ -437,7 +438,7 @@ public class CyberwareDataHandler
 		for (MobSpawnSettings.SpawnerData spawnListEntry : event.getSpawnerDataList())
 		{
 			// TODO
-			if (spawnListEntry.entityClass().equals(EntityCyberZombie.class))
+			if (spawnListEntry.type.equals(EntityCyberZombie.class))
 			{
 				spawnListEntriesToRemove.add(spawnListEntry);
 			}

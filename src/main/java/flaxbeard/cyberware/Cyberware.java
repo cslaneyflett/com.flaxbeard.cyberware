@@ -9,6 +9,9 @@ import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.handler.*;
 import flaxbeard.cyberware.common.item.ItemArmorCyberware;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
+import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.Blocks;
+import flaxbeard.cyberware.common.registry.Items;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -24,10 +27,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
 import org.slf4j.Logger;
 
@@ -36,8 +36,6 @@ public class Cyberware
 {
 	public static final String MODID = "cyberware";
 	public static final Logger logger = LogUtils.getLogger();
-	public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
-	public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
 
 	//	public static CreativeModeTab creativeTab = new TabCyberware(MODID);
 
@@ -45,13 +43,13 @@ public class Cyberware
 	{
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		modEventBus.addListener(this::commonSetup);
-		modEventBus.addListener(this::loadComplete);
 
-		BLOCKS.register(modEventBus);
-		ITEMS.register(modEventBus);
+		Items.ITEMS.register(modEventBus);
+		Blocks.BLOCKS.register(modEventBus);
+		BlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
 
 		MinecraftForge.EVENT_BUS.register(this);
-		//			NetworkRegistry.INSTANCE.registerGuiHandler(Cyberware.INSTANCE, new GuiHandler());
+		// NetworkRegistry.INSTANCE.registerGuiHandler(Cyberware.INSTANCE, new GuiHandler());
 		MinecraftForge.EVENT_BUS.register(CyberwareDataHandler.INSTANCE);
 		MinecraftForge.EVENT_BUS.register(CyberwareConfig.INSTANCE);
 		MinecraftForge.EVENT_BUS.register(MiscHandler.INSTANCE);
@@ -60,15 +58,7 @@ public class Cyberware
 
 	private void commonSetup(final FMLCommonSetupEvent event)
 	{
-		//		 CapabilityManager.INSTANCE.register(ICyberwareUserData.class, CyberwareUserDataImpl.STORAGE,
-		//		 CyberwareUserDataImpl.class);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, CyberwareConfig.INSTANCE_SPEC);
-	}
-
-	public void loadComplete(final FMLLoadCompleteEvent event)
-	{
-		//		CyberwareConfig.postInit();
-		//		CyberwareContent.postInit();
 	}
 
 	@Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -83,7 +73,6 @@ public class Cyberware
 		@SubscribeEvent
 		public void onRegister(RegisterEvent event)
 		{
-			CyberwareContent.register(event);
 			CyberwarePacketHandler.register(event);
 		}
 
@@ -91,42 +80,13 @@ public class Cyberware
 		@SubscribeEvent
 		public void onServerStarting(ServerStartingEvent event)
 		{
-			//			event.registerServerCommand(new CommandClearCyberware());
+			// event.registerServerCommand(new CommandClearCyberware());
 		}
-
-
-		//		@SubscribeEvent
-		//		public void onConfigurationChangedEvent(@Nonnull ModConfigEvent.Reloading event) {
-		//			if (event.getConfig().getModId().equalsIgnoreCase(Cyberware.MODID)) {
-		//				CyberwareConfig.loadConfig();
-		//			}
-		//		}
-		//
-		//		@SubscribeEvent
-		//		public void onConfigurationLoadedEvent(@Nonnull ModConfigEvent.Loading event) {
-		//			if (event.getConfig().getModId().equalsIgnoreCase(Cyberware.MODID)) {
-		//				CyberwareConfig.loadConfig();
-		//			}
-		//		}
 	}
 
 	@Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.DEDICATED_SERVER)
 	public static class ServerModEvents
-	{
-
-		// TODO: i think this isnt needed with the new shared config events?
-		//		@SubscribeEvent
-		//		public void onPlayerLogin(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
-		//			ServerPlayer entityPlayer = event.getEntity();
-		//			Level world = entityPlayer.level;
-		//
-		//			if (world.isClientSide())
-		//			{
-		//				CyberwarePacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(entityPlayer.getsend), new
-		//				UpdateConfigPacket());
-		//			}
-		//		}
-	}
+	{}
 
 	@Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 	public static class ClientModEvents

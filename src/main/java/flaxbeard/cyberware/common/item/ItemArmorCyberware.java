@@ -1,6 +1,5 @@
 package flaxbeard.cyberware.common.item;
 
-import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.item.IDeconstructable;
 import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.common.CyberwareContent;
@@ -17,18 +16,9 @@ import javax.annotation.Nonnull;
 
 public class ItemArmorCyberware extends ArmorItem implements IDeconstructable
 {
-	public ItemArmorCyberware(String name, ArmorMaterial materialIn, EquipmentSlot equipmentSlotIn,
-							  Properties propertiesIn)
+	public ItemArmorCyberware(ArmorMaterial pMaterial, EquipmentSlot pSlot, Properties pProperties)
 	{
-		super(materialIn, equipmentSlotIn, propertiesIn);
-
-		setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(this);
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		setCreativeTab(Cyberware.creativeTab);
-
-		CyberwareContent.items.add(this);
+		super(pMaterial, pSlot, pProperties);
 	}
 
 	@Override

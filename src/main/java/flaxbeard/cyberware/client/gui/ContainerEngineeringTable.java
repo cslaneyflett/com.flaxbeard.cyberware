@@ -40,7 +40,7 @@ public class ContainerEngineeringTable extends AbstractContainerMenu
 		public void onSlotChanged()
 		{
 			super.onSlotChanged();
-			engineering.markDirty();
+			engineering.setChanged();
 
 			if (slotNumber >= 2 && slotNumber <= 8)
 			{

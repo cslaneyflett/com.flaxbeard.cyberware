@@ -65,7 +65,7 @@ public class ContainerSurgery extends Container
 			super.onSlotChanged();
 
 			surgery.updateEssence();
-			surgery.markDirty();
+			surgery.setChanged();
 		}
 
 		@Override
@@ -76,7 +76,7 @@ public class ContainerSurgery extends Container
 				surgery.disableDependants(getPlayerStack(), slot, index % LibConstants.WARE_PER_SLOT);
 				super.putStack(stack);
 			}
-			surgery.markDirty();
+			surgery.setChanged();
 			surgery.updateEssential(slot);
 			surgery.updateEssence();
 		}
@@ -86,7 +86,7 @@ public class ContainerSurgery extends Container
 		public void onPickupFromSlot(EntityPlayer entityPlayer, ItemStack stack)
 	    {
 			super.onPickupFromSlot(entityPlayer, stack);
-			surgery.markDirty();
+			surgery.setChanged();
 			surgery.updateEssential(slot);
 			surgery.updateEssence();
 	    }

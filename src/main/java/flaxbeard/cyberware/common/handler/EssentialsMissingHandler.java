@@ -21,9 +21,10 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.FoodStats;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -66,9 +67,9 @@ public class EssentialsMissingHandler
 	public static final DamageSource lowessence =
 		new DamageSource("cyberware.lowessence").bypassArmor().bypassMagic().bypassInvul();
 	public static final EssentialsMissingHandler INSTANCE = new EssentialsMissingHandler();
-	private static Map<Integer, Integer> timesLungs = new HashMap<>();
+	private static final Map<Integer, Integer> timesLungs = new HashMap<>();
 	private static final UUID idMissingLegSpeedAttribute = UUID.fromString("fe00fdea-5044-11e6-beb8-9e71128cae77");
-	private static final HashMultimap<String, AttributeModifier> multimapMissingLegSpeedAttribute;
+	private static final HashMultimap<Attribute, AttributeModifier> multimapMissingLegSpeedAttribute;
 
 	static
 	{
@@ -76,13 +77,13 @@ public class EssentialsMissingHandler
 		multimapMissingLegSpeedAttribute.put(
 			Attributes.MOVEMENT_SPEED,
 			new AttributeModifier(idMissingLegSpeedAttribute, "Missing leg speed",
-				-100F, 0
+				-100F, AttributeModifier.Operation.ADDITION
 			)
 		);
 	}
 
-	private Map<Integer, Boolean> last = new HashMap<>();
-	private Map<Integer, Boolean> lastClient = new HashMap<>();
+	private final Map<Integer, Boolean> last = new HashMap<>();
+	private final Map<Integer, Boolean> lastClient = new HashMap<>();
 
 	@SubscribeEvent
 	public void triggerCyberwareEvent(LivingEvent event)
@@ -110,7 +111,7 @@ public class EssentialsMissingHandler
 
 		if (!cyberwareUserData.hasEssential(EnumSlot.CRANIUM))
 		{
-			entityLivingBase.attackEntityFrom(brainless, Integer.MAX_VALUE);
+			entityLivingBase.hurt(brainless, Integer.MAX_VALUE);
 		}
 
 		if (entityLivingBase instanceof Player
@@ -120,20 +121,20 @@ public class EssentialsMissingHandler
 
 			if (tolerance <= 0)
 			{
-				entityLivingBase.attackEntityFrom(noessence, Integer.MAX_VALUE);
+				entityLivingBase.hurt(noessence, Integer.MAX_VALUE);
 			}
 
 			if (tolerance < CyberwareConfig.INSTANCE.CRITICAL_ESSENCE.get()
 				&& entityLivingBase.tickCount % 100 == 0
 				&& !entityLivingBase.hasEffect(CyberwareContent.neuropozyneEffect))
 			{
-				entityLivingBase.addEffect(new MobEffect(CyberwareContent.rejectionEffect, 110, 0, true, false));
-				entityLivingBase.attackEntityFrom(lowessence, 2F);
+				entityLivingBase.addEffect(new MobEffectInstance(CyberwareContent.rejectionEffect, 110, 0, true, false));
+				entityLivingBase.hurt(lowessence, 2F);
 			}
 
 			if (!cyberwareUserData.hasEssential(EnumSlot.EYES))
 			{
-				entityLivingBase.addEffect(new MobEffect(MobEffects.BLINDNESS, 40));
+				entityLivingBase.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40));
 			}
 		}
 
@@ -221,17 +222,17 @@ public class EssentialsMissingHandler
 
 		if (!cyberwareUserData.hasEssential(EnumSlot.HEART))
 		{
-			entityLivingBase.attackEntityFrom(heartless, Integer.MAX_VALUE);
+			entityLivingBase.hurt(heartless, Integer.MAX_VALUE);
 		}
 
 		if (!cyberwareUserData.hasEssential(EnumSlot.BONE))
 		{
-			entityLivingBase.attackEntityFrom(spineless, Integer.MAX_VALUE);
+			entityLivingBase.hurt(spineless, Integer.MAX_VALUE);
 		}
 
 		if (!cyberwareUserData.hasEssential(EnumSlot.MUSCLE))
 		{
-			entityLivingBase.attackEntityFrom(nomuscles, Integer.MAX_VALUE);
+			entityLivingBase.hurt(nomuscles, Integer.MAX_VALUE);
 		}
 
 		if (!cyberwareUserData.hasEssential(EnumSlot.LUNGS))
@@ -239,7 +240,7 @@ public class EssentialsMissingHandler
 			if (getLungsTime(entityLivingBase) >= 20)
 			{
 				timesLungs.put(entityLivingBase.getId(), entityLivingBase.tickCount);
-				entityLivingBase.attackEntityFrom(DamageSource.DROWN, 2F);
+				entityLivingBase.hurt(DamageSource.DROWN, 2F);
 			}
 		} else if (entityLivingBase.tickCount % 20 == 0)
 		{

@@ -29,7 +29,7 @@ public class ContainerScanner extends Container
 		@Override
 		public void onSlotChanged()
 		{
-			scanner.markDirty();
+			scanner.setChanged();
 		}
 
 		@Override
