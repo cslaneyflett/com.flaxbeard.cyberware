@@ -38,10 +38,9 @@ public class ItemCybereyeUpgrade extends ItemCyberware implements IMenuItem, IHu
 	public static final int META_TARGETING = 3;
 	public static final int META_ZOOM = 4;
 
-	public ItemCybereyeUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemCybereyeUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.EYES);
 	}
 
 	@Override

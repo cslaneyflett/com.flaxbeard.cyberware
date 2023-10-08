@@ -57,10 +57,9 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 		));
 	}
 
-	public ItemMuscleUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemMuscleUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.MUSCLE);
 	}
 
 	@Override

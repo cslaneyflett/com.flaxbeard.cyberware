@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.block.tile;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.BlockBeaconPost;
 import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.Blocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Block;
@@ -101,7 +102,7 @@ public class TileEntityBeaconPost extends BlockEntity
 
 						BlockState state = level.getBlockState(newPos);
 						Block block = state.getBlock();
-						if (block == CyberwareContent.radioPost && state.getValue(BlockBeaconPost.TRANSFORMED) > 0)
+						if (block == Blocks.BEACON_POST.get() && state.getValue(BlockBeaconPost.TRANSFORMED) > 0)
 						{
 							level.getBlockEntity(newPos);
 							level.getChunk(newPos).setBlockState(newPos, state.setValue(BlockBeaconPost.TRANSFORMED, 0), false);

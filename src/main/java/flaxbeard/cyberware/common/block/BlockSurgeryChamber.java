@@ -1,325 +1,201 @@
 package flaxbeard.cyberware.common.block;
 
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.block.item.ItemSurgeryChamber;
+import flaxbeard.cyberware.common.block.tile.TileEntityEngineeringTable;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgeryChamber;
-import net.minecraft.block.material.EnumPushReaction;
-import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.RandomSource;
-import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 
-public class BlockSurgeryChamber extends Block implements EntityBlock
+public class BlockSurgeryChamber extends HorizontalDirectionalBlock implements EntityBlock
 {
-	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-	public static final BooleanProperty OPEN = BooleanProperty.create("open");
-	public static final EnumProperty<EnumChamberHalf> HALF = EnumProperty.create("half", EnumChamberHalf.class);
-	public final Item itemBlock;
+	public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
+	public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
 
 	public BlockSurgeryChamber(Properties pProperties)
 	{
 		super(pProperties);
-//		this.setDefaultState(this.blockState.getBaseState()
-//			.setValue(FACING, Direction.NORTH)
-//			.setValue(OPEN, Boolean.FALSE)
-//			.setValue(HALF, EnumChamberHalf.LOWER));
-//
-//		itemBlock = new ItemSurgeryChamber(this, "cyberware.tooltip.surgery_chamber.0", "cyberware.tooltip" +
-//			".surgery_chamber.1");
+
+		this.registerDefaultState(
+			this.stateDefinition.any()
+				.setValue(OPEN, false)
+				.setValue(FACING, Direction.NORTH)
+				.setValue(HALF, DoubleBlockHalf.LOWER)
+		);
 	}
 
-	private static final AABB top = new AABB(0F, 15F / 16F, 0F, 1F, 1F, 1F);
-	private static final AABB south = new AABB(0F, 0F, 0F, 1F, 1F, 1F / 16F);
-	private static final AABB north = new AABB(0F, 0F, 15F / 16F, 1F, 1F, 1F);
-	private static final AABB east = new AABB(0F, 0F, 0F, 1F / 16F, 1F, 1F);
-	private static final AABB west = new AABB(15F / 16F, 0F, 0F, 1F, 1F, 1F);
-	private static final AABB bottom = new AABB(0F, 0F, 0F, 1F, 1F / 16F, 1F);
-
-	@Nonnull
+	@Nullable
 	@Override
-	public ItemStack getItem(Level worldIn, BlockPos pos, BlockState state)
+	public BlockEntity newBlockEntity(@Nonnull BlockPos pPos, @Nonnull BlockState pState)
 	{
-		return new ItemStack(itemBlock);
+		return pState.getValue(HALF) == DoubleBlockHalf.UPPER
+			? new TileEntitySurgeryChamber(pPos, pState)
+			: null;
 	}
 
-	@SuppressWarnings("deprecation")
+	@Nullable
 	@Override
-	public void addCollisionBoxToList(BlockState state, @Nonnull Level world, @Nonnull BlockPos pos,
-									  @Nonnull AABB entityBox, @Nonnull List<AABB> collidingBoxes,
-									  @Nullable Entity entity, boolean isActualState)
+	public BlockState getStateForPlacement(@Nonnull BlockPlaceContext context)
 	{
-		Direction face = state.getValue(FACING);
-		boolean open = state.getValue(OPEN);
+		var pos = context.getClickedPos();
+		var level = context.getLevel();
 
-		if (state.getValue(HALF) == EnumChamberHalf.UPPER)
+		if (pos.getY() < level.getMaxBuildHeight() - 1 && level.getBlockState(pos.above()).canBeReplaced(context))
 		{
-			addCollisionBoxToList(pos, entityBox, collidingBoxes, top);
-			if (!open || face != Direction.SOUTH)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, south);
-			}
-			if (!open || face != Direction.NORTH)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, north);
-			}
-			if (!open || face != Direction.EAST)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, east);
-			}
-			if (!open || face != Direction.WEST)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, west);
-			}
+			return this.defaultBlockState()
+				.setValue(FACING, context.getHorizontalDirection().getOpposite())
+				.setValue(HALF, DoubleBlockHalf.LOWER);
 		} else
 		{
-			addCollisionBoxToList(pos, entityBox, collidingBoxes, bottom);
-			if (!open || face != Direction.SOUTH)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, south);
-			}
-			if (!open || face != Direction.NORTH)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, north);
-			}
-			if (!open || face != Direction.EAST)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, east);
-			}
-			if (!open || face != Direction.WEST)
-			{
-				addCollisionBoxToList(pos, entityBox, collidingBoxes, west);
-			}
+			return null;
 		}
 	}
 
 	@Override
-	public boolean onBlockActivated(Level world, BlockPos pos, BlockState blockState,
-									Player entityPlayer, EnumHand hand,
-									Direction side, float hitX, float hitY, float hitZ)
+	public void setPlacedBy(@Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState state,
+							LivingEntity placer, @Nonnull ItemStack stack)
 	{
-		boolean top = blockState.getValue(HALF) == EnumChamberHalf.UPPER;
-		if (canOpen(top ? pos : pos.up(), world))
-		{
-			toggleDoor(top, blockState, pos, world);
+		level.setBlockAndUpdate(pos.above(), state.setValue(HALF, DoubleBlockHalf.UPPER));
+	}
 
-			notifySurgeon(top ? pos : pos.up(), world);
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nonnull
+	@Override
+	public InteractionResult use(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos usePos,
+								 @Nonnull Player player, @Nonnull InteractionHand hand, @Nonnull BlockHitResult hit)
+	{
+		// The real entity is stored in the top half.
+		var pos = state.getValue(HALF) == DoubleBlockHalf.UPPER ? usePos : usePos.above();
+
+		if (level.getBlockEntity(pos) instanceof TileEntityEngineeringTable blockEntity)
+		{
+			if (this.canOpen(pos, level))
+			{
+				this.toggleDoor(!state.getValue(OPEN), state, pos, level);
+				this.notifySurgeon(pos, level);
+			} else
+			{
+				return InteractionResult.FAIL;
+			}
+
+			return InteractionResult.SUCCESS;
+		}
+
+		return InteractionResult.FAIL;
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Override
+	public boolean canSurvive(@Nonnull BlockState state, @Nonnull LevelReader level, @Nonnull BlockPos pos)
+	{
+		var below = pos.below();
+		var stateBelow = level.getBlockState(below);
+
+		return state.getValue(HALF) == DoubleBlockHalf.LOWER
+			? stateBelow.isFaceSturdy(level, below, Direction.UP)
+			: stateBelow.is(this);
+	}
+
+	private static final VoxelShape SHAPE_TOP = Shapes.create(
+		new AABB(0F, 15F / 16F, 0F, 1F, 1F, 1F)
+	);
+	private static final VoxelShape SHAPE_SOUTH = Shapes.create(
+		new AABB(0F, 0F, 0F, 1F, 1F, 1F / 16F)
+	);
+	private static final VoxelShape SHAPE_NORTH = Shapes.create(
+		new AABB(0F, 0F, 15F / 16F, 1F, 1F, 1F)
+	);
+	private static final VoxelShape SHAPE_EAST = Shapes.create(
+		new AABB(0F, 0F, 0F, 1F / 16F, 1F, 1F)
+	);
+	private static final VoxelShape SHAPE_WEST = Shapes.create(
+		new AABB(15F / 16F, 0F, 0F, 1F, 1F, 1F)
+	);
+	private static final VoxelShape SHAPE_BOTTOM = Shapes.create(
+		new AABB(0F, 0F, 0F, 1F, 1F / 16F, 1F)
+	);
+	private static final VoxelShape SHAPE_TOP_SOUTH = Shapes.join(SHAPE_TOP, SHAPE_SOUTH, BooleanOp.OR);
+	private static final VoxelShape SHAPE_TOP_NORTH = Shapes.join(SHAPE_TOP, SHAPE_NORTH, BooleanOp.OR);
+	private static final VoxelShape SHAPE_TOP_EAST = Shapes.join(SHAPE_TOP, SHAPE_EAST, BooleanOp.OR);
+	private static final VoxelShape SHAPE_TOP_WEST = Shapes.join(SHAPE_TOP, SHAPE_WEST, BooleanOp.OR);
+	private static final VoxelShape SHAPE_BOTTOM_SOUTH = Shapes.join(SHAPE_BOTTOM, SHAPE_SOUTH, BooleanOp.OR);
+	private static final VoxelShape SHAPE_BOTTOM_NORTH = Shapes.join(SHAPE_BOTTOM, SHAPE_NORTH, BooleanOp.OR);
+	private static final VoxelShape SHAPE_BOTTOM_EAST = Shapes.join(SHAPE_BOTTOM, SHAPE_EAST, BooleanOp.OR);
+	private static final VoxelShape SHAPE_BOTTOM_WEST = Shapes.join(SHAPE_BOTTOM, SHAPE_WEST, BooleanOp.OR);
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nonnull
+	@Override
+	public VoxelShape getShape(@Nonnull BlockState state, @Nonnull BlockGetter level, @Nonnull BlockPos pos,
+							   @Nonnull CollisionContext context)
+	{
+		var top = state.getValue(HALF) == DoubleBlockHalf.UPPER;
+		return switch (state.getValue(FACING).getOpposite())
+		{
+			case SOUTH -> top ? SHAPE_TOP_SOUTH : SHAPE_BOTTOM_SOUTH;
+			case WEST -> top ? SHAPE_TOP_WEST : SHAPE_BOTTOM_WEST;
+			case EAST -> top ? SHAPE_TOP_EAST : SHAPE_BOTTOM_EAST;
+			default -> top ? SHAPE_TOP_NORTH : SHAPE_BOTTOM_NORTH;
+		};
+	}
+
+	public void toggleDoor(boolean open, @Nonnull BlockState state, @Nonnull BlockPos pos, @Nonnull Level level)
+	{
+		// Only takes in UPPER pos.
+		var newState = state.setValue(OPEN, open);
+		var lowerPos = pos.below();
+		var update = Block.UPDATE_IMMEDIATE | Block.UPDATE_CLIENTS;
+
+		level.setBlock(pos, newState, update);
+		if (level.getBlockState(lowerPos).getBlock() == this)
+		{
+			level.setBlock(lowerPos, newState, update);
+		}
+	}
+
+	private boolean canOpen(@Nonnull BlockPos pos, @Nonnull Level level)
+	{
+		// Only takes in UPPER pos, surgery is above it.
+		if (level.getBlockEntity(pos.above()) instanceof TileEntitySurgery surgery)
+		{
+			return surgery.canOpen();
 		}
 
 		return true;
 	}
 
-	public void toggleDoor(boolean top, BlockState blockState, BlockPos pos, Level worldIn)
+	private void notifySurgeon(@Nonnull BlockPos pos, @Nonnull Level level)
 	{
-		BlockState blockStateNew = blockState.cycleProperty(OPEN);
-		worldIn.setBlockState(pos, blockStateNew, 2);
-
-		BlockPos otherPos = pos.up();
-		if (top)
+		// Only takes in UPPER pos, surgery is above it.
+		if (level.getBlockEntity(pos.above()) instanceof TileEntitySurgery surgery)
 		{
-			otherPos = pos.down();
+			surgery.notifyChange();
 		}
-		BlockState otherState = worldIn.getBlockState(otherPos);
-
-		if (otherState.getBlock() == this)
-		{
-			otherState = otherState.cycleProperty(OPEN);
-			worldIn.setBlockState(otherPos, otherState, 2);
-		}
-	}
-
-	private boolean canOpen(BlockPos pos, Level worldIn)
-	{
-		BlockEntity above = worldIn.getBlockEntity(pos.up());
-
-		if (above instanceof TileEntitySurgery)
-		{
-			return ((TileEntitySurgery) above).canOpen();
-		}
-		return true;
-	}
-
-	private void notifySurgeon(BlockPos pos, Level worldIn)
-	{
-		BlockEntity above = worldIn.getBlockEntity(pos.up());
-
-		if (above instanceof TileEntitySurgery)
-		{
-			((TileEntitySurgery) above).notifyChange();
-		}
-	}
-
-	@Override
-	public void neighborChanged(BlockState blockState, Level world, BlockPos pos, Block blockIn, BlockPos fromPos)
-	{
-		if (blockState.getValue(HALF) == EnumChamberHalf.UPPER)
-		{
-			BlockPos blockpos = pos.down();
-			BlockState iblockstate = world.getBlockState(blockpos);
-
-			if (iblockstate.getBlock() != this)
-			{
-				world.setBlockToAir(pos);
-			} else if (blockIn != this)
-			{
-				iblockstate.neighborChanged(world, blockpos, blockIn, fromPos);
-			}
-		} else
-		{
-			BlockPos blockpos1 = pos.up();
-			BlockState iblockstate1 = world.getBlockState(blockpos1);
-
-			if (iblockstate1.getBlock() != this)
-			{
-				world.setBlockToAir(pos);
-				if (!world.isClientSide())
-				{
-					dropBlockAsItem(world, pos, blockState, 0);
-				}
-			}
-		}
-	}
-
-	@Nonnull
-	@Override
-	public Item getItemDropped(BlockState state, RandomSource rand, int fortune)
-	{
-		return state.getValue(HALF) == EnumChamberHalf.UPPER ? Items.AIR : this.itemBlock;
-	}
-
-	@Override
-	public boolean canPlaceBlockAt(Level worldIn, BlockPos pos)
-	{
-		return pos.getY() < worldIn.getHeight() - 1
-			&& worldIn.getBlockState(pos.down()).isSideSolid(worldIn, pos.down(), Direction.UP)
-			&& super.canPlaceBlockAt(worldIn, pos)
-			&& super.canPlaceBlockAt(worldIn, pos.up());
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public EnumPushReaction getPushReaction(BlockState state)
-	{
-		return EnumPushReaction.DESTROY;
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public BlockState getStateFromMeta(int metadata)
-	{
-		return this.defaultBlockState()
-			.setValue(HALF, (metadata & 1) > 0 ? EnumChamberHalf.UPPER : EnumChamberHalf.LOWER)
-			.setValue(OPEN, (metadata & 2) > 0)
-			.setValue(FACING, Direction.byHorizontalIndex(metadata >> 2));
-	}
-
-	@Override
-	public int getMetaFromState(BlockState blockState)
-	{
-		return (blockState.getValue(FACING).getHorizontalIndex() << 2)
-			+ (blockState.getValue(HALF) == EnumChamberHalf.UPPER ? 1 : 0)
-			+ (blockState.getValue(OPEN) ? 2 : 0);
-	}
-
-	@Nonnull
-	@Override
-	protected BlockStateContainer createBlockState()
-	{
-		return new BlockStateContainer(this, HALF, FACING, OPEN);
-	}
-
-	@Override
-	public void onBlockHarvested(Level worldIn, BlockPos pos, BlockState state, Player entityPlayer)
-	{
-		BlockPos blockpos = pos.down();
-		BlockPos blockpos1 = pos.up();
-
-		if (entityPlayer.capabilities.isCreativeMode && state.getValue(HALF) == EnumChamberHalf.UPPER && worldIn.getBlockState(blockpos).getBlock() == this)
-		{
-			worldIn.setBlockToAir(blockpos);
-		}
-
-		if (state.getValue(HALF) == EnumChamberHalf.LOWER && worldIn.getBlockState(blockpos1).getBlock() == this)
-		{
-			if (entityPlayer.capabilities.isCreativeMode)
-			{
-				worldIn.setBlockToAir(pos);
-			}
-
-			worldIn.setBlockToAir(blockpos1);
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public boolean isOpaqueCube(BlockState state)
-	{
-		return false;
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public boolean isFullCube(BlockState state)
-	{
-		return false;
-	}
-
-	public enum EnumChamberHalf implements StringRepresentable
-	{
-		UPPER,
-		LOWER;
-
-		public String toString()
-		{
-			return this.getName();
-		}
-
-		public String getName()
-		{
-			return this == UPPER ? "upper" : "lower";
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public EnumBlockRenderType getRenderType(BlockState state)
-	{
-		return EnumBlockRenderType.MODEL;
-	}
-
-	@Override
-	public BlockEntity createNewTileEntity(@Nonnull Level world, int metadata)
-	{
-		return (metadata & 1) > 0 ? new TileEntitySurgeryChamber() : null;
 	}
 }

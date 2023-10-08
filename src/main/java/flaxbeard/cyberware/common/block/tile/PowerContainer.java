@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.block.tile;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.INBTSerializable;
 
+// TODO: completely refactor this to target forge energy, low priority
 public class PowerContainer implements INBTSerializable<CompoundTag>
 {
 	private long stored;
@@ -44,19 +45,19 @@ public class PowerContainer implements INBTSerializable<CompoundTag>
 		}
 	}
 
-//	@Override
+	// @Override
 	public long getCapacity()
 	{
 		return capacity;
 	}
 
-//	@Override
+	// @Override
 	public long getStoredPower()
 	{
 		return stored;
 	}
 
-//	@Override
+	// @Override
 	public long givePower(long Tesla, boolean simulated)
 	{
 		final long acceptedTesla = Math.min(this.getCapacity() - this.stored, Math.min(inputRate, Tesla));
@@ -69,7 +70,7 @@ public class PowerContainer implements INBTSerializable<CompoundTag>
 		return acceptedTesla;
 	}
 
-//	@Override
+	// @Override
 	public long takePower(long Tesla, boolean simulated)
 	{
 		final long removedPower = Math.min(this.stored, Math.min(outputRate, Tesla));

@@ -12,6 +12,7 @@ import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.registry.BlockEntities;
 import flaxbeard.cyberware.common.registry.Blocks;
 import flaxbeard.cyberware.common.registry.Items;
+import flaxbeard.cyberware.common.registry.items.Armors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -44,9 +45,9 @@ public class Cyberware
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		modEventBus.addListener(this::commonSetup);
 
-		Items.ITEMS.register(modEventBus);
 		Blocks.BLOCKS.register(modEventBus);
 		BlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
+		Items.ITEMS.register(modEventBus);
 
 		MinecraftForge.EVENT_BUS.register(this);
 		// NetworkRegistry.INSTANCE.registerGuiHandler(Cyberware.INSTANCE, new GuiHandler());
@@ -134,7 +135,7 @@ public class Cyberware
 				Minecraft.getInstance().getItemColors().register(
 					(stack, tintIndex) -> tintIndex > 0 ? -1 :
 						((ItemArmorCyberware) stack.getItem()).getColor(stack),
-					CyberwareContent.trenchCoat
+					Armors.TRENCH_COAT.get()
 				);
 			}
 		}

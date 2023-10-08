@@ -1,295 +1,179 @@
 package flaxbeard.cyberware.common.block;
 
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.block.item.ItemEngineeringTable;
+import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
 import flaxbeard.cyberware.common.block.tile.TileEntityEngineeringTable;
-import flaxbeard.cyberware.common.block.tile.TileEntityEngineeringTable.TileEntityEngineeringDummy;
-import net.minecraft.block.material.EnumPushReaction;
-import net.minecraft.block.state.BlockStateContainer;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.RandomSource;
-import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-public class BlockEngineeringTable extends Block implements EntityBlock
+public class BlockEngineeringTable extends HorizontalDirectionalBlock implements EntityBlock
 {
-	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-	public static final EnumProperty<EnumEngineeringHalf> HALF = EnumProperty.create(
-		"half",
-		EnumEngineeringHalf.class
-	);
-	public final Item itemBlock;
-
-	private static final AABB s = new AABB(4F / 16F, 0F, 0F / 16F, 12F / 16F, 1F, 12F / 16F);
-	private static final AABB n = new AABB(4F / 16F, 0F, 4F / 16F, 12F / 16F, 1F, 16F / 16F);
-	private static final AABB e = new AABB(0F / 16F, 0F, 4F / 16F, 12F / 16F, 1F, 12F / 16F);
-	private static final AABB w = new AABB(4F / 16F, 0F, 4F / 16F, 16F / 16F, 1F, 12F / 16F);
+	public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
 
 	public BlockEngineeringTable(Properties pProperties)
 	{
 		super(pProperties);
-//		this.setDefaultState(this.blockState.getBaseState().setValue(FACING, Direction.NORTH).setValue(
-//			HALF,
-//			EnumEngineeringHalf.LOWER
-//		));
-//		itemBlock = new ItemEngineeringTable(this, "cyberware.tooltip.engineering_table");
+
+		this.registerDefaultState(
+			this.stateDefinition.any()
+				.setValue(FACING, Direction.NORTH)
+				.setValue(HALF, DoubleBlockHalf.LOWER)
+		);
 	}
 
-	@SuppressWarnings("deprecation")
-	@Nonnull
+	@Nullable
 	@Override
-	public AABB getBoundingBox(BlockState state, LevelReader source, BlockPos pos)
+	public BlockEntity newBlockEntity(@Nonnull BlockPos pPos, @Nonnull BlockState pState)
 	{
-		if (state.getValue(HALF) == EnumEngineeringHalf.UPPER)
+		return pState.getValue(HALF) == DoubleBlockHalf.UPPER
+			? new TileEntityEngineeringTable(pPos, pState)
+			: new TileEntityEngineeringTable.TileEntityEngineeringDummy(pPos, pState);
+	}
+
+	@Nullable
+	@Override
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
+																  @Nonnull BlockEntityType<T> type)
+	{
+		return type == BlockEntities.ENGINEERING_TABLE.get() ? TileEntityEngineeringTable::tick : null;
+	}
+
+	@Nullable
+	@Override
+	public BlockState getStateForPlacement(@Nonnull BlockPlaceContext context)
+	{
+		var pos = context.getClickedPos();
+		var level = context.getLevel();
+
+		if (pos.getY() < level.getMaxBuildHeight() - 1 && level.getBlockState(pos.above()).canBeReplaced(context))
 		{
-			Direction face = state.getValue(FACING);
-			switch (face)
-			{
-				case NORTH:
-					return s;
-				case SOUTH:
-					return n;
-				case EAST:
-					return w;
-				case WEST:
-					return e;
-			}
-		}
-
-		return super.getBoundingBox(state, source, pos);
-	}
-
-	@Nonnull
-	@Override
-	public ItemStack getItem(Level worldIn, BlockPos pos, BlockState state)
-	{
-		return new ItemStack(itemBlock);
-	}
-
-	@Override
-	public void neighborChanged(BlockState state, Level worldIn, BlockPos pos, Block blockIn, BlockPos fromPos, boolean moving)
-	{
-		if (state.getValue(HALF) == EnumEngineeringHalf.UPPER)
-		{
-			BlockPos blockpos = pos.down();
-			BlockState iblockstate = worldIn.getBlockState(blockpos);
-
-			if (iblockstate.getBlock() != this)
-			{
-				worldIn.setBlockToAir(pos);
-			} else if (blockIn != this)
-			{
-				iblockstate.neighborChanged(worldIn, blockpos, blockIn, fromPos, moving);
-			}
+			return this.defaultBlockState()
+				.setValue(FACING, context.getHorizontalDirection().getOpposite())
+				.setValue(HALF, DoubleBlockHalf.LOWER);
 		} else
 		{
-			BlockPos blockpos1 = pos.up();
-			BlockState iblockstate1 = worldIn.getBlockState(blockpos1);
+			return null;
+		}
+	}
 
-			if (iblockstate1.getBlock() != this)
+	@Override
+	public void setPlacedBy(@Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState state,
+							LivingEntity placer, @Nonnull ItemStack stack)
+	{
+		level.setBlockAndUpdate(pos.above(), state.setValue(HALF, DoubleBlockHalf.UPPER));
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nonnull
+	@Override
+	public InteractionResult use(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos usePos,
+								 @Nonnull Player player, @Nonnull InteractionHand hand, @Nonnull BlockHitResult hit)
+	{
+		// The real entity is stored in the top half.
+		var pos = state.getValue(HALF) == DoubleBlockHalf.UPPER ? usePos : usePos.above();
+
+		if (level.getBlockEntity(pos) instanceof TileEntityEngineeringTable blockEntity)
+		{
+			// TODO
+			// player.openGui(Cyberware.INSTANCE, 2, world, pos.getX(), pos.getY(), pos.getZ());
+
+			return InteractionResult.SUCCESS;
+		}
+
+		return InteractionResult.FAIL;
+	}
+
+	private static final VoxelShape SHAPE_SOUTH = Shapes.create(
+		new AABB(4F / 16F, 0F, 0F / 16F, 12F / 16F, 1F, 12F / 16F)
+	);
+	private static final VoxelShape SHAPE_NORTH = Shapes.create(
+		new AABB(4F / 16F, 0F, 4F / 16F, 12F / 16F, 1F, 16F / 16F)
+	);
+	private static final VoxelShape SHAPE_EAST = Shapes.create(
+		new AABB(0F / 16F, 0F, 4F / 16F, 12F / 16F, 1F, 12F / 16F)
+	);
+	private static final VoxelShape SHAPE_WEST = Shapes.create(
+		new AABB(4F / 16F, 0F, 4F / 16F, 16F / 16F, 1F, 12F / 16F)
+	);
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nonnull
+	@Override
+	public VoxelShape getShape(@Nonnull BlockState state, @Nonnull BlockGetter level, @Nonnull BlockPos pos,
+							   @Nonnull CollisionContext context)
+	{
+		return switch (state.getValue(FACING).getOpposite())
+		{
+			case SOUTH -> SHAPE_SOUTH;
+			case WEST -> SHAPE_WEST;
+			case EAST -> SHAPE_EAST;
+			default -> SHAPE_NORTH;
+		};
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Override
+	public boolean canSurvive(@Nonnull BlockState state, @Nonnull LevelReader level, @Nonnull BlockPos pos)
+	{
+		var below = pos.below();
+		var stateBelow = level.getBlockState(below);
+
+		return state.getValue(HALF) == DoubleBlockHalf.LOWER
+			? stateBelow.isFaceSturdy(level, below, Direction.UP)
+			: stateBelow.is(this);
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Override
+	public void onRemove(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState newState, boolean moving)
+	{
+		if (level.getBlockEntity(pos) instanceof TileEntityEngineeringTable blockEntity)
+		{
+			var handler = blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().orElseThrow();
+			for (int i = 0; i < handler.getSlots(); i++)
 			{
-				worldIn.setBlockToAir(pos);
-				if (!worldIn.isClientSide())
+				var stack = handler.getStackInSlot(i);
+
+				if (!stack.isEmpty())
 				{
-					this.dropBlockAsItem(worldIn, pos, state, 0);
+					level.addFreshEntity(new ItemEntity(
+						level, pos.getX(), pos.getY(), pos.getZ(),
+						stack
+					));
 				}
 			}
 		}
-	}
 
-	@Override
-	public void onBlockHarvested(Level worldIn, BlockPos pos, BlockState state, Player entityPlayer)
-	{
-		BlockPos blockpos = pos.relative(Direction.DOWN);
-		BlockPos blockpos1 = pos.relative(Direction.UP);
-
-		if (entityPlayer.isCreative() && state.getValue(HALF) == EnumEngineeringHalf.UPPER && worldIn.getBlockState(blockpos).getBlock() == this)
-		{
-			worldIn.setBlockToAir(blockpos);
-		}
-
-		if (state.getValue(HALF) == EnumEngineeringHalf.LOWER && worldIn.getBlockState(blockpos1).getBlock() == this)
-		{
-			if (entityPlayer.isCreative())
-			{
-				worldIn.setBlockToAir(pos);
-			}
-
-			worldIn.setBlockToAir(blockpos1);
-		}
-	}
-
-	@Override
-	public void onBlockPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack)
-	{
-		if (stack.hasDisplayName())
-		{
-			BlockEntity tileentity = worldIn.getBlockEntity(pos);
-
-			if (tileentity instanceof TileEntityEngineeringTable)
-			{
-				((TileEntityEngineeringTable) tileentity).setCustomInventoryName(stack.getDisplayName());
-			}
-		}
-	}
-
-	@Override
-	public BlockEntity createNewTileEntity(@Nonnull Level world, int metadata)
-	{
-		return (metadata & 1) > 0 ? new TileEntityEngineeringTable() : new TileEntityEngineeringDummy();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public EnumBlockRenderType getRenderType(BlockState state)
-	{
-		return EnumBlockRenderType.MODEL;
-	}
-
-	@Override
-	public boolean onBlockActivated(Level world, BlockPos pos, BlockState blockState,
-									Player entityPlayer, EnumHand hand,
-									Direction side, float hitX, float hitY, float hitZ)
-	{
-		boolean top = blockState.getValue(HALF) == EnumEngineeringHalf.UPPER;
-		BlockPos checkPos = top ? pos : pos.add(0, 1, 0);
-		BlockEntity tileentity = world.getBlockEntity(checkPos);
-
-		if (tileentity instanceof TileEntityEngineeringTable)
-		{
-			entityPlayer.openGui(Cyberware.INSTANCE, 2, world, checkPos.getX(), checkPos.getY(), checkPos.getZ());
-		}
-
-		return true;
-	}
-
-	@Override
-	public void breakBlock(Level world, @Nonnull BlockPos pos, @Nonnull BlockState blockState)
-	{
-		boolean top = blockState.getValue(HALF) == EnumEngineeringHalf.UPPER;
-		if (top)
-		{
-			BlockEntity tileentity = world.getBlockEntity(pos);
-
-			if (tileentity instanceof TileEntityEngineeringTable engineering
-				&& !world.isClientSide())
-			{
-				for (int indexSlot = 0; indexSlot < engineering.slots.getSlots(); indexSlot++)
-				{
-					ItemStack stack = engineering.slots.getStackInSlot(indexSlot);
-					if (!stack.isEmpty())
-					{
-						InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(), stack);
-					}
-				}
-			}
-
-			super.breakBlock(world, pos, blockState);
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public BlockState getStateFromMeta(int metadata)
-	{
-		return this.defaultBlockState()
-			.setValue(HALF, (metadata & 1) > 0 ? EnumEngineeringHalf.UPPER : EnumEngineeringHalf.LOWER)
-			.setValue(FACING, Direction.byHorizontalIndex(metadata >> 1));
-	}
-
-	@Override
-	public int getMetaFromState(BlockState blockState)
-	{
-		return (blockState.getValue(FACING).getHorizontalIndex() << 1)
-			+ (blockState.getValue(HALF) == EnumEngineeringHalf.UPPER ? 1 : 0);
-	}
-
-	@Nonnull
-	@Override
-	protected BlockStateContainer createBlockState()
-	{
-		return new BlockStateContainer(this, HALF, FACING);
-	}
-
-	@Override
-	public boolean canPlaceBlockAt(Level worldIn, BlockPos pos)
-	{
-		return pos.getY() < worldIn.getHeight() - 1
-			&& super.canPlaceBlockAt(worldIn, pos)
-			&& super.canPlaceBlockAt(worldIn, pos.up());
-	}
-
-	@SuppressWarnings("deprecation")
-	@Nonnull
-	@Override
-	public EnumPushReaction getPushReaction(BlockState blockState)
-	{
-		return EnumPushReaction.DESTROY;
-	}
-
-	@Nonnull
-	@Override
-	public Item getItemDropped(BlockState blockState, RandomSource rand, int fortune)
-	{
-		return blockState.getValue(HALF) == EnumEngineeringHalf.UPPER ? Items.AIR : this.itemBlock;
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public boolean isOpaqueCube(BlockState blockState)
-	{
-		return blockState.getValue(HALF) == EnumEngineeringHalf.LOWER;
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public boolean isFullCube(BlockState blockState)
-	{
-		return blockState.getValue(HALF) == EnumEngineeringHalf.LOWER;
-	}
-
-	public enum EnumEngineeringHalf implements StringRepresentable
-	{
-		UPPER,
-		LOWER;
-
-		public String toString()
-		{
-			return this.getName();
-		}
-
-		@Override
-		@Nonnull
-		public String getSerializedName()
-		{
-			return this == UPPER ? "upper" : "lower";
-		}
+		super.onRemove(state, level, pos, newState, moving);
 	}
 }

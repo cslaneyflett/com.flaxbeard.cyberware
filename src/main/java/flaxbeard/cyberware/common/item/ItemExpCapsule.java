@@ -25,20 +25,9 @@ import java.util.List;
 
 public class ItemExpCapsule extends Item
 {
-	public ItemExpCapsule(String name)
+	public ItemExpCapsule(Properties pProperties)
 	{
-		super();
-
-		setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(this);
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		setCreativeTab(Cyberware.creativeTab);
-
-		setMaxDamage(0);
-		setMaxStackSize(1);
-
-		CyberwareContent.items.add(this);
+		super(pProperties);
 	}
 
 	@Override

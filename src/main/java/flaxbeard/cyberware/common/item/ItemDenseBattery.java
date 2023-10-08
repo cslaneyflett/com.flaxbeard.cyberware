@@ -10,9 +10,9 @@ import net.minecraft.world.item.ItemStack;
 
 public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 {
-	public ItemDenseBattery(String name, EnumSlot slot)
+	public ItemDenseBattery(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot);
+		super(itemProperties, cyberwareProperties, EnumSlot.LOWER_ORGANS);
 	}
 
 	@Override

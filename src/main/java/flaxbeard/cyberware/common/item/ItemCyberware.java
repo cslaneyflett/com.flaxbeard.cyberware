@@ -12,6 +12,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.NonNullList;
 import net.minecraft.util.random.Weight;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -22,30 +23,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class ItemCyberware extends ItemCyberwareBase implements ICyberware, ICyberwareTabItem, IDeconstructable
+public class ItemCyberware extends Item implements ICyberware, ICyberwareTabItem, IDeconstructable
 {
-	private final EnumSlot[] slots;
-	private int[] essence;
-	private NonNullList<NonNullList<ItemStack>> components;
-
-	public ItemCyberware(String name, EnumSlot[] slots, String[] subnames)
+	public ItemCyberware(Properties itemProperties, CyberwareProperties cyberwareProperties, EnumSlot slot)
 	{
-		super(name, subnames);
-
-		this.slots = slots;
-
-		this.essence = new int[subnames.length + 1];
-		this.components = NonNullList.create();
-	}
-
-	public ItemCyberware(String name, EnumSlot slot, String[] subnames)
-	{
-		this(name, new EnumSlot[]{slot}, subnames);
-	}
-
-	public ItemCyberware(String name, EnumSlot slot)
-	{
-		this(name, slot, new String[0]);
+		super(itemProperties);
 	}
 
 	public ItemCyberware setWeights(Integer... raw)

@@ -12,30 +12,20 @@ import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
 public class ItemBlockCyberware extends BlockItem implements ICyberwareTabItem
 {
-	private String[] tt;
-
-	public ItemBlockCyberware(Block block, Properties properties)
-	{
-		super(block, properties);
-	}
-
+	private final String[] tooltip;
+	
 	public ItemBlockCyberware(Block block, Properties properties, String... tooltip)
 	{
 		super(block, properties);
-		this.tt = tooltip;
+		this.tooltip = tooltip;
 	}
-
-	public ItemBlockCyberware(Block block, String... tooltip)
-	{
-		super(block, new Properties());
-		this.tt = tooltip;
-	}
-
+	
 	@Override
 	public EnumCategory getCategory(ItemStack stack)
 	{
@@ -44,13 +34,13 @@ public class ItemBlockCyberware extends BlockItem implements ICyberwareTabItem
 
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag advanced)
+	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag)
 	{
-		if (this.tt == null) return;
+		super.appendHoverText(stack, level, tooltip, flag);
+		if (this.tooltip == null) return;
 
-		for (String str : tt)
+		for (String str : this.tooltip)
 		{
-			// TODO: chat components .translatable
 			tooltip.add(Component.literal(ChatFormatting.GRAY + I18n.get(str)));
 		}
 	}

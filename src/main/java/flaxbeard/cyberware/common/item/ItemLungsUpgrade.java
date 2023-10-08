@@ -21,10 +21,9 @@ public class ItemLungsUpgrade extends ItemCyberware
 	private static final int META_COMPRESSED_OXYGEN = 0;
 	private static final int META_HYPEROXYGENATION_BOOST = 1;
 
-	public ItemLungsUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemLungsUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.LUNGS);
 	}
 
 	// TODO: render

@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.item;
 import com.google.common.collect.HashMultimap;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
+import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import net.minecraft.world.damagesource.DamageSource;
@@ -25,16 +26,14 @@ public class ItemBoneUpgrade extends ItemCyberware
 	public static final int META_FLEX = 1;
 	public static final int META_BATTERY = 2;
 	public static final int MAX_STACK_SIZE_LACING = 5;
-
-	public ItemBoneUpgrade(String name, EnumSlot slot, String[] subnames)
-	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
-	}
-
 	private static final UUID idBoneHealthAttribute = UUID.fromString("8bce997a-4c3a-11e6-beb8-9e71128cae77");
 	private static final HashMap<Integer, HashMultimap<Attribute, AttributeModifier>> multimapBoneHealthAttributes =
 		new HashMap<>(MAX_STACK_SIZE_LACING + 1);
+
+	public ItemBoneUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
+	{
+		super(itemProperties, cyberwareProperties, ICyberware.EnumSlot.BONE);
+	}
 
 	private static HashMultimap<Attribute, AttributeModifier> getBoneHealthAttribute(int stackSize)
 	{

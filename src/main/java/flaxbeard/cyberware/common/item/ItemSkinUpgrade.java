@@ -45,6 +45,11 @@ public class ItemSkinUpgrade extends ItemCyberware
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
+	public ItemSkinUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
+	{
+		super(itemProperties, cyberwareProperties, EnumSlot.SKIN);
+	}
+
 	@SubscribeEvent
 	public void handleLivingUpdate(CyberwareUpdateEvent event)
 	{

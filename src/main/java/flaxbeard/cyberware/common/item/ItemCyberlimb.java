@@ -36,6 +36,11 @@ public class ItemCyberlimb extends ItemCyberware implements ISidedLimb
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
+	public ItemCyberlimb(Properties itemProperties, CyberwareProperties cyberwareProperties)
+	{
+		super(itemProperties, cyberwareProperties, EnumSlot.HEART);
+	}
+
 	@Override
 	public boolean isEssential(ItemStack stack)
 	{

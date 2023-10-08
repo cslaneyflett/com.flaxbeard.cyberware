@@ -2,13 +2,14 @@ package flaxbeard.cyberware.common.item;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ISpecialBattery;
+import flaxbeard.cyberware.api.item.ICyberware;
 import net.minecraft.world.item.ItemStack;
 
 public class ItemCreativeBattery extends ItemCyberware implements ISpecialBattery
 {
-	public ItemCreativeBattery(String name, EnumSlot slot)
+	public ItemCreativeBattery(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot);
+		super(itemProperties, cyberwareProperties, EnumSlot.LOWER_ORGANS);
 	}
 
 	@Override

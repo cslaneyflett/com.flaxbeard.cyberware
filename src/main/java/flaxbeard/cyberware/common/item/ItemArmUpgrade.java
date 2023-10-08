@@ -2,6 +2,7 @@ package flaxbeard.cyberware.common.item;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
+import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.common.CyberwareContent;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,10 +16,9 @@ public class ItemArmUpgrade extends ItemCyberware
 {
 	public static final int META_BOW = 0;
 
-	public ItemArmUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemArmUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, ICyberware.EnumSlot.BONE);
 	}
 
 	@Override

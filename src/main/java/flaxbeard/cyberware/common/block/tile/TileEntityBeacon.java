@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -70,9 +71,11 @@ public class TileEntityBeacon extends BlockEntity
 		return mapBeaconPositionByDimension.computeIfAbsent(idDimension, k -> new HashMap<>());
 	}
 
-	public static void tick(Level level, BlockPos pos, BlockState state, TileEntityBeacon blockEntity)
+	public static void tick(Level level, BlockPos pos, BlockState state, BlockEntity be)
 	{
 		assert level != null;
+		var blockEntity = (TileEntityBeacon) be;
+
 		boolean working = level.hasNeighborSignal(pos);
 
 		if (!blockEntity.wasWorking && working)

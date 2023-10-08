@@ -54,10 +54,9 @@ public class ItemHandUpgrade extends ItemCyberware implements IMenuItem
 		);
 	}
 
-	public ItemHandUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemHandUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.HAND);
 	}
 
 	@Override

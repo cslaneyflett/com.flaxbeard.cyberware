@@ -8,7 +8,6 @@ import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb.EnumSide;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.BlockSurgeryChamber;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.handler.EssentialsMissingHandler;
@@ -16,6 +15,7 @@ import flaxbeard.cyberware.common.item.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.items.LowerOrgans;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -439,9 +439,10 @@ public class TileEntitySurgery extends BlockEntity
 		return r;
 	}
 
-	public static void tick(Level level, BlockPos pos, BlockState state, TileEntitySurgery blockEntity)
+	public static void tick(Level level, BlockPos pos, BlockState state, BlockEntity be)
 	{
 		assert level != null;
+		var blockEntity = (TileEntitySurgery) be;
 
 		if (blockEntity.inProgress && blockEntity.progressTicks < 80)
 		{
@@ -653,11 +654,12 @@ public class TileEntitySurgery extends BlockEntity
 					this.targetEntity = entityLivingBase;
 				} else
 				{
-					BlockState state = level.getBlockState(worldPosition.relative(Direction.DOWN));
-					if (state.getBlock() instanceof BlockSurgeryChamber)
+					var chamberPos = worldPosition.relative(Direction.DOWN);
+					var state = level.getBlockState(chamberPos);
+					if (state.getBlock() instanceof BlockSurgeryChamber surgeryChamber)
 					{
-						((BlockSurgeryChamber) state.getBlock()).toggleDoor(true, state,
-							worldPosition.relative(Direction.DOWN),
+						surgeryChamber.toggleDoor(true, state,
+							chamberPos,
 							level
 						);
 					}
@@ -713,7 +715,7 @@ public class TileEntitySurgery extends BlockEntity
 					{
 						hasConsume = true;
 					}
-					if (ware instanceof ItemCyberware && (((ItemCyberware) ware).getPowerProduction(ret) > 0 || ware == CyberwareContent.creativeBattery))
+					if (ware instanceof ItemCyberware && (((ItemCyberware) ware).getPowerProduction(ret) > 0 || ware == LowerOrgans.BATTERY_CREATIVE.get()))
 					{
 						hasProduce = true;
 					}

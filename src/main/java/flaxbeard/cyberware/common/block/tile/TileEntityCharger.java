@@ -81,9 +81,11 @@ public class TileEntityCharger extends BlockEntity implements IEnergyStorage
 	//		return super.hasCapability(capability, facing);
 	//	}
 
-	public static void tick(Level level, BlockPos pos, BlockState state, TileEntityCharger blockEntity)
+	public static void tick(Level level, BlockPos pos, BlockState state, BlockEntity be)
 	{
 		assert level != null;
+		var blockEntity = (TileEntityCharger) be;
+
 		List<LivingEntity> entitiesInRange = level.getEntitiesOfClass(
 			LivingEntity.class,
 			new AABB(pos.getX(), pos.getY(), pos.getZ(),

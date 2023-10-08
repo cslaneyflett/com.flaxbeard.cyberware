@@ -13,18 +13,9 @@ import net.minecraft.world.item.Tier;
 
 public class ItemSwordCyberware extends SwordItem implements IDeconstructable
 {
-	public ItemSwordCyberware(String name, Tier tier)
+	public ItemSwordCyberware(Tier pTier, int pAttackDamageModifier, float pAttackSpeedModifier, Properties pProperties)
 	{
-		// int pAttackDamageModifier, float pAttackSpeedModifier, Item.Properties pProperties
-		super(tier);
-
-		setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(this);
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		setCreativeTab(Cyberware.creativeTab);
-
-		CyberwareContent.items.add(this);
+		super(pTier, pAttackDamageModifier, pAttackSpeedModifier, pProperties);
 	}
 
 	@Override
@@ -39,7 +30,7 @@ public class ItemSwordCyberware extends SwordItem implements IDeconstructable
 		// TODO: magic numbers
 		return NNLUtil.fromArray
 			(new ItemStack[]{
-				new ItemStack(Items.IRON_INGOT, 2, CyberwareItemMetadata.of(0)),
+				new ItemStack(Items.IRON_INGOT, 2),
 				new ItemStack(CyberwareContent.component, 1, CyberwareItemMetadata.of(2)),
 				new ItemStack(CyberwareContent.component, 1, CyberwareItemMetadata.of(4))
 			});

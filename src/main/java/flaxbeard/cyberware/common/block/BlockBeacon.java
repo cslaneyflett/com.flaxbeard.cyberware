@@ -1,16 +1,19 @@
 package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
@@ -23,12 +26,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Objects;
 
-public class BlockBeacon extends Block implements EntityBlock, SimpleWaterloggedBlock
+public class BlockBeacon extends HorizontalDirectionalBlock implements EntityBlock, SimpleWaterloggedBlock
 {
-	private static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-	private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
 	public BlockBeacon(Properties pProperties)
 	{
@@ -48,18 +49,20 @@ public class BlockBeacon extends Block implements EntityBlock, SimpleWaterlogged
 		return new TileEntityBeacon(pPos, pState);
 	}
 
+	@Nullable
 	@Override
-	public void onNeighborChange(BlockState state, LevelReader level, BlockPos pos, BlockPos neighbor)
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
+																  @Nonnull BlockEntityType<T> type)
 	{
-		super.onNeighborChange(state, level, pos, neighbor);
+		return type == BlockEntities.BEACON.get() ? TileEntityBeacon::tick : null;
+	}
 
-		if (pos.relative(Direction.DOWN) == neighbor &&
-			!level.getBlockState(neighbor).isCollisionShapeFullBlock(level, neighbor))
-		{
-			Level fullLevel = (Level) level;
-			BlockBeacon.dropResources(state, fullLevel, pos);
-			this.destroy(fullLevel, pos, state);
-		}
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Override
+	public boolean canSurvive(@Nonnull BlockState state, @Nonnull LevelReader level, @Nonnull BlockPos pos)
+	{
+		var below = pos.below();
+		return level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
 	}
 
 	private static final VoxelShape SHAPE = Shapes.create(
@@ -81,7 +84,7 @@ public class BlockBeacon extends Block implements EntityBlock, SimpleWaterlogged
 	{
 		var fluidState = context.getLevel().getFluidState(context.getClickedPos());
 
-		return Objects.requireNonNull(super.getStateForPlacement(context))
+		return this.defaultBlockState()
 			.setValue(FACING, context.getHorizontalDirection().getOpposite())
 			.setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
 	}

@@ -25,10 +25,9 @@ public class ItemCybereyes extends ItemCyberware
 {
 	private static boolean isBlind;
 
-	public ItemCybereyes(String name, EnumSlot slot)
+	public ItemCybereyes(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.EYES);
 	}
 
 	@Override

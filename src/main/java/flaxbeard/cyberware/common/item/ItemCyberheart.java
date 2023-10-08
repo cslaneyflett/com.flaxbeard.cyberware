@@ -14,10 +14,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class ItemCyberheart extends ItemCyberware
 {
-	public ItemCyberheart(String name, EnumSlot slot)
+	public ItemCyberheart(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.HEART);
 	}
 
 	@Override

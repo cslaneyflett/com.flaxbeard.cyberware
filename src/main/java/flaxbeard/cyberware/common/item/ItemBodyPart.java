@@ -13,6 +13,7 @@ public class ItemBodyPart extends ItemCyberware implements ISidedLimb
 		super(name, slots, subnames);
 	}
 
+
 	@Override
 	public boolean isEssential(ItemStack stack)
 	{

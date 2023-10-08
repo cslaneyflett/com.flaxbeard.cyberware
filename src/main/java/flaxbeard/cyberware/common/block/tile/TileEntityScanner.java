@@ -242,9 +242,13 @@ public class TileEntityScanner extends BlockEntity
 		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());
 	}
 
-	public static void tick(Level level, BlockPos pos, BlockState state, TileEntityScanner blockEntity)
+	public static void tick(Level level, BlockPos pos, BlockState state, BlockEntity be)
 	{
+		assert level != null;
+		var blockEntity = (TileEntityScanner) be;
+
 		ItemStack toDestroy = blockEntity.slots.getStackInSlot(0);
+
 		if (CyberwareAPI.canDeconstruct(toDestroy)
 			&& toDestroy.getCount() > 0
 			&& blockEntity.slots.getStackInSlot(2).isEmpty())

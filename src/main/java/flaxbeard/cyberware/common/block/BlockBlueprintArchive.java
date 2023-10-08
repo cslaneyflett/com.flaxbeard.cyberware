@@ -6,26 +6,22 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Objects;
 
-public class BlockBlueprintArchive extends Block implements EntityBlock
+public class BlockBlueprintArchive extends HorizontalDirectionalBlock implements EntityBlock
 {
-	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-
 	public BlockBlueprintArchive(Properties pProperties)
 	{
 		super(pProperties);
@@ -47,7 +43,7 @@ public class BlockBlueprintArchive extends Block implements EntityBlock
 	@Override
 	public BlockState getStateForPlacement(@Nonnull BlockPlaceContext context)
 	{
-		return Objects.requireNonNull(super.getStateForPlacement(context))
+		return this.defaultBlockState()
 			.setValue(FACING, context.getHorizontalDirection().getOpposite());
 	}
 
@@ -67,7 +63,28 @@ public class BlockBlueprintArchive extends Block implements EntityBlock
 		return InteractionResult.FAIL;
 	}
 
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Override
+	public void onRemove(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState newState, boolean moving)
+	{
+		if (level.getBlockEntity(pos) instanceof TileEntityBlueprintArchive blockEntity)
+		{
+			var handler = blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().orElseThrow();
+			for (int i = 0; i < handler.getSlots(); i++)
+			{
+				var stack = handler.getStackInSlot(i);
+
+				if (!stack.isEmpty())
+				{
+					level.addFreshEntity(new ItemEntity(
+						level, pos.getX(), pos.getY(), pos.getZ(),
+						stack
+					));
+				}
+			}
+		}
+	}
+
 	// TODO
-	// breakBlock      -> drop this.slots
 	// onBlockPlacedBy -> blockEntity.setCustomInventoryName(stack.getDisplayName())
 }

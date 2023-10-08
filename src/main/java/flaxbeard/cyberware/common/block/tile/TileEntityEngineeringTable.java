@@ -21,6 +21,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,7 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class TileEntityEngineeringTable extends BlockEntity implements ITickable
+public class TileEntityEngineeringTable extends BlockEntity
 {
 	public TileEntityEngineeringTable(BlockPos pPos, BlockState pBlockState)
 	{
@@ -602,20 +603,21 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		}
 	}
 
-	@Override
-	public void update()
+	public static void tick(Level level, BlockPos pos, BlockState state, BlockEntity be)
 	{
 		assert level != null;
-		if (level.hasNeighborSignal(worldPosition) || level.hasNeighborSignal(worldPosition.offset(0, -1, 0)))
+		var blockEntity = (TileEntityEngineeringTable) be;
+
+		if (level.hasNeighborSignal(pos) || level.hasNeighborSignal(pos.offset(0, -1, 0)))
 		{
-			if (time == 0)
+			if (blockEntity.time == 0)
 			{
-				this.smash(false);
+				blockEntity.smash(false);
 			}
-			time = (time + 1) % 25;
+			blockEntity.time = (blockEntity.time + 1) % 25;
 		} else
 		{
-			time = 0;
+			blockEntity.time = 0;
 		}
 	}
 
@@ -629,14 +631,14 @@ public class TileEntityEngineeringTable extends BlockEntity implements ITickable
 		level.playSound(player, worldPosition, SoundEvents.ITEM_BREAK, SoundSource.BLOCKS, 1F, .5F);
 		// TODO: particles
 
-		//		for (int index = 0; index < 10; index++)
-		//		{
-		//			level.spawnParticle(EnumParticleTypes.ITEM_CRACK,
-		//				x + .5F, y, z + .5F,
-		//				.25F * (level.getRandom().nextFloat() - .5F), .1F, .25F * (level.getRandom().nextFloat()
-		//					- .5F),
-		//				Item.getIdFromItem(slots.getStackInSlot(0).getItem())
-		//			);
-		//		}
+		//for (int index = 0; index < 10; index++)
+		//{
+		//	level.spawnParticle(EnumParticleTypes.ITEM_CRACK,
+		//		x + .5F, y, z + .5F,
+		//		.25F * (level.getRandom().nextFloat() - .5F), .1F, .25F * (level.getRandom().nextFloat()
+		//			- .5F),
+		//		Item.getIdFromItem(slots.getStackInSlot(0).getItem())
+		//	);
+		//}
 	}
 }

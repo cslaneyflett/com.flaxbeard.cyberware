@@ -84,10 +84,10 @@ public class VanillaWares
 				));
 			} else
 			{
-				MobEffect effect = entityLivingBase.getActivePotionEffect(MobEffects.NIGHT_VISION);
+				MobEffectInstance effect = entityLivingBase.getEffect(MobEffects.NIGHT_VISION);
 				if (effect != null && effect.getAmplifier() == -53)
 				{
-					entityLivingBase.removePotionEffect(MobEffects.NIGHT_VISION);
+					entityLivingBase.removeEffect(MobEffects.NIGHT_VISION);
 				}
 			}
 		}
@@ -157,10 +157,10 @@ public class VanillaWares
 		{
 			List<String> ret = new ArrayList<>();
 			String[] desc = this.getDesciption(stack);
-			if (desc != null && desc.length > 0)
+			if (desc.length > 0)
 			{
 				String format = desc[0];
-				if (format.length() > 0)
+				if (!format.isEmpty())
 				{
 					ret.addAll(Arrays.asList(desc));
 				}

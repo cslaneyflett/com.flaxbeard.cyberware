@@ -19,14 +19,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class ItemSurgeryChamber extends BlockItem implements ICyberwareTabItem
+public class ItemSurgeryChamber extends ItemBlockCyberware
 {
-	private String[] tt;
-
-	public ItemSurgeryChamber(Block block, String... tooltip)
+	public ItemSurgeryChamber(Block block, Properties properties, String... tooltip)
 	{
-		super(block, new Properties());
-		this.tt = tooltip;
+		super(block, properties, tooltip);
 	}
 
 	@Nonnull
@@ -43,39 +40,20 @@ public class ItemSurgeryChamber extends BlockItem implements ICyberwareTabItem
 		}
 	}
 
-//	public static void placeDoor(Level worldIn, BlockPos pos, Direction facing, Block door)
-//	{
-//		BlockPos blockpos2 = pos.above();
-//
-//		BlockState iblockstate = door.defaultBlockState().setValue(BlockSurgeryChamber.FACING, facing);
-//		worldIn.setBlockState(pos, iblockstate.setValue(
-//			BlockSurgeryChamber.HALF,
-//			BlockSurgeryChamber.EnumChamberHalf.LOWER
-//		), 2);
-//		worldIn.setBlockState(blockpos2, iblockstate.setValue(
-//			BlockSurgeryChamber.HALF,
-//			BlockSurgeryChamber.EnumChamberHalf.UPPER
-//		), 2);
-//		worldIn.updateNeighborsAt(pos, door);
-//		worldIn.updateNeighborsAt(blockpos2, door);
-//	}
-
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag advanced)
-	{
-		if (this.tt != null)
-		{
-			for (String str : tt)
-			{
-				tooltip.add(Component.literal(ChatFormatting.GRAY + I18n.get(str)));
-			}
-		}
-	}
-
-	@Override
-	public EnumCategory getCategory(ItemStack stack)
-	{
-		return EnumCategory.BLOCKS;
-	}
+	//	public static void placeDoor(Level worldIn, BlockPos pos, Direction facing, Block door)
+	//	{
+	//		BlockPos blockpos2 = pos.above();
+	//
+	//		BlockState iblockstate = door.defaultBlockState().setValue(BlockSurgeryChamber.FACING, facing);
+	//		worldIn.setBlockState(pos, iblockstate.setValue(
+	//			BlockSurgeryChamber.HALF,
+	//			BlockSurgeryChamber.EnumChamberHalf.LOWER
+	//		), 2);
+	//		worldIn.setBlockState(blockpos2, iblockstate.setValue(
+	//			BlockSurgeryChamber.HALF,
+	//			BlockSurgeryChamber.EnumChamberHalf.UPPER
+	//		), 2);
+	//		worldIn.updateNeighborsAt(pos, door);
+	//		worldIn.updateNeighborsAt(blockpos2, door);
+	//	}
 }

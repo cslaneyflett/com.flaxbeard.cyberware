@@ -15,10 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -33,11 +30,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Objects;
 
-public class BlockComponentBox extends Block implements EntityBlock, SimpleWaterloggedBlock
+public class BlockComponentBox extends HorizontalDirectionalBlock implements EntityBlock, SimpleWaterloggedBlock
 {
-	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 	private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 	public BlockItem itemBlock;
 
@@ -84,7 +79,7 @@ public class BlockComponentBox extends Block implements EntityBlock, SimpleWater
 	{
 		var fluidState = context.getLevel().getFluidState(context.getClickedPos());
 
-		return Objects.requireNonNull(super.getStateForPlacement(context))
+		return this.defaultBlockState()
 			.setValue(FACING, context.getHorizontalDirection().getOpposite())
 			.setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
 	}
@@ -129,6 +124,19 @@ public class BlockComponentBox extends Block implements EntityBlock, SimpleWater
 		return InteractionResult.FAIL;
 	}
 
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Override
+	public void onRemove(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState newState, boolean moving)
+	{
+		if (level.getBlockEntity(pos) instanceof TileEntityComponentBox blockEntity)
+		{
+			level.addFreshEntity(new ItemEntity(
+				level, pos.getX(), pos.getY(), pos.getZ(),
+				getStack(blockEntity)
+			));
+		}
+	}
+
 	private ItemStack getStack(TileEntityComponentBox box)
 	{
 		ItemStack stackToDrop = new ItemStack(itemBlock);
@@ -147,5 +155,4 @@ public class BlockComponentBox extends Block implements EntityBlock, SimpleWater
 
 	// TODO
 	// onBlockPlacedBy -> blockEntity.setCustomInventoryName(stack.getDisplayName())
-	// breakBlock -> if (box.doDrop) stackToDrop = getStack(box);
 }

@@ -29,10 +29,9 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 	public static final int META_AQUA = 1;
 	public static final int META_WHEELS = 2;
 
-	public ItemFootUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemFootUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.FOOT);
 	}
 
 	@Override

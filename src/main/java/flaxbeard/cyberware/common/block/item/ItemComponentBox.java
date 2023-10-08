@@ -20,11 +20,9 @@ import java.util.List;
 
 public class ItemComponentBox extends ItemBlockCyberware
 {
-	public ItemComponentBox(Block block)
+	public ItemComponentBox(Block block, Properties properties, String... tooltip)
 	{
-		super(block, new Properties()
-			.stacksTo(1)
-		);
+		super(block, properties, tooltip);
 	}
 
 	@Nonnull
@@ -35,8 +33,8 @@ public class ItemComponentBox extends ItemBlockCyberware
 		assert entityPlayer != null;
 
 		ItemStack itemStackIn = useOnContext.getItemInHand();
-		// TODO: gui
-		//		entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
+		// TODO
+		// entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
 		return InteractionResult.PASS;
 	}
 
@@ -57,7 +55,8 @@ public class ItemComponentBox extends ItemBlockCyberware
 			return res;
 		} else
 		{
-			//			entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
+			// TODO
+			// entityPlayer.openGui(Cyberware.INSTANCE, 6, worldIn, 0, 0, 0);
 		}
 		return InteractionResult.SUCCESS;
 	}

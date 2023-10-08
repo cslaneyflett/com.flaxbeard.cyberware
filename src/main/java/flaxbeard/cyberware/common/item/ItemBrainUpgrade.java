@@ -4,6 +4,7 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
+import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.IMenuItem;
 import flaxbeard.cyberware.common.ArmorClass;
 import flaxbeard.cyberware.common.CyberwareContent;
@@ -47,10 +48,9 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 	public static final int META_THREAT_MATRIX = 4;
 	public static final int META_RADIO = 5;
 
-	public ItemBrainUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemBrainUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, ICyberware.EnumSlot.CRANIUM);
 	}
 
 	@Override

@@ -43,6 +43,7 @@ public class TileEntityComponentBox extends BlockEntity
 
 		public boolean isItemValidForSlot(int slot, @Nonnull ItemStack stack)
 		{
+			// TODO: component tag?
 			if (!stack.isEmpty() && stack.getItem() == CyberwareContent.component) return true;
 
 			return stack.isEmpty();
@@ -69,7 +70,7 @@ public class TileEntityComponentBox extends BlockEntity
 	{
 		if (capability == ForgeCapabilities.ITEM_HANDLER)
 		{
-			return lazySlots .cast();
+			return lazySlots.cast();
 		}
 
 		return super.getCapability(capability, facing);
@@ -137,7 +138,7 @@ public class TileEntityComponentBox extends BlockEntity
 		customName = name;
 	}
 
-//	@Override
+	//	@Override
 	public Component getDisplayName()
 	{
 		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());

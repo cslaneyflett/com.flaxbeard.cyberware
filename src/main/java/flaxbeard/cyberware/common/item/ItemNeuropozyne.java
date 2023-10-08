@@ -16,26 +16,19 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
+// TODO look at tags doucmentation, it has helpful
 public class ItemNeuropozyne extends PotionItem
 {
+	public ItemNeuropozyne(Properties pProperties)
+	{
+		super(pProperties);
+	}
+
 	public @Nonnull ItemStack getDefaultInstance() {
 		return PotionUtils.setPotion(super.getDefaultInstance(), Potions.WATER);
 	}
 
-	public ItemNeuropozyne(String name)
-	{
-		super(new Properties());
-//
-//		setRegistryName(name);
-//		// ForgeRegistries.ITEMS.register(this);
-//		setTranslationKey(Cyberware.MODID + "." + name);
-//
-//		setCreativeTab(Cyberware.creativeTab);
-//
-//		setMaxDamage(0);
-//
-//		CyberwareContent.items.add(this);
-	}
+
 //
 //	@Nonnull
 //	@Override

@@ -28,10 +28,9 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 	public static final int META_BATTERY = 2;
 	public static final int META_ADRENALINE_PUMP = 3;
 
-	public ItemLowerOrgansUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemLowerOrgansUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.LOWER_ORGANS);
 	}
 
 	private static final Map<UUID, Collection<MobEffectInstance>> mapPotions = new HashMap<>();

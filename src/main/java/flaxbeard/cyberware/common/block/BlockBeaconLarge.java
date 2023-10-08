@@ -1,17 +1,20 @@
 package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityBeaconLarge;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -20,11 +23,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Objects;
 
-public class BlockBeaconLarge extends Block implements EntityBlock
+public class BlockBeaconLarge extends HorizontalDirectionalBlock implements EntityBlock
 {
-	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 	private static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
 	public BlockBeaconLarge(Properties pProperties)
@@ -43,6 +44,14 @@ public class BlockBeaconLarge extends Block implements EntityBlock
 	public BlockEntity newBlockEntity(@Nonnull BlockPos pPos, @Nonnull BlockState pState)
 	{
 		return new TileEntityBeaconLarge(pPos, pState);
+	}
+
+	@Nullable
+	@Override
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
+																  @Nonnull BlockEntityType<T> type)
+	{
+		return type == BlockEntities.BEACON_LARGE.get() ? TileEntityBeaconLarge::tick : null;
 	}
 
 	private static final VoxelShape eastWest = Shapes.create(
@@ -71,7 +80,7 @@ public class BlockBeaconLarge extends Block implements EntityBlock
 	{
 		var fluidState = context.getLevel().getFluidState(context.getClickedPos());
 
-		return Objects.requireNonNull(super.getStateForPlacement(context))
+		return this.defaultBlockState()
 			.setValue(FACING, context.getHorizontalDirection().getOpposite())
 			.setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
 	}

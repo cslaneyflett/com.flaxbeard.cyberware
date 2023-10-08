@@ -21,10 +21,9 @@ public class ItemLegUpgrade extends ItemCyberware
 	private static final int META_JUMP_BOOST = 0;
 	private static final int META_FALL_DAMAGE = 1;
 
-	public ItemLegUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemLegUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.LEG);
 	}
 
 	@Override

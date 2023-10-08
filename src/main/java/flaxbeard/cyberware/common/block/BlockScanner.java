@@ -1,30 +1,26 @@
 package flaxbeard.cyberware.common.block;
 
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.block.item.ItemBlockCyberware;
+import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
 import flaxbeard.cyberware.common.block.tile.TileEntityScanner;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
+import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumHand;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class BlockScanner extends Block implements EntityBlock
 {
@@ -33,88 +29,65 @@ public class BlockScanner extends Block implements EntityBlock
 		super(pProperties);
 	}
 
-	@SuppressWarnings("deprecation")
+	@Nullable
 	@Override
-	public boolean isOpaqueCube(BlockState blockState)
+	public BlockEntity newBlockEntity(@Nonnull BlockPos pPos, @Nonnull BlockState pState)
 	{
-		return false;
+		return new TileEntityScanner(pPos, pState);
 	}
 
-	@SuppressWarnings("deprecation")
+	@Nullable
 	@Override
-	public boolean isFullCube(BlockState blockState)
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
+																  @Nonnull BlockEntityType<T> type)
 	{
-		return false;
+		return type == BlockEntities.SCANNER.get() ? TileEntityScanner::tick : null;
 	}
 
-	@Override
-	public BlockEntity createNewTileEntity(@Nonnull Level world, int metadata)
-	{
-		return new TileEntityScanner();
-	}
-
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
 	@Nonnull
 	@Override
-	public EnumBlockRenderType getRenderType(BlockState blockState)
+	public InteractionResult use(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos,
+								 @Nonnull Player player, @Nonnull InteractionHand hand, @Nonnull BlockHitResult hit)
 	{
-		return EnumBlockRenderType.MODEL;
-	}
-
-	@Override
-	public void onBlockPlacedBy(Level world, BlockPos pos, BlockState blockState, LivingEntity placer, ItemStack stack)
-	{
-		if (stack.hasDisplayName())
+		if (level.getBlockEntity(pos) instanceof TileEntityScanner blockEntity)
 		{
-			BlockEntity tileentity = world.getBlockEntity(pos);
-
-			if (tileentity instanceof TileEntityScanner)
+			if (player.isCreative() &&
+				player.isShiftKeyDown())
 			{
-				((TileEntityScanner) tileentity).setCustomInventoryName(stack.getDisplayName());
+				blockEntity.ticks = CyberwareConfig.INSTANCE.SCANNER_TIME.get() - 200;
 			}
-		}
-	}
 
-	@Override
-	public boolean onBlockActivated(Level world, BlockPos pos, BlockState blockState,
-									Player entityPlayer, EnumHand hand,
-									Direction side, float hitX, float hitY, float hitZ)
-	{
-		BlockEntity tileentity = world.getBlockEntity(pos);
-		if (tileentity instanceof TileEntityScanner)
-		{
-			if (entityPlayer.isCreative()
-				&& entityPlayer.isShiftKeyDown())
-			{
-				TileEntityScanner scanner = ((TileEntityScanner) tileentity);
-				scanner.ticks = CyberwareConfig.INSTANCE.SCANNER_TIME.get() - 200;
-			}
-			entityPlayer.openGui(Cyberware.INSTANCE, 3, world, pos.getX(), pos.getY(), pos.getZ());
+			// TODO
+			// entityPlayer.openGui(Cyberware.INSTANCE, 3, world, pos.getX(), pos.getY(), pos.getZ());
+
+			return InteractionResult.SUCCESS;
 		}
 
-		return true;
+		return InteractionResult.FAIL;
 	}
 
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
 	@Override
-	public void breakBlock(Level world, @Nonnull BlockPos pos, @Nonnull BlockState blockState)
+	public void onRemove(@Nonnull BlockState state, @Nonnull Level level, @Nonnull BlockPos pos, @Nonnull BlockState newState, boolean moving)
 	{
-		BlockEntity tileentity = world.getBlockEntity(pos);
-
-		if (tileentity instanceof TileEntityScanner
-			&& !world.isClientSide())
+		if (level.getBlockEntity(pos) instanceof TileEntityScanner blockEntity)
 		{
-			TileEntityScanner scanner = (TileEntityScanner) tileentity;
-
-			for (int indexSlot = 0; indexSlot < scanner.slots.getSlots(); indexSlot++)
+			var handler = blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).resolve().orElseThrow();
+			for (int i = 0; i < handler.getSlots(); i++)
 			{
-				ItemStack stack = scanner.slots.getStackInSlot(indexSlot);
+				var stack = handler.getStackInSlot(i);
+
 				if (!stack.isEmpty())
 				{
-					InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(), stack);
+					level.addFreshEntity(new ItemEntity(
+						level, pos.getX(), pos.getY(), pos.getZ(),
+						stack
+					));
 				}
 			}
 		}
 
-		super.breakBlock(world, pos, blockState);
+		super.onRemove(state, level, pos, newState, moving);
 	}
 }

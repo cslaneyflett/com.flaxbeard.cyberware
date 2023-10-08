@@ -135,7 +135,7 @@ public class TileEntityBlueprintArchive extends BlockEntity
 		this.customName = name;
 	}
 
-//	@Override
+	// @Override
 	public Component getDisplayName()
 	{
 		return this.hasCustomName() ? Component.literal(this.getName()) : Component.translatable(this.getName());

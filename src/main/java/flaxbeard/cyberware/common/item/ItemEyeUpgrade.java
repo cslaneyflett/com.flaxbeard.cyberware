@@ -10,10 +10,9 @@ import net.minecraftforge.common.MinecraftForge;
 
 public class ItemEyeUpgrade extends ItemCyberware implements IMenuItem, IHudjack
 {
-	public ItemEyeUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemEyeUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.EYES);
 	}
 
 	@Override

@@ -43,10 +43,9 @@ public class ItemHeartUpgrade extends ItemCyberware
 	private static final Map<UUID, Integer> timesMedkit = new HashMap<>();
 	private static final Map<UUID, Float> damageMedkit = new HashMap<>();
 
-	public ItemHeartUpgrade(String name, EnumSlot slot, String[] subnames)
+	public ItemHeartUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(name, slot, subnames);
-		MinecraftForge.EVENT_BUS.register(this);
+		super(itemProperties, cyberwareProperties, EnumSlot.HEART);
 	}
 
 	private final static int[] incompatibleWithCyberHeart = {META_INTERNAL_DEFIBRILLATOR, META_CARDIOVASCULAR_COUPLER};
