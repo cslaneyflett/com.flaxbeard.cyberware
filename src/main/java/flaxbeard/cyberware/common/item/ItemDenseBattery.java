@@ -2,32 +2,35 @@ package flaxbeard.cyberware.common.item;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ISpecialBattery;
-import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
-import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
+import flaxbeard.cyberware.common.registry.items.LowerOrgans;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+
+import javax.annotation.Nonnull;
 
 public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 {
 	public ItemDenseBattery(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(itemProperties, cyberwareProperties, EnumSlot.LOWER_ORGANS);
+		super(itemProperties, cyberwareProperties, BodyRegionEnum.LOWER_ORGANS);
 	}
 
 	@Override
-	public boolean isIncompatible(ItemStack stack, ItemStack other)
+	public boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack other)
 	{
-		return other.getItem() == CyberwareContent.lowerOrgansUpgrades
-			&& CyberwareItemMetadata.get(stack) == ItemLowerOrgansUpgrade.META_BATTERY;
+		return CyberwareAPI.getCyberware(other).getSlot(other) == BodyRegionEnum.LOWER_ORGANS
+			&& stack.is(LowerOrgans.BATTERY.get());
 	}
 
 	@Override
-	public int add(ItemStack battery, ItemStack power, int amount, boolean simulate)
+	public int add(@Nonnull ItemStack battery, @Nonnull ItemStack power, int amount, boolean simulate)
 	{
 		if (power == ItemStack.EMPTY)
 		{
-			int amountToAdd = Math.min(getCapacity(battery) - getStoredEnergy(battery), amount);
+			int amountToAdd = Math.min(getPowerCapacity(battery) - getStoredEnergy(battery), amount);
 			if (!simulate)
 			{
 				CompoundTag data = CyberwareAPI.getCyberwareNBT(battery);
@@ -39,7 +42,7 @@ public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 	}
 
 	@Override
-	public int extract(ItemStack battery, int amount, boolean simulate)
+	public int extract(@Nonnull ItemStack battery, int amount, boolean simulate)
 	{
 		int amountToSub = Math.min(getStoredEnergy(battery), amount);
 		if (!simulate)
@@ -51,7 +54,7 @@ public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 	}
 
 	@Override
-	public int getStoredEnergy(ItemStack battery)
+	public int getStoredEnergy(@Nonnull ItemStack battery)
 	{
 		CompoundTag data = CyberwareAPI.getCyberwareNBT(battery);
 
@@ -63,7 +66,7 @@ public class ItemDenseBattery extends ItemCyberware implements ISpecialBattery
 	}
 
 	@Override
-	public int getCapacity(ItemStack battery)
+	public int getPowerCapacity(@Nonnull ItemStack battery)
 	{
 		return LibConstants.DENSE_BATTERY_CAPACITY;
 	}

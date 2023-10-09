@@ -1,6 +1,6 @@
 package flaxbeard.cyberware.common.network;
 
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import net.minecraft.core.BlockPos;
@@ -70,17 +70,17 @@ public class SurgeryRemovePacket
 				{
 					surgery.disableDependants(
 						surgery.slotsPlayer.getStackInSlot(slotNumber),
-						EnumSlot.values()[slotNumber / 10],
+						BodyRegionEnum.values()[slotNumber / 10],
 						slotNumber % LibConstants.WARE_PER_SLOT
 					);
 				} else
 				{
 					surgery.enableDependsOn(
 						surgery.slotsPlayer.getStackInSlot(slotNumber),
-						EnumSlot.values()[slotNumber / 10], slotNumber % LibConstants.WARE_PER_SLOT
+						BodyRegionEnum.values()[slotNumber / 10], slotNumber % LibConstants.WARE_PER_SLOT
 					);
 				}
-				surgery.updateEssential(EnumSlot.values()[slotNumber / LibConstants.WARE_PER_SLOT]);
+				surgery.updateEssential(BodyRegionEnum.values()[slotNumber / LibConstants.WARE_PER_SLOT]);
 				surgery.updateEssence();
 			}
 		}

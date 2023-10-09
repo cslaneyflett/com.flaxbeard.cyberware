@@ -10,7 +10,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -19,12 +18,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,123 +40,44 @@ public class VanillaWares
 			MinecraftForge.EVENT_BUS.register(this);
 		}
 
+		@Nonnull
 		@Override
-		public EnumSlot getSlot(ItemStack stack)
+		public BodyRegionEnum getSlot(@Nonnull ItemStack stack)
 		{
-			return EnumSlot.EYES;
+			return BodyRegionEnum.EYES;
 		}
 
 		@Override
-		public int installedStackSize(ItemStack stack)
+		public int maximumStackSize(@Nonnull ItemStack stack)
 		{
 			return 1;
 		}
 
+		@Nonnull
 		@Override
-		public NonNullList<NonNullList<ItemStack>> required(ItemStack stack)
+		public NonNullList<NonNullList<ItemStack>> required(@Nonnull ItemStack stack)
 		{
 			return NonNullList.create();
 		}
 
 		@Override
-		public boolean isIncompatible(ItemStack stack, ItemStack other)
+		public boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack other)
 		{
 			return CyberwareAPI.getCyberware(other).isEssential(other);
 		}
 
 		@Override
-		public boolean isEssential(ItemStack stack)
+		public boolean isEssential(@Nonnull ItemStack stack)
 		{
 			return true;
 		}
 
-		@SubscribeEvent
-		public void handleSpiderNightVision(CyberwareUpdateEvent event)
-		{
-			LivingEntity entityLivingBase = event.getEntity();
-			if (entityLivingBase.tickCount % 20 != 0) return;
-
-			ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
-			if (cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
-			{
-				entityLivingBase.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, -53, true,
-					false
-				));
-			} else
-			{
-				MobEffectInstance effect = entityLivingBase.getEffect(MobEffects.NIGHT_VISION);
-				if (effect != null && effect.getAmplifier() == -53)
-				{
-					entityLivingBase.removeEffect(MobEffects.NIGHT_VISION);
-				}
-			}
-		}
-
-		@OnlyIn(Dist.CLIENT)
-		@SubscribeEvent
-		public void onDrawScreenPost(RenderGameOverlayEvent.Pre event)
-		{
-			if (event.getType() == ElementType.CROSSHAIRS)
-			{
-				Player entityPlayer = Minecraft.getInstance().player;
-				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-				if (cyberwareUserData != null
-					&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
-				{
-					GlStateManager.translate(0, event.getResolution().getScaledHeight() / 5, 0);
-				}
-			}
-		}
-
-		@OnlyIn(Dist.CLIENT)
-		@SubscribeEvent
-		public void onDrawScreenPost(RenderGameOverlayEvent.Post event)
-		{
-			if (event.getType() == ElementType.CROSSHAIRS)
-			{
-				Player entityPlayer = Minecraft.getInstance().player;
-				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-				if (cyberwareUserData != null
-					&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
-				{
-					GlStateManager.translate(0, -event.getResolution().getScaledHeight() / 5, 0);
-				}
-			}
-		}
-
-		@SubscribeEvent
-		@OnlyIn(Dist.CLIENT)
-		public void handleSpiderVision(TickEvent.ClientTickEvent event)
-		{
-			if (event.phase != TickEvent.Phase.START) return;
-
-			Player entityPlayer = Minecraft.getInstance().player;
-
-			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-			if (cyberwareUserData != null
-				&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
-			{
-				if (Minecraft.getInstance().entityRenderer.getShaderGroup() == null)
-				{
-					Minecraft.getInstance().entityRenderer.loadShader(new ResourceLocation("shaders/post/spider" +
-						".json"));
-				}
-			} else if (entityPlayer != null && !entityPlayer.isSpectator())
-			{
-				ShaderGroup shaderGroup = Minecraft.getInstance().entityRenderer.getShaderGroup();
-				if (shaderGroup != null && shaderGroup.getShaderGroupName().equals("minecraft:shaders/post/spider" +
-					".json"))
-				{
-					Minecraft.getInstance().entityRenderer.stopUseShader();
-				}
-			}
-		}
-
+		@Nonnull
 		@Override
-		public List<String> getInfo(ItemStack stack)
+		public List<String> getInfo(@Nonnull ItemStack stack)
 		{
 			List<String> ret = new ArrayList<>();
-			String[] desc = this.getDesciption(stack);
+			String[] desc = this.getDescription(stack);
 			if (desc.length > 0)
 			{
 				String format = desc[0];
@@ -168,51 +89,150 @@ public class VanillaWares
 			return ret;
 		}
 
-		private String[] getDesciption(ItemStack stack)
+		private String[] getDescription(ItemStack stack)
 		{
 			return I18n.get("cyberware.tooltip.spider_eye").split("\\\\n");
 		}
 
 		@Override
-		public int getCapacity(ItemStack wareStack)
+		public int getPowerConsumption(@Nonnull ItemStack stack)
 		{
 			return 0;
 		}
 
 		@Override
-		public void onAdded(LivingEntity entityLivingBase, ItemStack stack)
+		public int getPowerProduction(@Nonnull ItemStack stack)
+		{
+			return 0;
+		}
+
+		@Override
+		public int getPowerCapacity(@Nonnull ItemStack wareStack)
+		{
+			return 0;
+		}
+
+		@Override
+		public void onAdded(@Nonnull LivingEntity entityLivingBase, @Nonnull ItemStack stack)
 		{
 			// no operation
 		}
 
 		@Override
-		public void onRemoved(LivingEntity entityLivingBase, ItemStack stack)
+		public void onRemoved(@Nonnull LivingEntity entityLivingBase, @Nonnull ItemStack stack)
 		{
 			// no operation
 		}
 
 		@Override
-		public int getEssenceCost(ItemStack stack)
+		public int getEssenceCost(@Nonnull ItemStack stack)
 		{
 			return 5;
 		}
 
+		@Nonnull
 		@Override
-		public Quality getQuality(ItemStack stack)
+		public Quality getQuality(@Nonnull ItemStack stack)
 		{
 			return null;
 		}
 
+		@Nonnull
 		@Override
-		public ItemStack setQuality(ItemStack stack, Quality quality)
+		public ItemStack setQuality(@Nonnull ItemStack stack, @Nonnull Quality quality)
 		{
 			return stack;
 		}
 
 		@Override
-		public boolean canHoldQuality(ItemStack stack, Quality quality)
+		public boolean canHoldQuality(@Nonnull ItemStack stack, @Nonnull Quality quality)
 		{
 			return false;
+		}
+
+		public static class EventHandler
+		{
+			@SubscribeEvent
+			public void handleSpiderNightVision(CyberwareUpdateEvent event)
+			{
+				LivingEntity entityLivingBase = event.getEntity();
+				if (entityLivingBase.tickCount % 20 != 0) return;
+
+				ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
+				if (cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
+				{
+					entityLivingBase.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, -53, true,
+						false
+					));
+				} else
+				{
+					MobEffectInstance effect = entityLivingBase.getEffect(MobEffects.NIGHT_VISION);
+					if (effect != null && effect.getAmplifier() == -53)
+					{
+						entityLivingBase.removeEffect(MobEffects.NIGHT_VISION);
+					}
+				}
+			}
+
+			@OnlyIn(Dist.CLIENT)
+			@SubscribeEvent
+			public void onDrawScreenPre(RenderGuiOverlayEvent.Pre event)
+			{
+				if (event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type())
+				{
+					Player entityPlayer = Minecraft.getInstance().player;
+					ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+					if (cyberwareUserData != null
+						&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
+					{
+						GlStateManager.translate(0, event.getWindow().getGuiScaledHeight() / 5, 0);
+					}
+				}
+			}
+
+			@OnlyIn(Dist.CLIENT)
+			@SubscribeEvent
+			public void onDrawScreenPost(RenderGuiOverlayEvent.Post event)
+			{
+				if (event.getOverlay() == VanillaGuiOverlay.CROSSHAIR.type())
+				{
+					Player entityPlayer = Minecraft.getInstance().player;
+					ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+					if (cyberwareUserData != null
+						&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
+					{
+						GlStateManager.translate(0, -event.getWindow().getGuiScaledHeight() / 5, 0);
+					}
+				}
+			}
+
+			@SubscribeEvent
+			@OnlyIn(Dist.CLIENT)
+			public void handleSpiderVision(TickEvent.ClientTickEvent event)
+			{
+				if (event.phase != TickEvent.Phase.START) return;
+
+				Player entityPlayer = Minecraft.getInstance().player;
+
+				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+				if (cyberwareUserData != null
+					&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
+				{
+					if (Minecraft.getInstance().entityRenderer.getShaderGroup() == null)
+					{
+						Minecraft.getInstance().entityRenderer.loadShader(new ResourceLocation("shaders/post/spider" +
+							".json"));
+					}
+				} else if (entityPlayer != null && !entityPlayer.isSpectator())
+				{
+					ShaderGroup shaderGroup = Minecraft.getInstance().entityRenderer.getShaderGroup();
+					if (shaderGroup != null && shaderGroup.getShaderGroupName().equals("minecraft:shaders/post/spider" +
+						".json"))
+					{
+						Minecraft.getInstance().entityRenderer.stopUseShader();
+					}
+				}
+			}
 		}
 	}
 }

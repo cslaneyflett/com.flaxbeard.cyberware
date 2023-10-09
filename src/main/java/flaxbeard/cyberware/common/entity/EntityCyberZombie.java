@@ -3,7 +3,7 @@ package flaxbeard.cyberware.common.entity;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUserDataImpl;
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.handler.CyberwareDataHandler;
@@ -210,7 +210,7 @@ public class EntityCyberZombie extends Zombie
 			if (level.getRandom().nextFloat() < (rarity / 100.0F))
 			{
 				List<ItemStack> allWares = new ArrayList<>();
-				for (EnumSlot slot : EnumSlot.values())
+				for (BodyRegionEnum slot : BodyRegionEnum.values())
 				{
 					NonNullList<ItemStack> nnlInstalled = cyberware.getInstalledCyberware(slot);
 					for (ItemStack stack : nnlInstalled)
@@ -264,10 +264,10 @@ public class EntityCyberZombie extends Zombie
 
 		if (CyberwareConfig.INSTANCE.ENABLE_KATANA.get()
 			&& CyberwareConfig.INSTANCE.MOBS_ADD_CLOTHES.get()
-			&& !getItemStackFromSlot(EntityEquipmentSlot.MAINHAND).isEmpty()
-			&& getItemStackFromSlot(EntityEquipmentSlot.MAINHAND).getItem() == Items.IRON_SWORD)
+			&& !getItemBySlot(EntityEquipmentSlot.MAINHAND).isEmpty()
+			&& getItemBySlot(EntityEquipmentSlot.MAINHAND).getItem() == Items.IRON_SWORD)
 		{
-			setItemStackToSlot(EntityEquipmentSlot.MAINHAND, new ItemStack(CyberwareContent.katana));
+			setItemSlot(EntityEquipmentSlot.MAINHAND, new ItemStack(CyberwareContent.katana));
 			setDropChance(EntityEquipmentSlot.MAINHAND, 0F);
 		}
 	}

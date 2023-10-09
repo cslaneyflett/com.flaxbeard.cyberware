@@ -1,6 +1,5 @@
 package flaxbeard.cyberware.common.block.tile;
 
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.BlockBeaconPost;
 import flaxbeard.cyberware.common.registry.BlockEntities;
 import flaxbeard.cyberware.common.registry.Blocks;

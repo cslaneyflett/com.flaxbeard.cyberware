@@ -1,19 +1,17 @@
 package flaxbeard.cyberware.common.item;
 
-import flaxbeard.cyberware.Cyberware;
+import com.mojang.blaze3d.platform.InputConstants;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.item.IBlueprint;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.misc.NNLUtil;
+import flaxbeard.cyberware.common.registry.items.Misc;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.settings.GameSettings;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -27,32 +25,22 @@ import java.util.List;
 
 public class ItemBlueprint extends Item implements IBlueprint
 {
-	public ItemBlueprint(String name)
+	public ItemBlueprint(Properties pProperties)
 	{
-		super();
-
-		setRegistryName(name);
-		// ForgeRegistries.ITEMS.register(this);
-		setTranslationKey(Cyberware.MODID + "." + name);
-
-		setCreativeTab(Cyberware.creativeTab);
-
-		setHasSubtypes(true);
-		setMaxStackSize(1);
-
-		CyberwareContent.items.add(this);
+		super(pProperties);
 	}
 
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn)
+	public void appendHoverText(ItemStack stack, @Nullable Level worldIn, @Nonnull List<Component> tooltip, @Nonnull TooltipFlag flagIn)
 	{
 		CompoundTag tagCompound = stack.getTag();
 		if (tagCompound != null
 			&& tagCompound.contains("blueprintItem"))
 		{
-			GameSettings settings = Minecraft.getInstance().gameSettings;
-			if (settings.isKeyDown(settings.keyBindSneak))
+			var window = Minecraft.getInstance().getWindow().getWindow();
+
+			if (InputConstants.isKeyDown(window, Minecraft.getInstance().options.keyShift.getKey().getValue()))
 			{
 				ItemStack blueprintItem = ItemStack.of(tagCompound.getCompound("blueprintItem"));
 				if (!blueprintItem.isEmpty() && CyberwareAPI.canDeconstruct(blueprintItem))
@@ -80,14 +68,14 @@ public class ItemBlueprint extends Item implements IBlueprint
 		tooltip.add(Component.literal(ChatFormatting.DARK_GRAY + I18n.get("cyberware.tooltip.craft_blueprint")));
 	}
 
-	@Override
-	public void getSubItems(@Nonnull CreativeModeTab tab, @Nonnull NonNullList<ItemStack> list)
-	{
-		if (this.getCreativeTabs().contains(tab))
-		{
-			list.add(new ItemStack(this, 1, 1));
-		}
-	}
+	//	@Override
+	//	public void getSubItems(@Nonnull CreativeModeTab tab, @Nonnull NonNullList<ItemStack> list)
+	//	{
+	//		if (this.getCreativeTabs().contains(tab))
+	//		{
+	//			list.add(new ItemStack(this, 1, 1));
+	//		}
+	//	}
 
 	public static ItemStack getBlueprintForItem(ItemStack stack)
 	{
@@ -97,15 +85,15 @@ public class ItemBlueprint extends Item implements IBlueprint
 
 
 			toBlue.setCount(1);
-			if (toBlue.isItemStackDamageable())
+			if (toBlue.isDamageableItem())
 			{
-				toBlue.setItemDamage(0);
+				toBlue.setDamageValue(0);
 			}
 			toBlue.setTag(null);
 
-			ItemStack ret = new ItemStack(CyberwareContent.blueprint);
+			ItemStack ret = new ItemStack(Misc.BLUEPRINT.get());
 			CompoundTag tagCompound = new CompoundTag();
-			tagCompound.put("blueprintItem", toBlue.writeToNBT(new CompoundTag()));
+			tagCompound.put("blueprintItem", toBlue.save(new CompoundTag()));
 
 			ret.setTag(tagCompound);
 			return ret;
@@ -118,19 +106,21 @@ public class ItemBlueprint extends Item implements IBlueprint
 	@OnlyIn(Dist.CLIENT)
 	@Nonnull
 	@Override
-	public String getItemStackDisplayName(ItemStack stack)
+	public Component getName(ItemStack pStack)
 	{
-		CompoundTag tagCompound = stack.getTag();
-		if (tagCompound != null
-			&& tagCompound.contains("blueprintItem"))
+		CompoundTag tagCompound = pStack.getTag();
+
+		if (tagCompound != null &&
+			tagCompound.contains("blueprintItem"))
 		{
 			ItemStack blueprintItem = ItemStack.of(tagCompound.getCompound("blueprintItem"));
 			if (!blueprintItem.isEmpty())
 			{
-				return I18n.get("item.cyberware.blueprint.not_blank.name", blueprintItem.getDisplayName()).trim();
+				return Component.translatable("item.cyberware.blueprint.not_blank.name", blueprintItem.getDisplayName());
 			}
 		}
-		return ("" + I18n.get(this.getName(stack) + ".name")).trim();
+
+		return super.getName(pStack);
 	}
 
 	@Override
@@ -174,7 +164,7 @@ public class ItemBlueprint extends Item implements IBlueprint
 				return blueprintItem;
 			}
 		}
-		
+
 		return ItemStack.EMPTY;
 	}
 

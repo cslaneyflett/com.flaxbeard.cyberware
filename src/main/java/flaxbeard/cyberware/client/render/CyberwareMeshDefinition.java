@@ -2,7 +2,7 @@ package flaxbeard.cyberware.client.render;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.item.ICyberware.Quality;
-import flaxbeard.cyberware.common.item.ItemCyberware;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import net.minecraft.client.renderer.ItemMeshDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;

@@ -170,10 +170,10 @@ public class RenderPlayerCyberware extends RenderPlayer
 		mainModel.isRiding = shouldSit;
 		mainModel.isChild = entity.isChild();
 
-		ItemStack head = entity.getItemStackFromSlot(EntityEquipmentSlot.HEAD);
-		ItemStack body = entity.getItemStackFromSlot(EntityEquipmentSlot.CHEST);
-		ItemStack legs = entity.getItemStackFromSlot(EntityEquipmentSlot.LEGS);
-		ItemStack shoes = entity.getItemStackFromSlot(EntityEquipmentSlot.FEET);
+		ItemStack head = entity.getItemBySlot(EntityEquipmentSlot.HEAD);
+		ItemStack body = entity.getItemBySlot(EntityEquipmentSlot.CHEST);
+		ItemStack legs = entity.getItemBySlot(EntityEquipmentSlot.LEGS);
+		ItemStack shoes = entity.getItemBySlot(EntityEquipmentSlot.FEET);
 		ItemStack heldItem = InventoryPlayer.isHotbar(entity.inventory.currentItem) ?
 			entity.inventory.mainInventory.get(entity.inventory.currentItem) : null;
 		ItemStack offHand = entity.inventory.offHandInventory.get(0);

@@ -292,9 +292,9 @@ public final class CyberwareAPI
 	{
 		if (!stack.isEmpty())
 		{
-			if (stack.getItem() instanceof ICyberware)
+			if (stack.getItem() instanceof ICyberware ware)
 			{
-				return (ICyberware) stack.getItem();
+				return ware;
 			} else if (getLinkedWare(stack) != null)
 			{
 				return getLinkedWare(stack);

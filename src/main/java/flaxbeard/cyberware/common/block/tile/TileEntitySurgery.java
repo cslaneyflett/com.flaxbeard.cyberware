@@ -5,13 +5,13 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareSurgeryEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.ICyberware;
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb.EnumSide;
 import flaxbeard.cyberware.common.block.BlockSurgeryChamber;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.handler.EssentialsMissingHandler;
-import flaxbeard.cyberware.common.item.ItemCyberware;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.registry.BlockEntities;
@@ -44,7 +44,7 @@ public class TileEntitySurgery extends BlockEntity
 	public ItemStackHandler slotsPlayer = new ItemStackHandler(120);
 	public ItemStackHandler slots = new ItemStackHandler(120);
 	public boolean[] discardSlots = new boolean[120];
-	public boolean[] isEssentialMissing = new boolean[EnumSlot.values().length * 2];
+	public boolean[] isEssentialMissing = new boolean[BodyRegionEnum.values().length * 2];
 	public int essence = 0;
 	public int maxEssence = 0;
 	public int wrongSlot = -1;
@@ -81,7 +81,7 @@ public class TileEntitySurgery extends BlockEntity
 			maxEssence = cyberwareUserData.getMaxTolerance(entityLivingBase);
 
 			// Update slotsPlayer with the items in the player's body
-			for (EnumSlot slot : EnumSlot.values())
+			for (BodyRegionEnum slot : BodyRegionEnum.values())
 			{
 				NonNullList<ItemStack> cyberwares = cyberwareUserData.getInstalledCyberware(slot);
 				for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
@@ -107,7 +107,7 @@ public class TileEntitySurgery extends BlockEntity
 			while (needToCheck)
 			{
 				needToCheck = false;
-				for (EnumSlot slot : EnumSlot.values())
+				for (BodyRegionEnum slot : BodyRegionEnum.values())
 				{
 					for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
 					{
@@ -130,7 +130,7 @@ public class TileEntitySurgery extends BlockEntity
 		{
 			slotsPlayer = new ItemStackHandler(120);
 			this.maxEssence = CyberwareConfig.INSTANCE.ESSENCE.get();
-			for (EnumSlot slot : EnumSlot.values())
+			for (BodyRegionEnum slot : BodyRegionEnum.values())
 			{
 				updateEssential(slot);
 			}
@@ -138,7 +138,7 @@ public class TileEntitySurgery extends BlockEntity
 		wrongSlot = -1;
 	}
 
-	public boolean doesItemConflict(@Nonnull ItemStack stack, EnumSlot slot, int indexSlotToCheck)
+	public boolean doesItemConflict(@Nonnull ItemStack stack, BodyRegionEnum slot, int indexSlotToCheck)
 	{
 		int row = slot.ordinal();
 		if (!stack.isEmpty())
@@ -193,7 +193,7 @@ public class TileEntitySurgery extends BlockEntity
 		//		Cyberware.proxy.wrong(this);
 	}
 
-	public void disableDependants(ItemStack stack, EnumSlot slot, int indexSlotToCheck)
+	public void disableDependants(ItemStack stack, BodyRegionEnum slot, int indexSlotToCheck)
 	{
 		int row = slot.ordinal();
 		if (!stack.isEmpty())
@@ -214,7 +214,7 @@ public class TileEntitySurgery extends BlockEntity
 		}
 	}
 
-	public void enableDependsOn(ItemStack stack, EnumSlot slot, int indexSlotToCheck)
+	public void enableDependsOn(ItemStack stack, BodyRegionEnum slot, int indexSlotToCheck)
 	{
 		if (!stack.isEmpty())
 		{
@@ -226,7 +226,7 @@ public class TileEntitySurgery extends BlockEntity
 				outerLoop:
 				for (ItemStack needed : neededItem)
 				{
-					for (int row = 0; row < EnumSlot.values().length; row++)
+					for (int row = 0; row < BodyRegionEnum.values().length; row++)
 					{
 						for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
 						{
@@ -258,11 +258,11 @@ public class TileEntitySurgery extends BlockEntity
 		}
 	}
 
-	public boolean canDisableItem(ItemStack stack, EnumSlot slot, int indexSlotToCheck)
+	public boolean canDisableItem(ItemStack stack, BodyRegionEnum slot, int indexSlotToCheck)
 	{
 		if (!stack.isEmpty())
 		{
-			for (int row = 0; row < EnumSlot.values().length; row++)
+			for (int row = 0; row < BodyRegionEnum.values().length; row++)
 			{
 				for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
 				{
@@ -292,7 +292,7 @@ public class TileEntitySurgery extends BlockEntity
 		return true;
 	}
 
-	public boolean areRequirementsFulfilled(ItemStack stack, EnumSlot ignoredSlot, int indexSlotToCheck)
+	public boolean areRequirementsFulfilled(ItemStack stack, BodyRegionEnum ignoredSlot, int indexSlotToCheck)
 	{
 		if (!stack.isEmpty())
 		{
@@ -304,7 +304,7 @@ public class TileEntitySurgery extends BlockEntity
 				outerLoop:
 				for (ItemStack needed : neededItem)
 				{
-					for (int row = 0; row < EnumSlot.values().length; row++)
+					for (int row = 0; row < BodyRegionEnum.values().length; row++)
 					{
 						for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
 						{
@@ -387,7 +387,7 @@ public class TileEntitySurgery extends BlockEntity
 	@Override
 	public void handleUpdateTag(CompoundTag tag) {load(tag);}
 
-	public void updateEssential(EnumSlot slot)
+	public void updateEssential(BodyRegionEnum slot)
 	{
 		if (slot.hasEssential())
 		{
@@ -403,7 +403,7 @@ public class TileEntitySurgery extends BlockEntity
 		}
 	}
 
-	private byte isEssential(EnumSlot slot)
+	private byte isEssential(BodyRegionEnum slot)
 	{
 		byte r = 0;
 
@@ -527,9 +527,9 @@ public class TileEntitySurgery extends BlockEntity
 		assert level != null;
 		updatePlayerSlots(targetEntity, cyberwareUserData);
 
-		for (int indexCyberSlot = 0; indexCyberSlot < EnumSlot.values().length; indexCyberSlot++)
+		for (int indexCyberSlot = 0; indexCyberSlot < BodyRegionEnum.values().length; indexCyberSlot++)
 		{
-			EnumSlot slot = EnumSlot.values()[indexCyberSlot];
+			BodyRegionEnum slot = BodyRegionEnum.values()[indexCyberSlot];
 			NonNullList<ItemStack> nnlToInstall = NonNullList.create();
 			for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
 			{
@@ -547,7 +547,7 @@ public class TileEntitySurgery extends BlockEntity
 					ItemStack itemStackToSet = itemStackSurgery.copy();
 					if (CyberwareAPI.areCyberwareStacksEqual(itemStackToSet, itemStackPlayer))
 					{
-						int maxSize = CyberwareAPI.getCyberware(itemStackToSet).installedStackSize(itemStackToSet);
+						int maxSize = CyberwareAPI.getCyberware(itemStackToSet).maximumStackSize(itemStackToSet);
 
 						if (itemStackToSet.getCount() < maxSize)
 						{
@@ -680,7 +680,7 @@ public class TileEntitySurgery extends BlockEntity
 		boolean hasConsume = false;
 		boolean hasProduce = false;
 
-		for (EnumSlot slot : EnumSlot.values())
+		for (BodyRegionEnum slot : BodyRegionEnum.values())
 		{
 			for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
 			{
@@ -699,7 +699,7 @@ public class TileEntitySurgery extends BlockEntity
 						&& !playerStack.isEmpty()
 						&& CyberwareAPI.areCyberwareStacksEqual(playerStack, ret))
 					{
-						int maxSize = CyberwareAPI.getCyberware(ret).installedStackSize(ret);
+						int maxSize = CyberwareAPI.getCyberware(ret).maximumStackSize(ret);
 
 						if (ret.getCount() < maxSize)
 						{

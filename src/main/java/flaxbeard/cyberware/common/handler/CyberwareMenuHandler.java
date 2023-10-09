@@ -1,5 +1,6 @@
 package flaxbeard.cyberware.common.handler;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.client.ClientUtils;
@@ -9,14 +10,12 @@ import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.OpenRadialMenuPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CyberwareMenuHandler
 {
@@ -28,22 +27,22 @@ public class CyberwareMenuHandler
 	private static List<Integer> pressed = new ArrayList<>();
 
 	@SubscribeEvent
-	public void tick(ClientTickEvent event)
+	public void tick(TickEvent.ClientTickEvent event)
 	{
-		if (event.phase == Phase.START)
+		if (event.phase == TickEvent.Phase.START)
 		{
-			if (!KeyBinds.menu.isPressed()
-				&& mc.currentScreen == null
+			if (!KeyBinds.menu.isDown()
+				&& mc.screen == null
 				&& wasInScreen > 0)
 			{
 				KeyConflictContext inGame = KeyConflictContext.IN_GAME;
-				mc.gameSettings.keyBindForward.setKeyConflictContext(inGame);
-				mc.gameSettings.keyBindLeft.setKeyConflictContext(inGame);
-				mc.gameSettings.keyBindBack.setKeyConflictContext(inGame);
-				mc.gameSettings.keyBindRight.setKeyConflictContext(inGame);
-				mc.gameSettings.keyBindJump.setKeyConflictContext(inGame);
-				mc.gameSettings.keyBindSneak.setKeyConflictContext(inGame);
-				mc.gameSettings.keyBindSprint.setKeyConflictContext(inGame);
+				mc.options.keyUp.setKeyConflictContext(inGame);
+				mc.options.keyLeft.setKeyConflictContext(inGame);
+				mc.options.keyDown.setKeyConflictContext(inGame);
+				mc.options.keyRight.setKeyConflictContext(inGame);
+				mc.options.keyJump.setKeyConflictContext(inGame);
+				mc.options.keyShift.setKeyConflictContext(inGame);
+				mc.options.keySprint.setKeyConflictContext(inGame);
 
 				if (wasSprinting)
 				{
@@ -52,11 +51,11 @@ public class CyberwareMenuHandler
 				wasInScreen--;
 			}
 		}
-		if (event.phase == Phase.END)
+		if (event.phase == TickEvent.Phase.END)
 		{
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(mc.player);
 			if (mc.player != null
-				&& mc.currentScreen == null
+				&& mc.screen == null
 				&& cyberwareUserData != null)
 			{
 				for (int keyCode : cyberwareUserData.getHotkeys())
@@ -76,26 +75,26 @@ public class CyberwareMenuHandler
 			}
 
 			if (mc.player != null
-				&& cyberwareUserData.getNumActiveItems() > 0
-				&& KeyBinds.menu.isPressed()
-				&& mc.currentScreen == null)
+				&& Objects.requireNonNull(cyberwareUserData).getNumActiveItems() > 0
+				&& KeyBinds.menu.isDown()
+				&& mc.screen == null)
 			{
 				KeyConflictContext gui = KeyConflictContext.GUI;
-				mc.gameSettings.keyBindForward.setKeyConflictContext(gui);
-				mc.gameSettings.keyBindLeft.setKeyConflictContext(gui);
-				mc.gameSettings.keyBindBack.setKeyConflictContext(gui);
-				mc.gameSettings.keyBindRight.setKeyConflictContext(gui);
-				mc.gameSettings.keyBindJump.setKeyConflictContext(gui);
-				mc.gameSettings.keyBindSneak.setKeyConflictContext(gui);
-				mc.gameSettings.keyBindSprint.setKeyConflictContext(gui);
+				mc.options.keyUp.setKeyConflictContext(gui);
+				mc.options.keyLeft.setKeyConflictContext(gui);
+				mc.options.keyDown.setKeyConflictContext(gui);
+				mc.options.keyRight.setKeyConflictContext(gui);
+				mc.options.keyJump.setKeyConflictContext(gui);
+				mc.options.keyShift.setKeyConflictContext(gui);
+				mc.options.keySprint.setKeyConflictContext(gui);
 
-				mc.displayGuiScreen(new GuiCyberwareMenu());
+				mc.setScreen(new GuiCyberwareMenu());
 				cyberwareUserData.setOpenedRadialMenu(true);
 				CyberwarePacketHandler.INSTANCE.sendToServer(new OpenRadialMenuPacket());
 
 				wasInScreen = 5;
 			} else if (wasInScreen > 0
-				&& mc.currentScreen instanceof GuiCyberwareMenu)
+				&& mc.screen instanceof GuiCyberwareMenu)
 			{
 				wasSprinting = mc.player.isSprinting();
 			}
@@ -104,26 +103,28 @@ public class CyberwareMenuHandler
 
 	private boolean isPressed(ICyberwareUserData cyberwareUserData, int keyCode)
 	{
+		var window = Minecraft.getInstance().getWindow().getWindow();
+
 		if (keyCode < 0)
 		{
 			keyCode = keyCode + 100;
-			return Mouse.isButtonDown(keyCode);
+			return InputConstants.isKeyDown(window, keyCode);
 		} else if (keyCode > 900)
 		{
-			boolean shiftPressed = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+			boolean shiftPressed = InputConstants.isKeyDown(window, InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(window, InputConstants.KEY_RSHIFT);
 
 			keyCode = keyCode - 900;
-			return Keyboard.isKeyDown(keyCode) && shiftPressed;
+			return InputConstants.isKeyDown(window, keyCode) && shiftPressed;
 		} else
 		{
 			if (cyberwareUserData.getHotkey(keyCode + 900) != null)
 			{
 				boolean shiftPressed =
-					Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+					InputConstants.isKeyDown(window, InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(window, InputConstants.KEY_RSHIFT);
 
-				return Keyboard.isKeyDown(keyCode) && !shiftPressed;
+				return InputConstants.isKeyDown(window, keyCode) && !shiftPressed;
 			}
-			return Keyboard.isKeyDown(keyCode);
+			return InputConstants.isKeyDown(window, keyCode);
 		}
 	}
 }

@@ -53,7 +53,7 @@ public class NNLUtil
 		{
 			if (!stackExisting.isEmpty()
 				&& stackExisting.getItem() == stack.getItem()
-				&& CyberwareItemMetadata.identical(stackExisting, stack)
+				&& ItemStack.tagMatches(stackExisting, stack)
 			)
 			{
 				return indexLoop;

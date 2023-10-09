@@ -1,45 +1,49 @@
 package flaxbeard.cyberware.common.item;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb;
-import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
+import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import net.minecraft.world.item.ItemStack;
+
+import javax.annotation.Nonnull;
 
 public class ItemBodyPart extends ItemCyberware implements ISidedLimb
 {
-	public ItemBodyPart(String name, EnumSlot[] slots, String[] subnames)
-	{
-		super(name, slots, subnames);
-	}
+	public final @Nonnull BodyPartEnum bodyPart;
 
-
-	@Override
-	public boolean isEssential(ItemStack stack)
+	public ItemBodyPart(Properties properties, CyberwareProperties cyberwareProperties, BodyPartEnum bodyPart)
 	{
-		return true;
+		super(properties, cyberwareProperties, bodyPart.slot);
+		this.bodyPart = bodyPart;
 	}
 
 	@Override
-	public int getEssenceCost(ItemStack stack)
+	public boolean isEssential(@Nonnull ItemStack stack)
+	{
+		return this.bodyPart.slot.hasEssential();
+	}
+
+	@Override
+	public int getEssenceCost(@Nonnull ItemStack stack)
 	{
 		return 0;
 	}
 
 	@Override
-	public boolean isIncompatible(ItemStack stack, ItemStack other)
+	public boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack other)
 	{
-		// TODO: what the fuck is this magic number?
-		if (CyberwareItemMetadata.predicate(stack, (int t) -> t <= 7))
+		var thisWare = (ItemBodyPart) CyberwareAPI.getCyberware(stack);
+		var otherWare = CyberwareAPI.getCyberware(other);
+
+		if (thisWare.isEssential(stack))
 		{
-			return CyberwareAPI.getCyberware(other).isEssential(other);
+			return otherWare.isEssential(other);
 		}
 
-		ICyberware ware = CyberwareAPI.getCyberware(other);
-
-		if (ware instanceof ISidedLimb)
+		if (otherWare instanceof ISidedLimb sidedWare)
 		{
-			return ware.isEssential(other) && ((ISidedLimb) ware).getSide(other) == this.getSide(stack);
+			return sidedWare.isEssential(other) && sidedWare.getSide(other) == this.getSide(stack);
 		}
 
 		return false;
@@ -51,20 +55,25 @@ public class ItemBodyPart extends ItemCyberware implements ISidedLimb
 		return EnumCategory.BODY_PARTS;
 	}
 
+	@Nonnull
 	@Override
-	public EnumSide getSide(ItemStack stack)
+	public EnumSide getSide(@Nonnull ItemStack stack)
 	{
-		return CyberwareItemMetadata.predicate(stack, (int t) -> t % 2 == 0) ? EnumSide.LEFT : EnumSide.RIGHT;
+		// TODO: Potential issue, not all BodyParts have sides
+		return this.bodyPart.side;
+	}
+
+	// TODO: i don't think this is correct, but im enforcing nonnull on quality now
+	// and manufactured has no prefix, its not like you have scavenged organs... right?
+	@Nonnull
+	@Override
+	public Quality getQuality(@Nonnull ItemStack stack)
+	{
+		return CyberwareAPI.QUALITY_MANUFACTURED;
 	}
 
 	@Override
-	public Quality getQuality(ItemStack stack)
-	{
-		return null;
-	}
-
-	@Override
-	public boolean canHoldQuality(ItemStack stack, Quality quality)
+	public boolean canHoldQuality(@Nonnull ItemStack stack, @Nonnull Quality quality)
 	{
 		return false;
 	}

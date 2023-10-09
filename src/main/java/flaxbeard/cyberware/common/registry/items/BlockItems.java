@@ -5,11 +5,8 @@ import flaxbeard.cyberware.common.block.item.ItemComponentBox;
 import flaxbeard.cyberware.common.block.item.ItemEngineeringTable;
 import flaxbeard.cyberware.common.block.item.ItemSurgeryChamber;
 import flaxbeard.cyberware.common.registry.Blocks;
-import flaxbeard.cyberware.common.registry.Items;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.RegistryObject;
-
-import java.util.function.Supplier;
 
 public class BlockItems extends ItemRegistry
 {

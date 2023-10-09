@@ -15,4 +15,22 @@ public class Armors extends ItemRegistry
 		register("jacket", () -> new ItemArmorCyberware(ArmorMaterials.JACKET, EquipmentSlot.CHEST, new Item.Properties()));
 	public static final RegistryObject<Item> TRENCH_COAT =
 		register("trench_coat", () -> new ItemArmorCyberware(ArmorMaterials.TRENCH_COAT, EquipmentSlot.CHEST, new Item.Properties()));
+
+	// TODO
+
+//	if (item == CyberwareContent.trenchCoat)
+//	{
+//		nnl.add(new ItemStack(CyberwareContent.component, 2, 2));
+//		nnl.add(new ItemStack(Items.LEATHER, 12, 0));
+//		nnl.add(new ItemStack(Items.DYE, 1, 0));
+//	} else if (item == CyberwareContent.jacket)
+//	{
+//		nnl.add(new ItemStack(CyberwareContent.component, 1, 2));
+//		nnl.add(new ItemStack(Items.LEATHER, 8, 0));
+//		nnl.add(new ItemStack(Items.DYE, 1, 0));
+//	} else
+//	{
+//		nnl.add(new ItemStack(Blocks.STAINED_GLASS, 4, 15));
+//		nnl.add(new ItemStack(CyberwareContent.component, 1, 4));
+//	}
 }

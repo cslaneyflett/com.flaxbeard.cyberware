@@ -3,7 +3,7 @@ package flaxbeard.cyberware.api;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.item.HotkeyHelper;
 import flaxbeard.cyberware.api.item.ICyberware;
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb.EnumSide;
 import flaxbeard.cyberware.api.item.IHudjack;
 import flaxbeard.cyberware.api.item.IMenuItem;
@@ -41,7 +41,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 {
 	//	public static final IStorage<ICyberwareUserData> STORAGE = new CyberwareUserDataStorage();
 	private final NonNullList<NonNullList<ItemStack>> cyberwaresBySlot = NonNullList.create();
-	private boolean[] missingEssentials = new boolean[EnumSlot.values().length * 2];
+	private boolean[] missingEssentials = new boolean[BodyRegionEnum.values().length * 2];
 	private int power_stored = 0;
 	private int power_production = 0;
 	private int power_lastProduction = 0;
@@ -65,7 +65,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 	public CyberwareUserDataImpl()
 	{
 		hudData = new CompoundTag();
-		for (EnumSlot slot : EnumSlot.values())
+		for (BodyRegionEnum slot : BodyRegionEnum.values())
 		{
 			NonNullList<ItemStack> nnlCyberwaresInSlot = NonNullList.create();
 			for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
@@ -91,7 +91,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 			}
 		}
 		missingEssence = 0;
-		for (EnumSlot slot : EnumSlot.values())
+		for (BodyRegionEnum slot : BodyRegionEnum.values())
 		{
 			NonNullList<ItemStack> nnlCyberwaresInSlot = NonNullList.create();
 			NonNullList<ItemStack> startItems = StartingStacksConfig.getStartingItems(slot);
@@ -101,7 +101,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 			}
 			cyberwaresBySlot.set(slot.ordinal(), nnlCyberwaresInSlot);
 		}
-		missingEssentials = new boolean[EnumSlot.values().length * 2];
+		missingEssentials = new boolean[BodyRegionEnum.values().length * 2];
 		updateCapacity();
 	}
 
@@ -324,32 +324,32 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 	}
 
 	@Override
-	public NonNullList<ItemStack> getInstalledCyberware(EnumSlot slot)
+	public NonNullList<ItemStack> getInstalledCyberware(BodyRegionEnum slot)
 	{
 		return cyberwaresBySlot.get(slot.ordinal());
 	}
 
 	@Override
-	public boolean hasEssential(EnumSlot slot)
+	public boolean hasEssential(BodyRegionEnum slot)
 	{
 		return !missingEssentials[slot.ordinal() * 2];
 	}
 
 	@Override
-	public boolean hasEssential(EnumSlot slot, EnumSide side)
+	public boolean hasEssential(BodyRegionEnum slot, EnumSide side)
 	{
 		return !missingEssentials[slot.ordinal() * 2 + (side == EnumSide.LEFT ? 0 : 1)];
 	}
 
 	@Override
-	public void setHasEssential(EnumSlot slot, boolean hasLeft, boolean hasRight)
+	public void setHasEssential(BodyRegionEnum slot, boolean hasLeft, boolean hasRight)
 	{
 		missingEssentials[slot.ordinal() * 2] = !hasLeft;
 		missingEssentials[slot.ordinal() * 2 + 1] = !hasRight;
 	}
 
 	@Override
-	public void setInstalledCyberware(LivingEntity LivingEntity, EnumSlot slot,
+	public void setInstalledCyberware(LivingEntity LivingEntity, BodyRegionEnum slot,
 									  @Nonnull List<ItemStack> cyberwaresToInstall)
 	{
 		while (cyberwaresToInstall.size() > LibConstants.WARE_PER_SLOT)
@@ -372,7 +372,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 		hudjackItems = NonNullList.create();
 		hotkeys = new HashMap<>();
 
-		for (EnumSlot slot : EnumSlot.values())
+		for (BodyRegionEnum slot : BodyRegionEnum.values())
 		{
 			for (ItemStack itemStackCyberware : getInstalledCyberware(slot))
 			{
@@ -402,7 +402,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 						specialBatteries.add(itemStackCyberware);
 					} else
 					{
-						power_capacity += cyberware.getCapacity(itemStackCyberware);
+						power_capacity += cyberware.getPowerCapacity(itemStackCyberware);
 					}
 				}
 			}
@@ -412,7 +412,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 	}
 
 	@Override
-	public void setInstalledCyberware(LivingEntity LivingEntity, EnumSlot slot,
+	public void setInstalledCyberware(LivingEntity LivingEntity, BodyRegionEnum slot,
 									  NonNullList<ItemStack> cyberwaresToInstall)
 	{
 		if (cyberwaresToInstall.size() != cyberwaresBySlot.get(slot.ordinal()).size())
@@ -514,7 +514,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 		CompoundTag tagCompound = new CompoundTag();
 		ListTag listSlots = new ListTag();
 
-		for (EnumSlot slot : EnumSlot.values())
+		for (BodyRegionEnum slot : BodyRegionEnum.values())
 		{
 			ListTag listCyberwares = new ListTag();
 			for (ItemStack cyberware : getInstalledCyberware(slot))
@@ -618,7 +618,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 		ListTag listSlots = tagCompound.getList("cyberware", Tag.TAG_LIST);
 		for (int indexBodySlot = 0; indexBodySlot < listSlots.size(); indexBodySlot++)
 		{
-			EnumSlot slot = EnumSlot.values()[indexBodySlot];
+			BodyRegionEnum slot = BodyRegionEnum.values()[indexBodySlot];
 
 			ListTag listCyberwares = (ListTag) listSlots.get(indexBodySlot);
 			NonNullList<ItemStack> nnlCyberwaresOfType = NonNullList.create();

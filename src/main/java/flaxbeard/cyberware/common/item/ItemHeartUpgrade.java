@@ -3,11 +3,12 @@ package flaxbeard.cyberware.common.item;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
-import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
-import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.ParticlePacket;
+import flaxbeard.cyberware.common.registry.items.Heart;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.damagesource.CombatRules;
@@ -18,14 +19,13 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.PacketDistributor;
-import org.apache.commons.lang3.ArrayUtils;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -33,10 +33,6 @@ import java.util.UUID;
 
 public class ItemHeartUpgrade extends ItemCyberware
 {
-	public static final int META_INTERNAL_DEFIBRILLATOR = 0;
-	public static final int META_PLATELET_DISPATCHER = 1;
-	public static final int META_STEM_CELL_SYNTHESIZER = 2;
-	public static final int META_CARDIOVASCULAR_COUPLER = 3;
 	private static final Map<UUID, Integer> timesPlatelets = new HashMap<>();
 	private static final Map<UUID, Boolean> isPlateletWorking = new HashMap<>();
 	private static final Map<UUID, Boolean> isStemWorking = new HashMap<>();
@@ -45,16 +41,14 @@ public class ItemHeartUpgrade extends ItemCyberware
 
 	public ItemHeartUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(itemProperties, cyberwareProperties, EnumSlot.HEART);
+		super(itemProperties, cyberwareProperties, BodyRegionEnum.HEART);
 	}
 
-	private final static int[] incompatibleWithCyberHeart = {META_INTERNAL_DEFIBRILLATOR, META_CARDIOVASCULAR_COUPLER};
-
 	@Override
-	public boolean isIncompatible(ItemStack stack, ItemStack other)
+	public boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack other)
 	{
-		return other.getItem() == CyberwareContent.cyberheart
-			&& CyberwareItemMetadata.predicate(stack, (int t) -> ArrayUtils.contains(incompatibleWithCyberHeart, t));
+		return other.getItem() == Heart.CYBERHEART_BASE.get()
+			&& (stack.is(Heart.DEFIBRILLATOR.get()) || stack.is(Heart.CARDIOVASCULAR_COUPLER.get()));
 	}
 
 	@SubscribeEvent
@@ -66,7 +60,7 @@ public class ItemHeartUpgrade extends ItemCyberware
 		if (cyberwareUserData == null) return;
 
 		ItemStack itemStackInternalDefibrillator =
-			cyberwareUserData.getCyberware(getCachedStack(META_INTERNAL_DEFIBRILLATOR));
+			cyberwareUserData.getCyberware(Heart.DEFIBRILLATOR.get().getDefaultInstance());
 		if (!itemStackInternalDefibrillator.isEmpty())
 		{
 			if ((!CyberwareAPI.getCyberwareNBT(itemStackInternalDefibrillator).contains("used"))
@@ -76,7 +70,7 @@ public class ItemHeartUpgrade extends ItemCyberware
 			{
 				if (entityLivingBase instanceof Player)
 				{
-					NonNullList<ItemStack> items = cyberwareUserData.getInstalledCyberware(EnumSlot.HEART);
+					NonNullList<ItemStack> items = cyberwareUserData.getInstalledCyberware(BodyRegionEnum.HEART);
 					NonNullList<ItemStack> itemsNew = NonNullList.create();
 					itemsNew.addAll(items);
 					for (int index = 0; index < items.size(); index++)
@@ -84,13 +78,13 @@ public class ItemHeartUpgrade extends ItemCyberware
 						ItemStack item = items.get(index);
 						if (!item.isEmpty()
 							&& item.getItem() == this
-							&& CyberwareItemMetadata.get(item) == META_INTERNAL_DEFIBRILLATOR)
+							&& item.is(Heart.DEFIBRILLATOR.get()))
 						{
 							itemsNew.set(index, ItemStack.EMPTY);
 							break;
 						}
 					}
-					cyberwareUserData.setInstalledCyberware(entityLivingBase, EnumSlot.HEART, itemsNew);
+					cyberwareUserData.setInstalledCyberware(entityLivingBase, BodyRegionEnum.HEART, itemsNew);
 					cyberwareUserData.updateCapacity();
 					if (!entityLivingBase.level.isClientSide())
 					{
@@ -134,7 +128,7 @@ public class ItemHeartUpgrade extends ItemCyberware
 		if (entityLivingBase.tickCount % 20 == 0)
 		{
 			ItemStack itemStackCardiovascularCoupler =
-				cyberwareUserData.getCyberware(getCachedStack(META_CARDIOVASCULAR_COUPLER));
+				cyberwareUserData.getCyberware(Heart.CARDIOVASCULAR_COUPLER.get().getDefaultInstance());
 			if (!itemStackCardiovascularCoupler.isEmpty())
 			{
 				cyberwareUserData.addPower(
@@ -145,7 +139,7 @@ public class ItemHeartUpgrade extends ItemCyberware
 		}
 
 		ItemStack itemStackStemCellSynthesizer =
-			cyberwareUserData.getCyberware(getCachedStack(META_STEM_CELL_SYNTHESIZER));
+			cyberwareUserData.getCyberware(Heart.MEDKIT.get().getDefaultInstance());
 		if (entityLivingBase.tickCount % 20 == 0
 			&& !itemStackStemCellSynthesizer.isEmpty())
 		{
@@ -156,7 +150,7 @@ public class ItemHeartUpgrade extends ItemCyberware
 		}
 
 		ItemStack itemStackPlateletDispatcher =
-			cyberwareUserData.getCyberware(getCachedStack(META_PLATELET_DISPATCHER));
+			cyberwareUserData.getCyberware(Heart.PLATELETS.get().getDefaultInstance());
 		if (entityLivingBase.tickCount % 20 == 0
 			&& !itemStackPlateletDispatcher.isEmpty())
 		{
@@ -258,7 +252,7 @@ public class ItemHeartUpgrade extends ItemCyberware
 		if (cyberwareUserData == null) return;
 
 		ItemStack itemStackStemCellSynthesizer =
-			cyberwareUserData.getCyberware(getCachedStack(META_STEM_CELL_SYNTHESIZER));
+			cyberwareUserData.getCyberware(Heart.MEDKIT.get().getDefaultInstance());
 		if (!itemStackStemCellSynthesizer.isEmpty())
 		{
 			float damageAmount = event.getAmount();
@@ -355,31 +349,31 @@ public class ItemHeartUpgrade extends ItemCyberware
 	}
 
 	@Override
-	public int getPowerConsumption(ItemStack stack)
+	public int getPowerConsumption(@Nonnull ItemStack stack)
 	{
-		return CyberwareItemMetadata.get(stack) == META_INTERNAL_DEFIBRILLATOR ? LibConstants.DEFIBRILLATOR_CONSUMPTION
-			:
-				CyberwareItemMetadata.get(stack) == META_PLATELET_DISPATCHER ? LibConstants.PLATELET_CONSUMPTION
-					: CyberwareItemMetadata.get(stack) == META_STEM_CELL_SYNTHESIZER ? LibConstants.STEMCELL_CONSUMPTION
-						: 0;
+		if (stack.is(Heart.DEFIBRILLATOR.get())) return LibConstants.DEFIBRILLATOR_CONSUMPTION;
+		if (stack.is(Heart.PLATELETS.get())) return LibConstants.PLATELET_CONSUMPTION;
+		if (stack.is(Heart.MEDKIT.get())) return LibConstants.STEMCELL_CONSUMPTION;
+		return 0;
 	}
 
 	@Override
-	public int getCapacity(ItemStack stack)
+	public int getPowerCapacity(@Nonnull ItemStack stack)
 	{
-		return CyberwareItemMetadata.get(stack) == META_INTERNAL_DEFIBRILLATOR ? LibConstants.DEFIBRILLATOR_CONSUMPTION
-			: 0;
+		if (stack.is(Heart.DEFIBRILLATOR.get())) return LibConstants.DEFIBRILLATOR_CONSUMPTION;
+		return 0;
 	}
 
 	@Override
 	public boolean hasCustomPowerMessage(ItemStack stack)
 	{
-		return CyberwareItemMetadata.get(stack) == META_INTERNAL_DEFIBRILLATOR;
+		return stack.is(Heart.DEFIBRILLATOR.get());
 	}
 
 	@Override
-	public int getPowerProduction(ItemStack stack)
+	public int getPowerProduction(@Nonnull ItemStack stack)
 	{
-		return CyberwareItemMetadata.get(stack) == META_CARDIOVASCULAR_COUPLER ? LibConstants.COUPLER_PRODUCTION + 1 : 0;
+		if (stack.is(Heart.CARDIOVASCULAR_COUPLER.get())) return LibConstants.COUPLER_PRODUCTION + 1;
+		return 0;
 	}
 }

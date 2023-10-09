@@ -4,26 +4,27 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
-import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.IMenuItem;
 import flaxbeard.cyberware.common.ArmorClass;
-import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
-import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.DodgePacket;
+import flaxbeard.cyberware.common.registry.items.BrainUpgrades;
+import flaxbeard.cyberware.common.registry.items.Misc;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
@@ -33,7 +34,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.network.PacketDistributor;
-import org.apache.commons.lang3.ArrayUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -41,24 +41,17 @@ import java.util.*;
 
 public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 {
-	public static final int META_CORTICAL_STACK = 0;
-	public static final int META_ENDER_JAMMER = 1;
-	public static final int META_CONSCIOUSNESS_TRANSMITTER = 2;
-	public static final int META_NEURAL_CONTEXTUALIZER = 3;
-	public static final int META_THREAT_MATRIX = 4;
-	public static final int META_RADIO = 5;
-
 	public ItemBrainUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(itemProperties, cyberwareProperties, ICyberware.EnumSlot.CRANIUM);
+		super(itemProperties, cyberwareProperties, BodyRegionEnum.CRANIUM);
 	}
 
 	@Override
-	public boolean isIncompatible(ItemStack stack, ItemStack other)
+	public boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack other)
 	{
 		return other.getItem() == this
-			&& CyberwareItemMetadata.matches(stack, META_CORTICAL_STACK)
-			&& CyberwareItemMetadata.matches(other, META_CONSCIOUSNESS_TRANSMITTER);
+			&& stack.is(BrainUpgrades.CORTICAL_STACK.get())
+			&& other.is(BrainUpgrades.CONSCIOUSNESS_TRANSMITTER.get());
 	}
 
 	@SubscribeEvent
@@ -75,7 +68,7 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 	{
 		if (entityLivingBase == null) return true;
 
-		ItemStack itemStackJammer = CyberwareContent.brainUpgrades.getCachedStack(ItemBrainUpgrade.META_ENDER_JAMMER);
+		ItemStack itemStackJammer = BrainUpgrades.ENDER_JAMMER.get().getDefaultInstance();
 
 		ICyberwareUserData cyberwareUserDataSelf = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
 		if (cyberwareUserDataSelf != null)
@@ -134,21 +127,22 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayerOriginal);
 			if (cyberwareUserData == null) return;
 
-			if (cyberwareUserData.isCyberwareInstalled(getCachedStack(META_CORTICAL_STACK)))
+			if (cyberwareUserData.isCyberwareInstalled(BrainUpgrades.CORTICAL_STACK.get().getDefaultInstance()))
 			{
 				if (!entityPlayerOriginal.level.isClientSide())
 				{
-					ItemStack stack = new ItemStack(CyberwareContent.expCapsule);
+					ItemStack stack = new ItemStack(Misc.EXP_CAPSULE.get());
 					CompoundTag tagCompound = new CompoundTag();
 					tagCompound.putInt("xp", entityPlayerOriginal.totalExperience);
 					stack.setTag(tagCompound);
 					var pos = entityPlayerOriginal.position();
-					// TODO: uhhhh
-					//					BlockEntity item = BlockEntity.loadStatic(new BlockPos(pos.x, pos.y, pos.z),
-					//					null);
-					//					entityPlayerOriginal.level.setBlockEntity(item);
+
+					entityPlayerOriginal.level.addFreshEntity(new ItemEntity(
+						entityPlayerOriginal.level, pos.x(), pos.y(), pos.z(),
+						stack
+					));
 				}
-			} else if (cyberwareUserData.isCyberwareInstalled(getCachedStack(META_CONSCIOUSNESS_TRANSMITTER)))
+			} else if (cyberwareUserData.isCyberwareInstalled(BrainUpgrades.CONSCIOUSNESS_TRANSMITTER.get().getDefaultInstance()))
 			{
 				event.getEntity().giveExperienceLevels((int) (entityPlayerOriginal.experienceLevel * .9F));
 			}
@@ -163,12 +157,13 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 		ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
 		if (cyberwareUserData == null) return;
 
-		ItemStack itemStackNeuralContextualizer =
-			cyberwareUserData.getCyberware(getCachedStack(META_NEURAL_CONTEXTUALIZER));
-		if (!itemStackNeuralContextualizer.isEmpty()
-			&& EnableDisableHelper.isEnabled(itemStackNeuralContextualizer)
-			&& isContextWorking(entityPlayer)
-			&& !entityPlayer.isShiftKeyDown())
+		ItemStack itemStackNeuralContextualizer = cyberwareUserData.getCyberware(
+			BrainUpgrades.NEURAL_CONTEXTUALIZER.get().getDefaultInstance()
+		);
+		if (!itemStackNeuralContextualizer.isEmpty() &&
+			EnableDisableHelper.isEnabled(itemStackNeuralContextualizer) &&
+			isContextWorking(entityPlayer) &&
+			!entityPlayer.isShiftKeyDown())
 		{
 			BlockState state = event.getState();
 			ItemStack tool = entityPlayer.getItemInHand(InteractionHand.MAIN_HAND);
@@ -183,12 +178,12 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 
 			for (int indexSlot = 0; indexSlot < 10; indexSlot++)
 			{
-				if (indexSlot != entityPlayer.inventory.currentItem)
+				if (indexSlot != entityPlayer.getInventory().selected)
 				{
-					ItemStack potentialTool = entityPlayer.inventory.mainInventory.get(indexSlot);
+					ItemStack potentialTool = entityPlayer.getInventory().getItem(indexSlot);
 					if (isToolEffective(potentialTool, state))
 					{
-						entityPlayer.inventory.currentItem = indexSlot;
+						entityPlayer.getInventory().selected = indexSlot;
 						return;
 					}
 				}
@@ -209,7 +204,7 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 		ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
 
 		ItemStack itemStackNeuralContextualizer =
-			cyberwareUserData.getCyberware(getCachedStack(META_NEURAL_CONTEXTUALIZER));
+			cyberwareUserData.getCyberware(BrainUpgrades.NEURAL_CONTEXTUALIZER.get().getDefaultInstance());
 		if (!itemStackNeuralContextualizer.isEmpty()
 			&& EnableDisableHelper.isEnabled(itemStackNeuralContextualizer))
 		{
@@ -222,7 +217,9 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 			isContextWorking.put(entityLivingBase.getUUID(), Boolean.FALSE);
 		}
 
-		ItemStack itemStackThreatMatrix = cyberwareUserData.getCyberware(getCachedStack(META_THREAT_MATRIX));
+		ItemStack itemStackThreatMatrix = cyberwareUserData.getCyberware(
+			BrainUpgrades.THREAT_MATRIX.get().getDefaultInstance()
+		);
 		if (!itemStackThreatMatrix.isEmpty())
 		{
 			isMatrixWorking.put(entityLivingBase.getUUID(), cyberwareUserData.usePower(
@@ -234,7 +231,7 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 			isMatrixWorking.put(entityLivingBase.getUUID(), Boolean.FALSE);
 		}
 
-		ItemStack itemStackRadio = cyberwareUserData.getCyberware(getCachedStack(META_RADIO));
+		ItemStack itemStackRadio = cyberwareUserData.getCyberware(BrainUpgrades.RADIO.get().getDefaultInstance());
 		if (!itemStackRadio.isEmpty()
 			&& EnableDisableHelper.isEnabled(itemStackRadio))
 		{
@@ -281,17 +278,17 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 	public boolean isToolEffective(@Nonnull ItemStack tool, BlockState state)
 	{
 		return !tool.isEmpty() && tool.getItem().isCorrectToolForDrops(tool, state);
-//		if (!tool.isEmpty())
-//		{
-//			for (String toolType : tool.getItem().getToolClasses(tool))
-//			{
-//				if (state.getBlock().isToolEffective(toolType, state))
-//				{
-//					return true;
-//				}
-//			}
-//		}
-//		return false;
+		//		if (!tool.isEmpty())
+		//		{
+		//			for (String toolType : tool.getItem().getToolClasses(tool))
+		//			{
+		//				if (state.getBlock().isToolEffective(toolType, state))
+		//				{
+		//					return true;
+		//				}
+		//			}
+		//		}
+		//		return false;
 	}
 
 	@SubscribeEvent
@@ -301,8 +298,8 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 		ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
 		if (cyberwareUserData == null) return;
 
-		if (cyberwareUserData.isCyberwareInstalled(getCachedStack(META_CORTICAL_STACK))
-			|| cyberwareUserData.isCyberwareInstalled(getCachedStack(META_CONSCIOUSNESS_TRANSMITTER)))
+		if (cyberwareUserData.isCyberwareInstalled(BrainUpgrades.CORTICAL_STACK.get().getDefaultInstance())
+			|| cyberwareUserData.isCyberwareInstalled(BrainUpgrades.CONSCIOUSNESS_TRANSMITTER.get().getDefaultInstance()))
 		{
 			event.setCanceled(true);
 		}
@@ -318,7 +315,7 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 		ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
 		if (cyberwareUserData == null) return;
 
-		if (cyberwareUserData.isCyberwareInstalled(getCachedStack(META_THREAT_MATRIX))
+		if (cyberwareUserData.isCyberwareInstalled(BrainUpgrades.THREAT_MATRIX.get().getDefaultInstance())
 			&& !entityLivingBase.level.isClientSide()
 			&& event.getSource() instanceof EntityDamageSource source)
 		{
@@ -354,11 +351,6 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 					entityLivingBase.hurtTime = entityLivingBase.maxHurtTime = 10;
 					entityLivingBase.lastDamage = 9999F;
 
-					//					CyberwarePacketHandler.INSTANCE.sendToAllAround(new DodgePacket
-					//					(entityLivingBase.getId()),
-					//							new TargetPoint(entityLivingBase.level.provider.getDimension(),
-					//							entityLivingBase.posX, entityLivingBase.posY, entityLivingBase.posZ,
-					//							50));
 					var pos = entityLivingBase.position();
 					CyberwarePacketHandler.INSTANCE.send(
 						PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(pos.x, pos.y, pos.z,
@@ -373,23 +365,20 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 	}
 
 	@Override
-	public int getPowerConsumption(ItemStack stack)
+	public int getPowerConsumption(@Nonnull ItemStack stack)
 	{
-		return switch (CyberwareItemMetadata.get(stack))
-		{
-			case META_NEURAL_CONTEXTUALIZER -> LibConstants.CONTEXTUALIZER_CONSUMPTION;
-			case META_THREAT_MATRIX -> LibConstants.MATRIX_CONSUMPTION;
-			case META_RADIO -> LibConstants.RADIO_CONSUMPTION;
-			default -> 0;
-		};
+		if (stack.is(BrainUpgrades.NEURAL_CONTEXTUALIZER.get())) return LibConstants.CONTEXTUALIZER_CONSUMPTION;
+		if (stack.is(BrainUpgrades.THREAT_MATRIX.get())) return LibConstants.MATRIX_CONSUMPTION;
+		if (stack.is(BrainUpgrades.RADIO.get())) return LibConstants.RADIO_CONSUMPTION;
+		return 0;
 	}
-
-	private final static int[] menuFlags = {META_ENDER_JAMMER, META_NEURAL_CONTEXTUALIZER, META_RADIO};
 
 	@Override
 	public boolean hasMenu(ItemStack stack)
 	{
-		return CyberwareItemMetadata.predicate(stack, (int t) -> ArrayUtils.contains(menuFlags, t));
+		return stack.is(BrainUpgrades.ENDER_JAMMER.get())
+			|| stack.is(BrainUpgrades.NEURAL_CONTEXTUALIZER.get())
+			|| stack.is(BrainUpgrades.RADIO.get());
 	}
 
 	@Override

@@ -1,7 +1,7 @@
 package flaxbeard.cyberware.client.gui;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -20,12 +20,12 @@ public class ContainerSurgery extends Container
 	{
 		public final int savedXPosition;
 		public final int savedYPosition;
-		public final EnumSlot slot;
+		public final BodyRegionEnum slot;
 		private final int index;
 		private IItemHandler playerItems;
 
 		public SlotSurgery(IItemHandler itemHandler, IItemHandler playerItems, int index, int xPosition, int yPosition
-			, EnumSlot slot)
+			, BodyRegionEnum slot)
 		{
 			super(itemHandler, index, xPosition, yPosition);
 
@@ -110,7 +110,7 @@ public class ContainerSurgery extends Container
 
 			if (CyberwareAPI.areCyberwareStacksEqual(stack, playerStack))
 			{
-				int stackSize = CyberwareAPI.getCyberware(stack).installedStackSize(stack);
+				int stackSize = CyberwareAPI.getCyberware(stack).maximumStackSize(stack);
 				if (playerStack.getCount() == stackSize) return false;
 			}
 
@@ -138,7 +138,7 @@ public class ContainerSurgery extends Container
 				return 1;
 			}
 			ItemStack playerStack = getPlayerStack();
-			int stackSize = CyberwareAPI.getCyberware(stack).installedStackSize(stack);
+			int stackSize = CyberwareAPI.getCyberware(stack).maximumStackSize(stack);
 			if (CyberwareAPI.areCyberwareStacksEqual(playerStack, stack))
 			{
 				return stackSize - playerStack.getCount();
@@ -154,7 +154,7 @@ public class ContainerSurgery extends Container
 		this.surgery = surgery;
 
 		int indexContainerSlot = 0;
-		for (EnumSlot slot : EnumSlot.values())
+		for (BodyRegionEnum slot : BodyRegionEnum.values())
 		{
 			for (int indexCyberwareSlot = 0; indexCyberwareSlot < 8; indexCyberwareSlot++)
 			{

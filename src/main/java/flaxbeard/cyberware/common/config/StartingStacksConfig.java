@@ -101,7 +101,7 @@ public class StartingStacksConfig
 	private static String[][] startingItems;
 	private static NonNullList<NonNullList<ItemStack>> startingStacks;
 
-	public static NonNullList<ItemStack> getStartingItems(@Nonnull ICyberware.EnumSlot slot)
+	public static NonNullList<ItemStack> getStartingItems(@Nonnull ICyberware.BodyRegionEnum slot)
 	{
 		return startingStacks.get(slot.ordinal());
 	}

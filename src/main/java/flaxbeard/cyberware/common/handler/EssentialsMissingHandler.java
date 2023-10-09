@@ -5,7 +5,7 @@ import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb.EnumSide;
 import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.common.CyberwareContent;
@@ -14,37 +14,34 @@ import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.item.ItemCyberlimb;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.item.EnumAction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumHandSide;
-import net.minecraft.util.FoodStats;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.eventhandler.Event;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -109,7 +106,7 @@ public class EssentialsMissingHandler
 			cyberwareUserData.resetBuffer();
 		}
 
-		if (!cyberwareUserData.hasEssential(EnumSlot.CRANIUM))
+		if (!cyberwareUserData.hasEssential(BodyRegionEnum.CRANIUM))
 		{
 			entityLivingBase.hurt(brainless, Integer.MAX_VALUE);
 		}
@@ -132,7 +129,7 @@ public class EssentialsMissingHandler
 				entityLivingBase.hurt(lowessence, 2F);
 			}
 
-			if (!cyberwareUserData.hasEssential(EnumSlot.EYES))
+			if (!cyberwareUserData.hasEssential(BodyRegionEnum.EYES))
 			{
 				entityLivingBase.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40));
 			}
@@ -141,12 +138,12 @@ public class EssentialsMissingHandler
 		int numMissingLegs = 0;
 		int numMissingLegsVisible = 0;
 
-		if (!cyberwareUserData.hasEssential(EnumSlot.LEG, EnumSide.LEFT))
+		if (!cyberwareUserData.hasEssential(BodyRegionEnum.LEG, EnumSide.LEFT))
 		{
 			numMissingLegs++;
 			numMissingLegsVisible++;
 		}
-		if (!cyberwareUserData.hasEssential(EnumSlot.LEG, EnumSide.RIGHT))
+		if (!cyberwareUserData.hasEssential(BodyRegionEnum.LEG, EnumSide.RIGHT))
 		{
 			numMissingLegs++;
 			numMissingLegsVisible++;
@@ -172,14 +169,15 @@ public class EssentialsMissingHandler
 		{
 			if (numMissingLegsVisible == 2)
 			{
+				// TODO: cant set these
 				entityLivingBase.height = 1.8F - (10F / 16F);
 				((Player) entityLivingBase).eyeHeight =
-					((Player) entityLivingBase).getDefaultEyeHeight() - (10F / 16F);
-				AABB axisalignedbb = entityLivingBase.getEntityBoundingBox();
-				entityLivingBase.setEntityBoundingBox(new AABB(
+					((Player) entityLivingBase).getEyeHeight() - (10F / 16F);
+				AABB axisalignedbb = entityLivingBase.getBoundingBox();
+				entityLivingBase.setBoundingBox(new AABB(
 					axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ,
-					axisalignedbb.minX + entityLivingBase.width, axisalignedbb.minY + entityLivingBase.height,
-					axisalignedbb.minZ + entityLivingBase.width
+					axisalignedbb.minX + entityLivingBase.getBbWidth(), axisalignedbb.minY + entityLivingBase.getBbHeight(),
+					axisalignedbb.minZ + entityLivingBase.getBbWidth()
 				));
 
 				if (entityLivingBase.level.isClientSide())
@@ -191,13 +189,15 @@ public class EssentialsMissingHandler
 				}
 			} else if (last(entityLivingBase.level.isClientSide(), entityLivingBase))
 			{
+				// TODO: cant set these
 				entityLivingBase.height = 1.8F;
-				((Player) entityLivingBase).eyeHeight = ((Player) entityLivingBase).getDefaultEyeHeight();
-				AABB axisalignedbb = entityLivingBase.getEntityBoundingBox();
-				entityLivingBase.setEntityBoundingBox(new AABB(
+				((Player) entityLivingBase).eyeHeight =
+					((Player) entityLivingBase).getEyeHeight();
+				AABB axisalignedbb = entityLivingBase.getBoundingBox();
+				entityLivingBase.setBoundingBox(new AABB(
 					axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ,
-					axisalignedbb.minX + entityLivingBase.width, axisalignedbb.minY + entityLivingBase.height,
-					axisalignedbb.minZ + entityLivingBase.width
+					axisalignedbb.minX + entityLivingBase.getBbWidth(), axisalignedbb.minY + entityLivingBase.getBbHeight(),
+					axisalignedbb.minZ + entityLivingBase.getBbWidth()
 				));
 
 				if (entityLivingBase.level.isClientSide())
@@ -213,29 +213,29 @@ public class EssentialsMissingHandler
 		if (numMissingLegs >= 1
 			&& entityLivingBase.isOnGround())
 		{
-			entityLivingBase.getAttributeMap().applyAttributeModifiers(multimapMissingLegSpeedAttribute);
+			entityLivingBase.getAttributes().addTransientAttributeModifiers(multimapMissingLegSpeedAttribute);
 		} else if (numMissingLegs >= 1
 			|| entityLivingBase.tickCount % 20 == 0)
 		{
-			entityLivingBase.getAttributeMap().removeAttributeModifiers(multimapMissingLegSpeedAttribute);
+			entityLivingBase.getAttributes().removeAttributeModifiers(multimapMissingLegSpeedAttribute);
 		}
 
-		if (!cyberwareUserData.hasEssential(EnumSlot.HEART))
+		if (!cyberwareUserData.hasEssential(BodyRegionEnum.HEART))
 		{
 			entityLivingBase.hurt(heartless, Integer.MAX_VALUE);
 		}
 
-		if (!cyberwareUserData.hasEssential(EnumSlot.BONE))
+		if (!cyberwareUserData.hasEssential(BodyRegionEnum.BONE))
 		{
 			entityLivingBase.hurt(spineless, Integer.MAX_VALUE);
 		}
 
-		if (!cyberwareUserData.hasEssential(EnumSlot.MUSCLE))
+		if (!cyberwareUserData.hasEssential(BodyRegionEnum.MUSCLE))
 		{
 			entityLivingBase.hurt(nomuscles, Integer.MAX_VALUE);
 		}
 
-		if (!cyberwareUserData.hasEssential(EnumSlot.LUNGS))
+		if (!cyberwareUserData.hasEssential(BodyRegionEnum.LUNGS))
 		{
 			if (getLungsTime(entityLivingBase) >= 20)
 			{
@@ -277,11 +277,11 @@ public class EssentialsMissingHandler
 		{
 			int numMissingLegs = 0;
 
-			if (!cyberwareUserData.hasEssential(EnumSlot.LEG, EnumSide.LEFT))
+			if (!cyberwareUserData.hasEssential(BodyRegionEnum.LEG, EnumSide.LEFT))
 			{
 				numMissingLegs++;
 			}
-			if (!cyberwareUserData.hasEssential(EnumSlot.LEG, EnumSide.RIGHT))
+			if (!cyberwareUserData.hasEssential(BodyRegionEnum.LEG, EnumSide.RIGHT))
 			{
 				numMissingLegs++;
 			}
@@ -302,7 +302,9 @@ public class EssentialsMissingHandler
 
 			if (numMissingLegs == 2)
 			{
-				entityLivingBase.motionY = 0.2F;
+				// TODO: this may be very cursed
+				var md = entityLivingBase.getDeltaMovement();
+				entityLivingBase.setDeltaMovement(md.x, 0.2F, md.y);
 			}
 		}
 	}
@@ -313,8 +315,8 @@ public class EssentialsMissingHandler
 		return entityLivingBase.tickCount - timeLungs;
 	}
 
-	private static Map<Integer, Integer> mapHunger = new HashMap<>();
-	private static Map<Integer, Float> mapSaturation = new HashMap<>();
+	private static final Map<Integer, Integer> mapHunger = new HashMap<>();
+	private static final Map<Integer, Float> mapSaturation = new HashMap<>();
 
 	@SubscribeEvent
 	public void handleEatFoodTick(LivingEntityUseItemEvent.Tick event)
@@ -324,14 +326,13 @@ public class EssentialsMissingHandler
 
 		if (entityLivingBase == null) return;
 
-		if (entityLivingBase instanceof Player
+		if (entityLivingBase instanceof Player entityPlayer
 			&& !stack.isEmpty()
-			&& stack.getItem().getItemUseAction(stack) == EnumAction.EAT)
+			&& stack.getItem().getUseAnimation(stack) == UseAnim.EAT)
 		{
-			Player entityPlayer = (Player) entityLivingBase;
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
 
-			if (cyberwareUserData != null && !cyberwareUserData.hasEssential(EnumSlot.LOWER_ORGANS))
+			if (cyberwareUserData != null && !cyberwareUserData.hasEssential(BodyRegionEnum.LOWER_ORGANS))
 			{
 				mapHunger.put(entityPlayer.getId(), entityPlayer.getFoodData().getFoodLevel());
 				mapSaturation.put(entityPlayer.getId(), entityPlayer.getFoodData().getSaturationLevel());
@@ -349,14 +350,13 @@ public class EssentialsMissingHandler
 		LivingEntity entityLivingBase = event.getEntity();
 		ItemStack stack = event.getItem();
 
-		if (entityLivingBase instanceof Player
+		if (entityLivingBase instanceof Player entityPlayer
 			&& !stack.isEmpty()
-			&& stack.getItem().getItemUseAction(stack) == EnumAction.EAT)
+			&& stack.getItem().getUseAnimation(stack) == UseAnim.EAT)
 		{
-			Player entityPlayer = (Player) entityLivingBase;
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
 
-			if (cyberwareUserData != null && !cyberwareUserData.hasEssential(EnumSlot.LOWER_ORGANS))
+			if (cyberwareUserData != null && !cyberwareUserData.hasEssential(BodyRegionEnum.LOWER_ORGANS))
 			{
 				Integer hunger = mapHunger.get(entityPlayer.getId());
 				if (hunger != null)
@@ -368,11 +368,8 @@ public class EssentialsMissingHandler
 				if (saturation != null)
 				{
 					// note: setFoodSaturationLevel() is client side only
-					FoodStats foodStats = entityPlayer.getFoodData();
-					CompoundTag tagCompound = new CompoundTag();
-					foodStats.writeNBT(tagCompound);
-					tagCompound.putFloat("foodSaturationLevel", saturation);
-					foodStats.readNBT(tagCompound);
+					FoodData foodStats = entityPlayer.getFoodData();
+					foodStats.setSaturation(saturation);
 				}
 			}
 		}
@@ -383,30 +380,28 @@ public class EssentialsMissingHandler
 
 	@SubscribeEvent
 	@OnlyIn(Dist.CLIENT)
-	public void overlayPre(ClientTickEvent event)
+	public void overlayPre(TickEvent.ClientTickEvent event)
 	{
-		if (event.phase == Phase.START
-			&& Minecraft.getInstance() != null
-			&& Minecraft.getInstance().player != null)
+		if (event.phase == TickEvent.Phase.START && Minecraft.getInstance().player != null)
 		{
 			Player entityPlayer = Minecraft.getInstance().player;
 
-			entityPlayer.getAttributeMap().removeAttributeModifiers(multimapMissingLegSpeedAttribute);
+			entityPlayer.getAttributes().removeAttributeModifiers(multimapMissingLegSpeedAttribute);
 		}
 	}
 
 	@SubscribeEvent
 	@OnlyIn(Dist.CLIENT)
-	public void overlayPre(RenderGameOverlayEvent.Pre event)
+	public void overlayPre(RenderGuiOverlayEvent.Pre event)
 	{
-		if (event.getType() == ElementType.ALL)
+		if (true)// event.getOverlay() == ElementType.ALL)
 		{
 			Player entityPlayer = Minecraft.getInstance().player;
 			if (entityPlayer == null) return;
 
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
 			if (cyberwareUserData != null
-				&& !cyberwareUserData.hasEssential(EnumSlot.EYES)
+				&& !cyberwareUserData.hasEssential(BodyRegionEnum.EYES)
 				&& !entityPlayer.isCreative())
 			{
 				GlStateManager.pushMatrix();
@@ -422,7 +417,7 @@ public class EssentialsMissingHandler
 			if (TileEntitySurgery.workingOnPlayer)
 			{
 				float trans = 1.0F;
-				float ticks = TileEntitySurgery.playerProgressTicks + event.getPartialTicks();
+				float ticks = TileEntitySurgery.playerProgressTicks + event.getPartialTick();
 				if (ticks < 20F)
 				{
 					trans = ticks / 20F;
@@ -450,8 +445,8 @@ public class EssentialsMissingHandler
 		ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
 		if (cyberwareUserData != null)
 		{
-			if (!cyberwareUserData.hasEssential(EnumSlot.SKIN)
-				&& (!event.getSource().isUnblockable()
+			if (!cyberwareUserData.hasEssential(BodyRegionEnum.SKIN)
+				&& (!event.getSource().isBypassMagic()
 				|| event.getSource() == DamageSource.FALL))
 			{
 				event.setAmount(event.getAmount() * 3F);
@@ -507,12 +502,12 @@ public class EssentialsMissingHandler
 		}
 	}
 
-	private void processEvent(Event event, EnumHand hand, Player entityPlayer, ICyberwareUserData cyberwareUserData)
+	private void processEvent(Event event, InteractionHand hand, Player entityPlayer, ICyberwareUserData cyberwareUserData)
 	{
-		EnumHandSide mainHand = entityPlayer.getPrimaryHand();
-		EnumHandSide offHand = ((mainHand == EnumHandSide.LEFT) ? EnumHandSide.RIGHT : EnumHandSide.LEFT);
-		EnumSide correspondingMainHand = ((mainHand == EnumHandSide.RIGHT) ? EnumSide.RIGHT : EnumSide.LEFT);
-		EnumSide correspondingOffHand = ((offHand == EnumHandSide.RIGHT) ? EnumSide.RIGHT : EnumSide.LEFT);
+		HumanoidArm mainHand = entityPlayer.getMainArm();
+		HumanoidArm offHand = ((mainHand == HumanoidArm.LEFT) ? HumanoidArm.RIGHT : HumanoidArm.LEFT);
+		EnumSide correspondingMainHand = ((mainHand == HumanoidArm.RIGHT) ? EnumSide.RIGHT : EnumSide.LEFT);
+		EnumSide correspondingOffHand = ((offHand == HumanoidArm.RIGHT) ? EnumSide.RIGHT : EnumSide.LEFT);
 
 		boolean leftUnpowered = false;
 		ItemStack armLeft =
@@ -530,10 +525,10 @@ public class EssentialsMissingHandler
 			rightUnpowered = true;
 		}
 
-		if (hand == EnumHand.MAIN_HAND && (!cyberwareUserData.hasEssential(EnumSlot.ARM, correspondingMainHand) || leftUnpowered))
+		if (hand == InteractionHand.MAIN_HAND && (!cyberwareUserData.hasEssential(BodyRegionEnum.ARM, correspondingMainHand) || leftUnpowered))
 		{
 			event.setCanceled(true);
-		} else if (hand == EnumHand.OFF_HAND && (!cyberwareUserData.hasEssential(EnumSlot.ARM, correspondingOffHand) || rightUnpowered))
+		} else if (hand == InteractionHand.OFF_HAND && (!cyberwareUserData.hasEssential(BodyRegionEnum.ARM, correspondingOffHand) || rightUnpowered))
 		{
 			event.setCanceled(true);
 		}

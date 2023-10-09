@@ -1,37 +1,5 @@
 package flaxbeard.cyberware.common;
 
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
-import flaxbeard.cyberware.common.block.*;
-import flaxbeard.cyberware.common.config.CyberwareConfig;
-import flaxbeard.cyberware.common.effect.PotionNeuropozyne;
-import flaxbeard.cyberware.common.entity.EntityCyberZombie;
-import flaxbeard.cyberware.common.handler.RecipeHandler;
-import flaxbeard.cyberware.common.integration.botania.BotaniaIntegration;
-import flaxbeard.cyberware.common.integration.enderio.EnderIOIntegration;
-import flaxbeard.cyberware.common.integration.tan.ToughAsNailsIntegration;
-import flaxbeard.cyberware.common.item.*;
-import flaxbeard.cyberware.common.item.VanillaWares.SpiderEyeWare;
-import flaxbeard.cyberware.common.misc.BlueprintCraftingHandler;
-import flaxbeard.cyberware.common.misc.CyberwareDyingHandler;
-import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
-import flaxbeard.cyberware.common.misc.NNLUtil;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.random.Weight;
-import net.minecraft.util.random.WeightedEntry;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
-import net.minecraftforge.registries.RegisterEvent;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-
 public class CyberwareContent
 {
 //	public static final int RARE = 10;

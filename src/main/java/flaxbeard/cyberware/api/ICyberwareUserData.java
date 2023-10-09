@@ -1,6 +1,6 @@
 package flaxbeard.cyberware.api;
 
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb.EnumSide;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -12,11 +12,11 @@ import java.util.List;
 
 public interface ICyberwareUserData
 {
-	NonNullList<ItemStack> getInstalledCyberware(EnumSlot slot);
+	NonNullList<ItemStack> getInstalledCyberware(BodyRegionEnum slot);
 
-	void setInstalledCyberware(LivingEntity entityLivingBase, EnumSlot slot, List<ItemStack> cyberware);
+	void setInstalledCyberware(LivingEntity entityLivingBase, BodyRegionEnum slot, List<ItemStack> cyberware);
 
-	void setInstalledCyberware(LivingEntity entityLivingBase, EnumSlot slot, NonNullList<ItemStack> cyberware);
+	void setInstalledCyberware(LivingEntity entityLivingBase, BodyRegionEnum slot, NonNullList<ItemStack> cyberware);
 
 	boolean isCyberwareInstalled(ItemStack cyberware);
 
@@ -26,9 +26,9 @@ public interface ICyberwareUserData
 
 	void deserializeNBT(CompoundTag tagCompound);
 
-	boolean hasEssential(EnumSlot slot);
+	boolean hasEssential(BodyRegionEnum slot);
 
-	void setHasEssential(EnumSlot slot, boolean hasLeft, boolean hasRight);
+	void setHasEssential(BodyRegionEnum slot, boolean hasLeft, boolean hasRight);
 
 	ItemStack getCyberware(ItemStack cyberware);
 
@@ -62,7 +62,7 @@ public interface ICyberwareUserData
 
 	boolean usePower(ItemStack stack, int amount, boolean isPassive);
 
-	boolean hasEssential(EnumSlot slot, EnumSide side);
+	boolean hasEssential(BodyRegionEnum slot, EnumSide side);
 
 	void resetWare(LivingEntity entityLivingBase);
 

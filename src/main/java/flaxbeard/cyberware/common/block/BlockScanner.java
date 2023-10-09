@@ -1,6 +1,5 @@
 package flaxbeard.cyberware.common.block;
 
-import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
 import flaxbeard.cyberware.common.block.tile.TileEntityScanner;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.registry.BlockEntities;

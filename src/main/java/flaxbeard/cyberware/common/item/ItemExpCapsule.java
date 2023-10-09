@@ -1,17 +1,12 @@
 package flaxbeard.cyberware.common.item;
 
-import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.CyberwareContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -30,19 +25,6 @@ public class ItemExpCapsule extends Item
 		super(pProperties);
 	}
 
-	@Override
-	public void getSubItems(@Nonnull CreativeModeTab tab, @Nonnull NonNullList<ItemStack> list)
-	{
-		if (this.getCreativeTabs().contains(tab))
-		{
-			ItemStack stack = new ItemStack(this);
-			CompoundTag tagCompound = new CompoundTag();
-			tagCompound.putInt("xp", 100);
-			stack.setTag(tagCompound);
-			list.add(stack);
-		}
-	}
-
 	@OnlyIn(Dist.CLIENT)
 	public boolean hasEffect(ItemStack stack)
 	{
@@ -51,10 +33,9 @@ public class ItemExpCapsule extends Item
 
 	@Nonnull
 	@Override
-	public InteractionResultHolder<ItemStack> onItemRightClick(Level world, Player entityPlayer,
-															   @Nonnull InteractionHand hand)
+	public InteractionResultHolder<ItemStack> use(@Nonnull Level pLevel, @Nonnull Player pPlayer, @Nonnull InteractionHand pUsedHand)
 	{
-		ItemStack stack = entityPlayer.getItemInHand(hand);
+		ItemStack stack = pPlayer.getItemInHand(pUsedHand);
 
 		int xp = 0;
 		CompoundTag tagCompound = stack.getTag();
@@ -65,14 +46,14 @@ public class ItemExpCapsule extends Item
 			xp = tagCompound.getInt("xp");
 		}
 
-		if (!entityPlayer.isCreative())
+		if (!pPlayer.isCreative())
 		{
 			stack.shrink(1);
 		}
 
-		entityPlayer.giveExperiencePoints(xp);
+		pPlayer.giveExperiencePoints(xp);
 
-		return new InteractionResultHolder<>(InteractionResult.SUCCESS, stack);
+		return super.use(pLevel, pPlayer, pUsedHand);
 	}
 
 	@Override

@@ -5,6 +5,8 @@ import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb;
+import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +22,7 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
+import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +33,7 @@ public class ItemCyberlimb extends ItemCyberware implements ISidedLimb
 	public static final int META_LEFT_CYBER_LEG = 2;
 	public static final int META_RIGHT_CYBER_LEG = 3;
 
-	public ItemCyberlimb(String name, EnumSlot[] slots, String[] subnames)
+	public ItemCyberlimb(String name, BodyRegionEnum[] slots, String[] subnames)
 	{
 		super(name, slots, subnames);
 		MinecraftForge.EVENT_BUS.register(this);
@@ -38,17 +41,17 @@ public class ItemCyberlimb extends ItemCyberware implements ISidedLimb
 
 	public ItemCyberlimb(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(itemProperties, cyberwareProperties, EnumSlot.HEART);
+		super(itemProperties, cyberwareProperties, BodyRegionEnum.HEART);
 	}
 
 	@Override
-	public boolean isEssential(ItemStack stack)
+	public boolean isEssential(@Nonnull ItemStack stack)
 	{
 		return true;
 	}
 
 	@Override
-	public boolean isIncompatible(ItemStack stack, ItemStack other)
+	public boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack other)
 	{
 		ICyberware ware = CyberwareAPI.getCyberware(other);
 
@@ -59,8 +62,9 @@ public class ItemCyberlimb extends ItemCyberware implements ISidedLimb
 		return false;
 	}
 
+	@Nonnull
 	@Override
-	public EnumSide getSide(ItemStack stack)
+	public EnumSide getSide(@Nonnull ItemStack stack)
 	{
 		return CyberwareItemMetadata.predicate(stack, (int t) -> t % 2 == 0) ? EnumSide.LEFT : EnumSide.RIGHT;
 	}
@@ -151,7 +155,7 @@ public class ItemCyberlimb extends ItemCyberware implements ISidedLimb
 	}
 
 	@Override
-	public int getPowerConsumption(ItemStack stack)
+	public int getPowerConsumption(@Nonnull ItemStack stack)
 	{
 		return LibConstants.LIMB_CONSUMPTION;
 	}

@@ -1,6 +1,5 @@
 package flaxbeard.cyberware.common.block;
 
-import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
 import flaxbeard.cyberware.common.block.tile.TileEntityCharger;
 import flaxbeard.cyberware.common.registry.BlockEntities;
 import net.minecraft.core.BlockPos;

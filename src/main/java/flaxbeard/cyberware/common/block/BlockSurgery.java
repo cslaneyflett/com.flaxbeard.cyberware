@@ -1,7 +1,6 @@
 package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.common.block.tile.TileEntityScanner;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.registry.BlockEntities;

@@ -2,7 +2,7 @@ package flaxbeard.cyberware.client.gui;
 
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.api.item.ICyberware.EnumSlot;
+import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.client.gui.ContainerSurgery.SlotSurgery;
 import flaxbeard.cyberware.client.render.ModelBox;
@@ -388,7 +388,7 @@ public class GuiSurgery extends GuiContainer
 						} else
 						{
 							indexStacks.set(indexCount, playerStack.copy());
-							EnumSlot slot = EnumSlot.values()[indexSurgeySlot / LibConstants.WARE_PER_SLOT];
+							BodyRegionEnum slot = BodyRegionEnum.values()[indexSurgeySlot / LibConstants.WARE_PER_SLOT];
 							indexPages[indexCount] = slot.getSlotNumber();
 							indexNews[indexCount] = 2;
 							indexCount++;
@@ -414,7 +414,7 @@ public class GuiSurgery extends GuiContainer
 				if (!draw.isEmpty())
 				{
 					indexStacks.set(indexCount, draw);
-					EnumSlot slot = EnumSlot.values()[indexSurgeySlot / LibConstants.WARE_PER_SLOT];
+					BodyRegionEnum slot = BodyRegionEnum.values()[indexSurgeySlot / LibConstants.WARE_PER_SLOT];
 					indexPages[indexCount] = slot.getSlotNumber();
 					indexNews[indexCount] = nu;
 					indexCount++;
@@ -703,7 +703,7 @@ public class GuiSurgery extends GuiContainer
 
 			for (int index = 0; index < surgery.isEssentialMissing.length; index++)
 			{
-				EnumSlot slot = EnumSlot.values()[index / 2];
+				BodyRegionEnum slot = BodyRegionEnum.values()[index / 2];
 
 				if (slot.isSided())
 				{
@@ -1333,7 +1333,7 @@ public class GuiSurgery extends GuiContainer
 
 			for (int index = 0; index < surgery.isEssentialMissing.length; index++)
 			{
-				EnumSlot slot = EnumSlot.values()[index / 2];
+				BodyRegionEnum slot = BodyRegionEnum.values()[index / 2];
 
 				if (slot.isSided())
 				{

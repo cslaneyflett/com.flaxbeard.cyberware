@@ -3,22 +3,25 @@ package flaxbeard.cyberware.common.item;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.api.item.IHudjack;
 import flaxbeard.cyberware.api.item.IMenuItem;
-import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
+import flaxbeard.cyberware.common.registry.items.Eyes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
+
+import javax.annotation.Nonnull;
 
 public class ItemEyeUpgrade extends ItemCyberware implements IMenuItem, IHudjack
 {
 	public ItemEyeUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(itemProperties, cyberwareProperties, EnumSlot.EYES);
+		super(itemProperties, cyberwareProperties, BodyRegionEnum.EYES);
 	}
 
 	@Override
-	public boolean isIncompatible(ItemStack stack, ItemStack other)
+	public boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack other)
 	{
-		return other.getItem() == CyberwareContent.cybereyes;
+		return other.is(Eyes.CYBEREYE_BASE.get());
 	}
 
 	@Override

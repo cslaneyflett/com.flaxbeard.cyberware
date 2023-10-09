@@ -58,9 +58,10 @@ public class ClientUtils
 
 	public static void drawHoveringText(Screen gui, List<Component> textLines, int x, int y, Font font)
 	{
-//		net.minecraftforge.fml.client.config.GuiUtils.drawHoveringText(textLines, x, y, gui.width, gui.height, -1,
-//			font
-//		);
+		// TODO
+		//net.minecraftforge.fml.client.config.GuiUtils.drawHoveringText(textLines, x, y, gui.width, gui.height, -1,
+		//	font
+		//);
 	}
 
 	public static void useActiveItemClient(Entity entity, ItemStack stack)

@@ -2,14 +2,17 @@ package flaxbeard.cyberware.common.item;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ISpecialBattery;
-import flaxbeard.cyberware.api.item.ICyberware;
+import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import net.minecraft.world.item.ItemStack;
+
+import javax.annotation.Nonnull;
 
 public class ItemCreativeBattery extends ItemCyberware implements ISpecialBattery
 {
 	public ItemCreativeBattery(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(itemProperties, cyberwareProperties, EnumSlot.LOWER_ORGANS);
+		super(itemProperties, cyberwareProperties, BodyRegionEnum.LOWER_ORGANS);
 	}
 
 	@Override
@@ -31,13 +34,13 @@ public class ItemCreativeBattery extends ItemCyberware implements ISpecialBatter
 	}
 
 	@Override
-	public int getCapacity(ItemStack battery)
+	public int getPowerCapacity(@Nonnull ItemStack battery)
 	{
 		return 999999;
 	}
 
 	@Override
-	public boolean canHoldQuality(ItemStack stack, Quality quality)
+	public boolean canHoldQuality(@Nonnull ItemStack stack, @Nonnull Quality quality)
 	{
 		return quality == CyberwareAPI.QUALITY_MANUFACTURED;
 	}

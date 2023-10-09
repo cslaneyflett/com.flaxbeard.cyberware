@@ -24,28 +24,29 @@ public class ItemNeuropozyne extends PotionItem
 		super(pProperties);
 	}
 
-	public @Nonnull ItemStack getDefaultInstance() {
+	public @Nonnull ItemStack getDefaultInstance()
+	{
 		return PotionUtils.setPotion(super.getDefaultInstance(), Potions.WATER);
 	}
 
 
-//
-//	@Nonnull
-//	@Override
-//	public InteractionResultHolder<ItemStack> onItemRightClick(Level world, Player entityPlayer,
-//															   @Nonnull EnumHand hand)
-//	{
-//		ItemStack stack = entityPlayer.getHeldItem(hand);
-//
-//		if (!entityPlayer.capabilities.isCreativeMode)
-//		{
-//			stack.shrink(1);
-//		}
-//
-//		entityPlayer.addEffect(new MobEffectInstance(CyberwareContent.neuropozyneEffect, 24000, 0, false, false));
-//
-//		return new InteractionResultHolder<>(EnumActionResult.SUCCESS, stack);
-//	}
+	//
+	//	@Nonnull
+	//	@Override
+	//	public InteractionResultHolder<ItemStack> onItemRightClick(Level world, Player entityPlayer,
+	//															   @Nonnull EnumHand hand)
+	//	{
+	//		ItemStack stack = entityPlayer.getHeldItem(hand);
+	//
+	//		if (!entityPlayer.capabilities.isCreativeMode)
+	//		{
+	//			stack.shrink(1);
+	//		}
+	//
+	//		entityPlayer.addEffect(new MobEffectInstance(CyberwareContent.neuropozyneEffect, 24000, 0, false, false));
+	//
+	//		return new InteractionResultHolder<>(EnumActionResult.SUCCESS, stack);
+	//	}
 
 	@Override
 	@OnlyIn(Dist.CLIENT)

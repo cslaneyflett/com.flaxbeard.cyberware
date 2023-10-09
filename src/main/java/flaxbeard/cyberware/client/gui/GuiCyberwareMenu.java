@@ -12,8 +12,8 @@ import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.SyncHotkeyPacket;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.settings.GameSettings;
@@ -25,7 +25,7 @@ import org.lwjgl.opengl.GL11;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class GuiCyberwareMenu extends GuiScreen
+public class GuiCyberwareMenu extends Screen
 {
 	Minecraft mc = Minecraft.getInstance();
 	boolean movedWheel = false;

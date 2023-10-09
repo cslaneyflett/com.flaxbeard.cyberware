@@ -2,23 +2,25 @@ package flaxbeard.cyberware.common.misc;
 
 import com.google.common.collect.Lists;
 import flaxbeard.cyberware.Cyberware;
-import flaxbeard.cyberware.common.CyberwareContent;
+import flaxbeard.cyberware.common.registry.items.ArmorMaterials;
 import net.minecraft.core.NonNullList;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.EnumDyeColor;
-import net.minecraft.item.ItemArmor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.oredict.RecipeSorter;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class CyberwareDyingHandler implements Recipe
+// TODO: just purge this entire thing?
+public class CyberwareDyingHandler implements CraftingRecipe
 {
 	static
 	{
@@ -70,11 +72,9 @@ public class CyberwareDyingHandler implements Recipe
 
 			if (!itemStackInSlot.isEmpty())
 			{
-				if (itemStackInSlot.getItem() instanceof ItemArmor)
+				if (itemStackInSlot.getItem() instanceof ArmorItem itemArmor)
 				{
-					ItemArmor itemarmor = (ItemArmor) itemStackInSlot.getItem();
-
-					if (itemarmor.getArmorMaterial() != CyberwareContent.trenchMat
+					if (itemArmor.getMaterial() != ArmorMaterials.TRENCH_COAT
 						|| !itemStackArmor.isEmpty())
 					{
 						return false;
@@ -83,7 +83,7 @@ public class CyberwareDyingHandler implements Recipe
 					itemStackArmor = itemStackInSlot;
 				} else
 				{
-					if (itemStackInSlot.getItem() != Items.DYE)
+					if (!itemStackInSlot.is(Tags.Items.DYES))
 					{
 						return false;
 					}
@@ -104,29 +104,28 @@ public class CyberwareDyingHandler implements Recipe
 		int[] aint = new int[3];
 		int i = 0;
 		int j = 0;
-		ItemArmor itemarmor = null;
+		ArmorItem itemArmor = null;
 
 		for (int indexSlot = 0; indexSlot < inventoryCrafting.getSizeInventory(); indexSlot++)
 		{
-			ItemStack itemstack1 = inventoryCrafting.getStackInSlot(indexSlot);
+			ItemStack itemStack1 = inventoryCrafting.getStackInSlot(indexSlot);
 
-			if (!itemstack1.isEmpty())
+			if (!itemStack1.isEmpty())
 			{
-				if (itemstack1.getItem() instanceof ItemArmor)
+				if (itemStack1.getItem() instanceof ArmorItem itemArmor2)
 				{
-					itemarmor = (ItemArmor) itemstack1.getItem();
-
-					if (itemarmor.getArmorMaterial() != CyberwareContent.trenchMat || !itemstack.isEmpty())
+					itemArmor = itemArmor2;
+					if (itemArmor.getMaterial() != ArmorMaterials.TRENCH_COAT || !itemstack.isEmpty())
 					{
 						return ItemStack.EMPTY;
 					}
 
-					itemstack = itemstack1.copy();
+					itemstack = itemStack1.copy();
 					itemstack.setCount(1);
 
-					if (itemarmor.hasColor(itemstack1))
+					if (itemArmor.hasColor(itemStack1))
 					{
-						int l = itemarmor.getColor(itemstack);
+						int l = itemArmor.getColor(itemstack);
 						float f = (float) (l >> 16 & 255) / 255.0F;
 						float f1 = (float) (l >> 8 & 255) / 255.0F;
 						float f2 = (float) (l & 255) / 255.0F;
@@ -138,12 +137,12 @@ public class CyberwareDyingHandler implements Recipe
 					}
 				} else
 				{
-					if (itemstack1.getItem() != Items.DYE)
+					if (!itemStack1.is(Tags.Items.DYES))
 					{
 						return ItemStack.EMPTY;
 					}
 
-					float[] afloat = EntitySheep.getDyeRgb(EnumDyeColor.byDyeDamage(itemstack1.getMetadata()));
+					float[] afloat = EntitySheep.getDyeRgb(EnumDyeColor.byDyeDamage(itemStack1.getMetadata()));
 					int l1 = (int) (afloat[0] * 255.0F);
 					int i2 = (int) (afloat[1] * 255.0F);
 					int j2 = (int) (afloat[2] * 255.0F);
@@ -156,7 +155,7 @@ public class CyberwareDyingHandler implements Recipe
 			}
 		}
 
-		if (itemarmor == null)
+		if (itemArmor == null)
 		{
 			return ItemStack.EMPTY;
 		} else
@@ -171,7 +170,7 @@ public class CyberwareDyingHandler implements Recipe
 			k1 = (int) ((float) k1 * f3 / f4);
 			int lvt_12_3_ = (i1 << 8) + j1;
 			lvt_12_3_ = (lvt_12_3_ << 8) + k1;
-			itemarmor.setColor(itemstack, lvt_12_3_);
+			itemArmor.setColor(itemstack, lvt_12_3_);
 			return itemstack;
 		}
 	}

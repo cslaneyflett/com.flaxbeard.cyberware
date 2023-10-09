@@ -1,9 +1,6 @@
 package flaxbeard.cyberware.common.registry.items;
 
-import flaxbeard.cyberware.common.item.CyberwareProperties;
-import flaxbeard.cyberware.common.item.ItemBoneUpgrade;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
 
 public class Components extends ItemRegistry

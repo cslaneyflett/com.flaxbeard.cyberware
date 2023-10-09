@@ -125,7 +125,6 @@ public class Cyberware
 		public static void onClientSetup(FMLClientSetupEvent event)
 		{
 			MinecraftForge.EVENT_BUS.register(EssentialsMissingHandlerClient.INSTANCE);
-			MinecraftForge.EVENT_BUS.register(CreativeMenuHandler.INSTANCE);
 			MinecraftForge.EVENT_BUS.register(CyberwareMenuHandler.INSTANCE);
 			MinecraftForge.EVENT_BUS.register(HudHandler.INSTANCE);
 			ShaderUtil.init();

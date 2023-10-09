@@ -4,6 +4,8 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,19 +13,26 @@ import java.util.Map;
 
 public interface ICyberware
 {
-	public EnumSlot getSlot(ItemStack stack);
+	@Nonnull
+	BodyRegionEnum getSlot(@Nonnull ItemStack stack);
 
-	public int installedStackSize(ItemStack stack);
+	int maximumStackSize(@Nonnull ItemStack stack);
 
-	public NonNullList<NonNullList<ItemStack>> required(ItemStack stack);
+	@Nonnull
+	NonNullList<NonNullList<ItemStack>> required(@Nonnull ItemStack stack);
 
-	public boolean isIncompatible(ItemStack stack, ItemStack comparison);
+	boolean isIncompatible(@Nonnull ItemStack stack, @Nonnull ItemStack comparison);
 
-	boolean isEssential(ItemStack stack);
+	boolean isEssential(@Nonnull ItemStack stack);
 
-	public List<String> getInfo(ItemStack stack);
+	@Nonnull
+	List<String> getInfo(@Nonnull ItemStack stack);
 
-	public int getCapacity(ItemStack wareStack);
+	int getPowerConsumption(@Nonnull ItemStack stack);
+
+	int getPowerProduction(@Nonnull ItemStack stack);
+
+	int getPowerCapacity(@Nonnull ItemStack stack);
 
 	/**
 	 * Returns a Quality object representing the quality of this stack - all
@@ -34,26 +43,28 @@ public interface ICyberware
 	 * @param stack The ItemStack to check
 	 * @return An instance of Quality
 	 */
-	public Quality getQuality(ItemStack stack);
+	@Nonnull
+	Quality getQuality(@Nonnull ItemStack stack);
 
-	public ItemStack setQuality(ItemStack stack, Quality quality);
+	@Nonnull
+	ItemStack setQuality(@Nonnull ItemStack stack, @Nonnull Quality quality);
 
-	public boolean canHoldQuality(ItemStack stack, Quality quality);
+	boolean canHoldQuality(@Nonnull ItemStack stack, @Nonnull Quality quality);
 
-	public class Quality
+	class Quality
 	{
-		private static Map<String, Quality> mapping = new HashMap<>();
-		public static List<Quality> qualities = new ArrayList<>();
-		private String unlocalizedName;
-		private String nameModifier;
-		private String spriteSuffix;
+		private static final Map<String, Quality> mapping = new HashMap<>();
+		public static final List<Quality> qualities = new ArrayList<>();
+		private final String unlocalizedName;
+		private final String nameModifier;
+		private final String spriteSuffix;
 
-		public Quality(String unlocalizedName)
+		public Quality(@Nonnull String unlocalizedName)
 		{
 			this(unlocalizedName, null, null);
 		}
 
-		public Quality(String unlocalizedName, String nameModifier, String spriteSuffix)
+		public Quality(@Nonnull String unlocalizedName, String nameModifier, String spriteSuffix)
 		{
 			this.unlocalizedName = unlocalizedName;
 			this.nameModifier = nameModifier;
@@ -63,7 +74,7 @@ public interface ICyberware
 			qualities.add(this);
 		}
 
-		public String getUnlocalizedName()
+		public @Nonnull String getUnlocalizedName()
 		{
 			return unlocalizedName;
 		}
@@ -88,8 +99,7 @@ public interface ICyberware
 		}
 	}
 
-	// @TODO rename to BodyRegion since it's more a type/category than an actual inventory slot
-	public enum EnumSlot
+	enum BodyRegionEnum
 	{
 		EYES(12, "eyes"),
 		CRANIUM(11, "cranium"),
@@ -108,7 +118,7 @@ public interface ICyberware
 		private final boolean sidedSlot;
 		private final boolean hasEssential;
 
-		private EnumSlot(int slot, String name, boolean sidedSlot, boolean hasEssential)
+		BodyRegionEnum(int slot, String name, boolean sidedSlot, boolean hasEssential)
 		{
 			this.slotNumber = slot;
 			this.name = name;
@@ -116,7 +126,7 @@ public interface ICyberware
 			this.hasEssential = hasEssential;
 		}
 
-		private EnumSlot(int slot, String name)
+		BodyRegionEnum(int slot, String name)
 		{
 			this(slot, name, false, true);
 		}
@@ -126,9 +136,9 @@ public interface ICyberware
 			return slotNumber;
 		}
 
-		public static EnumSlot getSlotByPage(int page)
+		public static BodyRegionEnum getSlotByPage(int page)
 		{
-			for (EnumSlot slot : values())
+			for (BodyRegionEnum slot : values())
 			{
 				if (slot.getSlotNumber() == page)
 				{
@@ -154,20 +164,52 @@ public interface ICyberware
 		}
 	}
 
-	public void onAdded(LivingEntity entityLivingBase, ItemStack stack);
-
-	public void onRemoved(LivingEntity entityLivingBase, ItemStack stack);
-
-	public interface ISidedLimb
+	enum BodyPartEnum
 	{
-		public EnumSide getSide(ItemStack stack);
+		EYES(BodyRegionEnum.EYES),
+		BRAIN(BodyRegionEnum.CRANIUM),
+		HEART(BodyRegionEnum.HEART),
+		LUNGS(BodyRegionEnum.LUNGS),
+		STOMACH(BodyRegionEnum.LOWER_ORGANS),
+		SKIN(BodyRegionEnum.SKIN),
+		MUSCLES(BodyRegionEnum.MUSCLE),
+		BONES(BodyRegionEnum.BONE),
+		ARM_LEFT(BodyRegionEnum.ARM, ISidedLimb.EnumSide.LEFT),
+		ARM_RIGHT(BodyRegionEnum.ARM, ISidedLimb.EnumSide.RIGHT),
+		LEG_LEFT(BodyRegionEnum.LEG, ISidedLimb.EnumSide.LEFT),
+		LEG_RIGHT(BodyRegionEnum.LEG, ISidedLimb.EnumSide.RIGHT);
 
-		public enum EnumSide
+		public final @Nonnull BodyRegionEnum slot;
+		public final @Nullable ISidedLimb.EnumSide side;
+
+		BodyPartEnum(@Nonnull BodyRegionEnum bodyRegionEnum)
+		{
+			this.slot = bodyRegionEnum;
+			this.side = null;
+		}
+
+		BodyPartEnum(@Nonnull BodyRegionEnum bodyRegionEnum, @Nullable ISidedLimb.EnumSide side)
+		{
+			this.slot = bodyRegionEnum;
+			this.side = side;
+		}
+	}
+
+	void onAdded(@Nonnull LivingEntity entityLivingBase, @Nonnull ItemStack stack);
+
+	void onRemoved(@Nonnull LivingEntity entityLivingBase, @Nonnull ItemStack stack);
+
+	interface ISidedLimb extends ICyberware
+	{
+		@Nonnull
+		EnumSide getSide(@Nonnull ItemStack stack);
+
+		enum EnumSide
 		{
 			LEFT,
 			RIGHT;
 		}
 	}
 
-	public int getEssenceCost(ItemStack stack);
+	int getEssenceCost(@Nonnull ItemStack stack);
 }
