@@ -2,10 +2,10 @@ package flaxbeard.cyberware.common.item;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.registry.items.ArmUpgrades;
+import flaxbeard.cyberware.common.registry.items.CyberLimbs;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -19,7 +19,7 @@ public class ItemArmUpgrade extends ItemCyberware
 {
 	public ItemArmUpgrade(Properties itemProperties, CyberwareProperties cyberwareProperties)
 	{
-		super(itemProperties, cyberwareProperties, BodyRegionEnum.BONE);
+		super(itemProperties, cyberwareProperties, BodyRegionEnum.ARM);
 	}
 
 	@Nonnull
@@ -28,8 +28,8 @@ public class ItemArmUpgrade extends ItemCyberware
 	{
 		NonNullList<NonNullList<ItemStack>> l1 = NonNullList.create();
 		NonNullList<ItemStack> l2 = NonNullList.create();
-		l2.add(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_ARM));
-		l2.add(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_ARM));
+		l2.add(CyberLimbs.CYBERARM_LEFT.get().getDefaultInstance());
+		l2.add(CyberLimbs.CYBERARM_RIGHT.get().getDefaultInstance());
 		l1.add(l2);
 
 		return l1;
@@ -37,6 +37,8 @@ public class ItemArmUpgrade extends ItemCyberware
 
 	public static class EventHandler
 	{
+		public static final ItemCyberlimb.EventHandler INSTANCE = new ItemCyberlimb.EventHandler();
+
 		@SubscribeEvent
 		public void useBow(LivingEntityUseItemEvent.Tick event)
 		{

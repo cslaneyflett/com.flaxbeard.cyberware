@@ -1,7 +1,7 @@
 package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityCharger;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -33,6 +33,6 @@ public class BlockCharger extends Block implements EntityBlock
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
 																  @Nonnull BlockEntityType<T> type)
 	{
-		return type == BlockEntities.CHARGER.get() ? TileEntityCharger::tick : null;
+		return type == CWBlockEntities.CHARGER.get() ? TileEntityCharger::tick : null;
 	}
 }

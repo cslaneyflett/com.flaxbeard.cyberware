@@ -28,8 +28,20 @@ public class ItemCyberware extends Item implements ICyberware, ICyberwareTabItem
 						 @Nonnull BodyRegionEnum bodyRegionEnum)
 	{
 		super(itemProperties);
+
 		this.cyberwareProperties = cyberwareProperties;
 		this.bodyRegionEnum = bodyRegionEnum;
+
+		if (cyberwareProperties.rarity() != CyberwareProperties.Rarity.NEVER)
+		{
+			// TODO: item stack cant be made here, stick ourself into a list elsewhere and do the build in a later event
+			//var stack = new ItemStack(this);
+			//int maximumStackSize = maximumStackSize(stack);
+			//stack.setCount(maximumStackSize);
+			//this.setQuality(stack, CyberwareAPI.QUALITY_SCAVENGED);
+
+			//ZombieItem.add(cyberwareProperties.rarity(), stack);
+		}
 	}
 
 	@Override

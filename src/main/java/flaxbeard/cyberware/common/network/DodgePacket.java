@@ -1,7 +1,11 @@
 package flaxbeard.cyberware.common.network;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.hud.INotification;
 import flaxbeard.cyberware.api.hud.NotificationInstance;
+import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.common.handler.HudHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -56,12 +60,12 @@ public class DodgePacket
 				{
 					RandomSource rand = targetEntity.level.getRandom();
 					// TODO
-					//					level.spawnParticle(EnumParticleTypes.SPELL, targetEntity.posX, targetEntity
-					//					.posY + rand.nextFloat() * targetEntity.height, targetEntity.posZ,
-					//							(rand.nextFloat() - .5F) * .2F,
-					//							0,
-					//							(rand.nextFloat() - .5F) * .2F,
-					//							255, 255, 255);
+					// level.spawnParticle(EnumParticleTypes.SPELL, targetEntity.posX, targetEntity
+					// .posY + rand.nextFloat() * targetEntity.height, targetEntity.posZ,
+					// 		(rand.nextFloat() - .5F) * .2F,
+					// 		0,
+					// 		(rand.nextFloat() - .5F) * .2F,
+					// 		255, 255, 255);
 				}
 
 				targetEntity.playSound(SoundEvents.FIREWORK_ROCKET_SHOOT, 1F, 1F);
@@ -80,16 +84,15 @@ public class DodgePacket
 	private static class DodgeNotification implements INotification
 	{
 		@Override
-		public void render(int x, int y)
+		public void render(PoseStack poseStack, int x, int y)
 		{
-			// TODO: render
-			//			Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
-			//
-			//			GlStateManager.pushMatrix();
-			//			float[] color = CyberwareAPI.getHUDColor();
-			//			GlStateManager.color(color[0], color[1], color[2]);
-			//			ClientUtils.drawTexturedModalRect(x + 1, y + 1, 0, 39, 15, 14);
-			//			GlStateManager.popMatrix();
+			RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
+
+			poseStack.pushPose();
+			float[] color = CyberwareAPI.getHUDColor();
+			RenderSystem.setShaderColor(color[0], color[1], color[2], 1.0F);
+			ClientUtils.drawTexturedModalRect(x + 1, y + 1, 0, 39, 15, 14);
+			poseStack.popPose();
 		}
 
 		@Override

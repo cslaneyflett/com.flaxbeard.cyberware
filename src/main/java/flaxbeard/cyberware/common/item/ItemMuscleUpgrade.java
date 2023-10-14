@@ -158,6 +158,8 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 
 	public static class EventHandler
 	{
+		public static final EventHandler INSTANCE = new EventHandler();
+
 		@SubscribeEvent
 		public void handleHurt(LivingHurtEvent event)
 		{

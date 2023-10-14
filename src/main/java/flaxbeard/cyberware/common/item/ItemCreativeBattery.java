@@ -16,19 +16,19 @@ public class ItemCreativeBattery extends ItemCyberware implements ISpecialBatter
 	}
 
 	@Override
-	public int add(ItemStack battery, ItemStack power, int amount, boolean simulate)
+	public int add(@Nonnull ItemStack battery, @Nonnull ItemStack power, int amount, boolean simulate)
 	{
 		return amount;
 	}
 
 	@Override
-	public int extract(ItemStack battery, int amount, boolean simulate)
+	public int extract(@Nonnull ItemStack battery, int amount, boolean simulate)
 	{
 		return amount;
 	}
 
 	@Override
-	public int getStoredEnergy(ItemStack battery)
+	public int getStoredEnergy(@Nonnull ItemStack battery)
 	{
 		return 999999;
 	}

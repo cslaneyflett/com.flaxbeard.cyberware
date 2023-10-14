@@ -6,11 +6,11 @@ import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.api.item.IMenuItem;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.misc.NNLUtil;
 import flaxbeard.cyberware.common.registry.items.ArmUpgrades;
+import flaxbeard.cyberware.common.registry.items.CyberLimbs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.NonNullList;
 import net.minecraft.util.Tuple;
@@ -63,8 +63,10 @@ public class ItemHandUpgrade extends ItemCyberware implements IMenuItem
 	public NonNullList<NonNullList<ItemStack>> required(@Nonnull ItemStack stack)
 	{
 		return NNLUtil.fromArray(new ItemStack[][]{
-			new ItemStack[]{CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_ARM),
-				CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_ARM)}});
+			new ItemStack[]{
+				CyberLimbs.CYBERARM_LEFT.get().getDefaultInstance(),
+				CyberLimbs.CYBERARM_RIGHT.get().getDefaultInstance()
+			}});
 	}
 
 	@Override
@@ -141,6 +143,8 @@ public class ItemHandUpgrade extends ItemCyberware implements IMenuItem
 
 	public static class EventHandler
 	{
+		public static final EventHandler INSTANCE = new EventHandler();
+
 		private ItemStack getItemStackTool()
 		{
 			// TODO: config disabled, resource getting magic is janky
@@ -175,9 +179,11 @@ public class ItemHandUpgrade extends ItemCyberware implements IMenuItem
 			{
 				boolean wasEquipped = claws.getLastClaws(entityLivingBase);
 				boolean isEquipped = entityLivingBase.getMainHandItem().isEmpty()
-					&& (entityLivingBase.getMainArm() == HumanoidArm.RIGHT
-					? (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_ARM)))
-					: (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_ARM))))
+					&& (
+					entityLivingBase.getMainArm() == HumanoidArm.RIGHT
+						? cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERARM_RIGHT.get().getDefaultInstance())
+						: cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERARM_LEFT.get().getDefaultInstance())
+				)
 					&& EnableDisableHelper.isEnabled(itemStackClaws);
 				if (isEquipped)
 				{
@@ -212,9 +218,9 @@ public class ItemHandUpgrade extends ItemCyberware implements IMenuItem
 			if (cyberwareUserData == null) return null;
 
 			ItemStack itemStackMining = cyberwareUserData.getCyberware(ArmUpgrades.MINING.get().getDefaultInstance());
-			boolean isCybernetic = (entityPlayer.getMainArm() == HumanoidArm.RIGHT
-				? (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_ARM)))
-				: (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_ARM))));
+			boolean isCybernetic = entityPlayer.getMainArm() == HumanoidArm.RIGHT
+				? cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERARM_RIGHT.get().getDefaultInstance())
+				: cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERARM_LEFT.get().getDefaultInstance());
 
 			return new Tuple<>(isCybernetic, itemStackMining);
 		}

@@ -1,25 +1,21 @@
 package flaxbeard.cyberware.common.handler;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.ICyberware.Quality;
 import flaxbeard.cyberware.api.item.IDeconstructable;
-import flaxbeard.cyberware.common.CyberwareContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.settings.GameSettings;
 import net.minecraft.core.NonNullList;
-import net.minecraft.loot.LootEntryItem;
-import net.minecraft.loot.LootTableList;
-import net.minecraft.loot.RandomValueRange;
-import net.minecraft.loot.conditions.LootCondition;
-import net.minecraft.loot.functions.LootFunction;
-import net.minecraft.loot.functions.SetCount;
-import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.functions.LootItemFunction;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.LootTableLoadEvent;
@@ -28,6 +24,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MiscHandler
 {
@@ -44,59 +41,62 @@ public class MiscHandler
 			Quality quality = ware.getQuality(stack);
 
 
-			GameSettings settings = Minecraft.getInstance().gameSettings;
-			if (settings.isKeyDown(settings.keyBindSneak))
+			var settings = Minecraft.getInstance().options;
+			// TODO: cursed
+			if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), settings.keyShift.getKey().getValue()))
 			{
 				List<String> info = ware.getInfo(stack);
 				if (info != null)
 				{
-					event.getToolTip().addAll(info);
+					// TODO: ms paint
+					List<Component> comp = info.stream().map(Component::literal).collect(Collectors.toList());
+					event.getToolTip().addAll(comp);
 				}
 
 				NonNullList<NonNullList<ItemStack>> requirements = ware.required(stack);
-				if (requirements.size() > 0)
+				if (!requirements.isEmpty())
 				{
-					String joined = "";
+					StringBuilder joined = new StringBuilder();
 					for (int indexRequirement = 0; indexRequirement < requirements.size(); indexRequirement++)
 					{
-						String toAdd = "";
+						StringBuilder toAdd = new StringBuilder();
 
 						for (int indexSubRequirement = 0; indexSubRequirement < requirements.get(indexRequirement).size(); indexSubRequirement++)
 						{
 							if (indexSubRequirement != 0)
 							{
-								toAdd += " " + I18n.get("cyberware.tooltip.joiner_or") + " ";
+								toAdd.append(" ").append(I18n.get("cyberware.tooltip.joiner_or")).append(" ");
 							}
-							toAdd += I18n.get(requirements.get(indexRequirement).get(indexSubRequirement).getTranslationKey() + ".name");
+							toAdd.append(requirements.get(indexRequirement).get(indexSubRequirement).getDisplayName());
 						}
 
 						if (indexRequirement != 0)
 						{
-							joined += I18n.get("cyberware.tooltip.joiner") + " ";
+							joined.append(I18n.get("cyberware.tooltip.joiner")).append(" ");
 						}
-						joined += toAdd;
+						joined.append(toAdd);
 					}
-					event.getToolTip().add(ChatFormatting.AQUA + I18n.get("cyberware.tooltip.requires") + " " + joined);
+					event.getToolTip().add(Component.literal(ChatFormatting.AQUA + I18n.get("cyberware.tooltip.requires") + " " + joined));
 				}
-				event.getToolTip().add(ChatFormatting.RED + I18n.get("cyberware.slot." + ware.getSlot(stack).getName()));
+				event.getToolTip().add(Component.literal(ChatFormatting.RED + I18n.get("cyberware.slot." + ware.getSlot(stack).getName())));
 
 
 				if (quality != null)
 				{
-					event.getToolTip().add(I18n.get(quality.getUnlocalizedName()));
+					event.getToolTip().add(Component.translatable(quality.getUnlocalizedName()));
 				}
 			} else
 			{
-				event.getToolTip().add(ChatFormatting.DARK_GRAY + I18n.get("cyberware.tooltip.shift_prompt"));
+				event.getToolTip().add(Component.literal(ChatFormatting.DARK_GRAY + I18n.get("cyberware.tooltip.shift_prompt")));
 			}
 		} else if (stack.getItem() instanceof IDeconstructable)
 		{
 			if (event.getToolTip().size() > 1)
 			{
-				event.getToolTip().add(1, ChatFormatting.DARK_GRAY + I18n.get("cyberware.tooltip.can_deconstruct"));
+				event.getToolTip().add(1, Component.literal(ChatFormatting.DARK_GRAY + I18n.get("cyberware.tooltip.can_deconstruct")));
 			} else
 			{
-				event.getToolTip().add(ChatFormatting.DARK_GRAY + I18n.get("cyberware.tooltip.can_deconstruct"));
+				event.getToolTip().add(Component.literal(ChatFormatting.DARK_GRAY + I18n.get("cyberware.tooltip.can_deconstruct")));
 			}
 		}
 	}
@@ -104,35 +104,37 @@ public class MiscHandler
 	@SubscribeEvent
 	public void handleNeuropozynePopulation(LootTableLoadEvent event)
 	{
-		if (event.getName() == LootTableList.CHESTS_SIMPLE_DUNGEON
-			|| event.getName() == LootTableList.CHESTS_ABANDONED_MINESHAFT
-			|| event.getName() == LootTableList.CHESTS_STRONGHOLD_CROSSING
-			|| event.getName() == LootTableList.CHESTS_STRONGHOLD_CORRIDOR
-			|| event.getName() == LootTableList.CHESTS_STRONGHOLD_LIBRARY
-			|| event.getName() == LootTableList.CHESTS_DESERT_PYRAMID
-			|| event.getName() == LootTableList.CHESTS_JUNGLE_TEMPLE)
+		// TODO ??
+		//		LootPoolSingletonContainer.simpleBuilder()
+		if (event.getName() == BuiltInLootTables.SIMPLE_DUNGEON
+			|| event.getName() == BuiltInLootTables.ABANDONED_MINESHAFT
+			|| event.getName() == BuiltInLootTables.STRONGHOLD_CROSSING
+			|| event.getName() == BuiltInLootTables.STRONGHOLD_CORRIDOR
+			|| event.getName() == BuiltInLootTables.STRONGHOLD_LIBRARY
+			|| event.getName() == BuiltInLootTables.DESERT_PYRAMID
+			|| event.getName() == BuiltInLootTables.JUNGLE_TEMPLE)
 		{
 			LootTable table = event.getTable();
 			LootPool main = table.getPool("main");
 			if (main != null)
 			{
-				LootCondition[] lc = new LootCondition[0];
-				LootFunction[] lf = new LootFunction[]{new SetCount(lc, new RandomValueRange(16F, 64F))};
-				main.addEntry(new LootEntryItem(CyberwareContent.neuropozyne, 15, 0, lf, lc, "cyberware:neuropozyne"));
+				LootItemCondition[] lc = new LootItemCondition[0];
+				//				LootItemFunction[] lf = new LootItemFunction[]{new SetItemCountFunction(lc, new RandomValueRange(16F, 64F))};
+				//				main.addEntry(new LootPoolEntry(CyberwareContent.neuropozyne, 15, 0, lf, lc, "cyberware:neuropozyne"));
 			}
 		}
 
-		if (event.getName() == LootTableList.CHESTS_NETHER_BRIDGE)
+		if (event.getName() == BuiltInLootTables.NETHER_BRIDGE)
 		{
 			LootTable table = event.getTable();
 			LootPool main = table.getPool("main");
 			if (main != null)
 			{
-				LootCondition[] lc = new LootCondition[0];
-				LootFunction[] lf = new LootFunction[0];
-				main.addEntry(new LootEntryItem(Item.getItemFromBlock(CyberwareContent.surgeryApparatus), 15, 0, lf,
-					lc, "cyberware:surgery_apparatus"
-				));
+				LootItemCondition[] lc = new LootItemCondition[0];
+				LootItemFunction[] lf = new LootItemFunction[0];
+				//				main.addEntry(new LootPoolEntry(CWBlocks.SURGERY.get().asItem(), 15, 0, lf,
+				//					lc, "cyberware:surgery_apparatus"
+				//				));
 			}
 		}
 	}

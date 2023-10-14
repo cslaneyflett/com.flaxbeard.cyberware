@@ -178,7 +178,6 @@ public interface ICyberware
 		ARM_RIGHT(BodyRegionEnum.ARM, ISidedLimb.EnumSide.RIGHT),
 		LEG_LEFT(BodyRegionEnum.LEG, ISidedLimb.EnumSide.LEFT),
 		LEG_RIGHT(BodyRegionEnum.LEG, ISidedLimb.EnumSide.RIGHT);
-
 		public final @Nonnull BodyRegionEnum slot;
 		public final @Nullable ISidedLimb.EnumSide side;
 

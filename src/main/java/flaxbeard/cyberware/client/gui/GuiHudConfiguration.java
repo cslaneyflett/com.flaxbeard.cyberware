@@ -1,6 +1,9 @@
 package flaxbeard.cyberware.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.hud.CyberwareHudDataEvent;
@@ -15,15 +18,17 @@ import flaxbeard.cyberware.common.handler.HudHandler;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.SyncHudDataPacket;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 
-import java.io.IOException;
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuiHudConfiguration extends GuiScreen
+public class GuiHudConfiguration extends Screen
 {
 	IHudElement dragging = null;
 	IHudElement hoveredElement = null;
@@ -33,14 +38,20 @@ public class GuiHudConfiguration extends GuiScreen
 	Minecraft mc = null;
 	boolean clicked = false;
 
-	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks)
+	protected GuiHudConfiguration(Component pTitle)
 	{
-		super.drawScreen(mouseX, mouseY, partialTicks);
+		super(pTitle);
+	}
+
+	@Override
+	public void render(@Nonnull PoseStack pPoseStack, int mouseX, int mouseY, float partialTicks)
+	{
+		super.render(pPoseStack, mouseX, mouseY, partialTicks);
+
 		Minecraft mc = Minecraft.getInstance();
 		sr = mc.getWindow();
 
-		GlStateManager.pushMatrix();
+		pPoseStack.pushPose();
 
 		boolean active = false;
 		ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(mc.player);
@@ -81,8 +92,8 @@ public class GuiHudConfiguration extends GuiScreen
 
 		for (IHudElement element : elements)
 		{
-			drawBox(element, mouseX, mouseY);
-			drawButtons(element, mouseX, mouseY);
+			drawBox(pPoseStack, element, mouseX, mouseY);
+			drawButtons(pPoseStack, element, mouseX, mouseY);
 		}
 
 		for (IHudElement element : elements)
@@ -98,36 +109,36 @@ public class GuiHudConfiguration extends GuiScreen
 			setXFromAbsolute(sr, dragging, moveToX);
 			setYFromAbsolute(sr, dragging, moveToY);
 
-			if (mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSneak))
+			if (InputConstants.isKeyDown(mc.getWindow().getWindow(), mc.options.keyShift.getKey().getValue()))
 			{
 				dragging.setX(Math.round(dragging.getX() / 5F) * 5);
 				dragging.setY(Math.round(dragging.getY() / 5F) * 5);
 			}
 
-			List<String> l = new ArrayList<>();
-			l.add(dragging.getX() + ", " + dragging.getY());
-			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.fontRenderer);
+			List<Component> l = new ArrayList<>();
+			l.add(Component.literal(dragging.getX() + ", " + dragging.getY()));
+			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.font);
 		} else if (hoveredElement != null)
 		{
-			List<String> l = new ArrayList<>();
-			l.add(hoveredElement.getX() + ", " + hoveredElement.getY());
-			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.fontRenderer);
+			List<Component> l = new ArrayList<>();
+			l.add(Component.literal(hoveredElement.getX() + ", " + hoveredElement.getY()));
+			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.font);
 		}
 
-		GlStateManager.popMatrix();
+		pPoseStack.popPose();
 		clicked = false;
 	}
 
-	private void drawBox(IHudElement element, int mouseX, int mouseY)
+	private void drawBox(PoseStack poseStack, IHudElement element, int mouseX, int mouseY)
 	{
-		Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
+		RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
 
 		int elemX = getAbsoluteX(sr, element) - 1;
 		int elemY = getAbsoluteY(sr, element) - 1;
 
-		GlStateManager.pushMatrix();
+		poseStack.pushPose();
 		float[] color = CyberwareAPI.getHUDColor();
-		GlStateManager.color(color[0], color[1], color[2]);
+		RenderSystem.setShaderColor(color[0], color[1], color[2], 1.0F);
 
 		if (element == dragging
 			|| element == hoveredElement)
@@ -204,8 +215,8 @@ public class GuiHudConfiguration extends GuiScreen
 		ClientUtils.drawTexturedModalRect(elemX, elemY + pos, one, 0, 1, height);
 		ClientUtils.drawTexturedModalRect(elemX + element.getWidth() + 1, elemY + pos, two, 0, 1, height);
 
-		GlStateManager.popMatrix();
-		GlStateManager.color(1.0F, 1.0F, 1.0F);
+		poseStack.pushPose();
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 	}
 
 	protected boolean isPointInRegion(int rectX, int rectY, int rectWidth, int rectHeight, int pointX, int pointY)
@@ -216,7 +227,7 @@ public class GuiHudConfiguration extends GuiScreen
 
 	private void drawButtonTooltips(IHudElement element, int mouseX, int mouseY)
 	{
-		Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
+		RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
 
 		int elemX = getAbsoluteX(sr, element) - 1;
 		int elemY = getAbsoluteY(sr, element) - 1;
@@ -246,9 +257,9 @@ public class GuiHudConfiguration extends GuiScreen
 
 		if (upDownHover)
 		{
-			List<String> l = new ArrayList<>();
-			l.add(I18n.get(down ? "cyberware.gui.stickDown" : "cyberware.gui.stickUp"));
-			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.fontRenderer);
+			List<Component> l = new ArrayList<>();
+			l.add(Component.translatable(down ? "cyberware.gui.stickDown" : "cyberware.gui.stickUp"));
+			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.font);
 
 			if (clicked)
 			{
@@ -258,9 +269,9 @@ public class GuiHudConfiguration extends GuiScreen
 
 		if (showHideHover)
 		{
-			List<String> l = new ArrayList<>();
-			l.add(I18n.get(hidden ? "cyberware.gui.show" : "cyberware.gui.hide"));
-			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.fontRenderer);
+			List<Component> l = new ArrayList<>();
+			l.add(Component.translatable(hidden ? "cyberware.gui.show" : "cyberware.gui.hide"));
+			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.font);
 
 			if (clicked)
 			{
@@ -270,9 +281,9 @@ public class GuiHudConfiguration extends GuiScreen
 
 		if (resetHover)
 		{
-			List<String> l = new ArrayList<>();
-			l.add(I18n.get("cyberware.gui.reset_hud"));
-			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.fontRenderer);
+			List<Component> l = new ArrayList<>();
+			l.add(Component.translatable("cyberware.gui.reset_hud"));
+			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.font);
 
 			if (clicked)
 			{
@@ -282,9 +293,9 @@ public class GuiHudConfiguration extends GuiScreen
 
 		if (leftRightHover)
 		{
-			List<String> l = new ArrayList<>();
-			l.add(I18n.get(right ? "cyberware.gui.stick_right" : "cyberware.gui.stick_left"));
-			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.fontRenderer);
+			List<Component> l = new ArrayList<>();
+			l.add(Component.translatable(right ? "cyberware.gui.stick_right" : "cyberware.gui.stick_left"));
+			ClientUtils.drawHoveringText(this, l, mouseX, mouseY, mc.font);
 
 			if (clicked)
 			{
@@ -293,9 +304,9 @@ public class GuiHudConfiguration extends GuiScreen
 		}
 	}
 
-	private void drawButtons(IHudElement element, int mouseX, int mouseY)
+	private void drawButtons(PoseStack poseStack, IHudElement element, int mouseX, int mouseY)
 	{
-		Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
+		RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
 
 		int elemX = getAbsoluteX(sr, element) - 1;
 		int elemY = getAbsoluteY(sr, element) - 1;
@@ -328,7 +339,7 @@ public class GuiHudConfiguration extends GuiScreen
 	}
 
 	@Override
-	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
+	public boolean mouseClicked(double pMouseX, double pMouseY, int mouseButton)
 	{
 		if (mouseButton == 0)
 		{
@@ -343,16 +354,20 @@ public class GuiHudConfiguration extends GuiScreen
 		{
 			flipVertical(hoveredElement);
 		}
+
+		return super.mouseClicked(pMouseX, pMouseY, mouseButton);
 	}
 
 	@Override
-	protected void mouseReleased(int mouseX, int mouseY, int mouseButton)
+	public boolean mouseReleased(double mouseX, double mouseY, int mouseButton)
 	{
 		if (mouseButton == 0
 			&& dragging != null)
 		{
 			dragging = null;
 		}
+
+		return super.mouseReleased(mouseX, mouseY, mouseButton);
 	}
 
 	public static int getAbsoluteX(Window sr, IHudElement element)
@@ -412,28 +427,29 @@ public class GuiHudConfiguration extends GuiScreen
 	}
 
 	@Override
-	public void updateScreen()
+	public void tick()
 	{
-		if (mc != null
-			&& mc.gameSettings != null)
+		if (mc != null)
 		{
-			if (mc.gameSettings.isKeyDown(mc.gameSettings.keyBindInventory))
+			if (InputConstants.isKeyDown(mc.getWindow().getWindow(), mc.options.keyInventory.getKey().getValue()))
 			{
-				mc.displayGuiScreen(null);
+				this.onClose();
 			}
 		}
-		super.updateScreen();
+		super.tick();
 	}
 
 	@Override
-	public boolean doesGuiPauseGame()
+	public boolean isPauseScreen()
 	{
 		return false;
 	}
 
 	@Override
-	public void onGuiClosed()
+	public void onClose()
 	{
+		super.onClose();
+
 		CompoundTag tagCompound = new CompoundTag();
 
 		CyberwareHudDataEvent hudEvent = new CyberwareHudDataEvent();

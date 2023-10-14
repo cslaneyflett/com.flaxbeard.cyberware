@@ -5,11 +5,8 @@ import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.ICyberware;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -152,6 +149,8 @@ public class VanillaWares
 
 		public static class EventHandler
 		{
+			public static final EventHandler INSTANCE = new EventHandler();
+
 			@SubscribeEvent
 			public void handleSpiderNightVision(CyberwareUpdateEvent event)
 			{
@@ -185,7 +184,7 @@ public class VanillaWares
 					if (cyberwareUserData != null
 						&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 					{
-						GlStateManager.translate(0, event.getWindow().getGuiScaledHeight() / 5, 0);
+						event.getPoseStack().translate(0, event.getWindow().getGuiScaledHeight() / 5.0F, 0);
 					}
 				}
 			}
@@ -201,7 +200,7 @@ public class VanillaWares
 					if (cyberwareUserData != null
 						&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 					{
-						GlStateManager.translate(0, -event.getWindow().getGuiScaledHeight() / 5, 0);
+						event.getPoseStack().translate(0, -event.getWindow().getGuiScaledHeight() / 5.0F, 0);
 					}
 				}
 			}
@@ -218,19 +217,21 @@ public class VanillaWares
 				if (cyberwareUserData != null
 					&& cyberwareUserData.isCyberwareInstalled(itemStackSpiderEye))
 				{
-					if (Minecraft.getInstance().entityRenderer.getShaderGroup() == null)
-					{
-						Minecraft.getInstance().entityRenderer.loadShader(new ResourceLocation("shaders/post/spider" +
-							".json"));
-					}
+					// TODO
+					//					if (Minecraft.getInstance().entityRenderer.getShaderGroup() == null)
+					//					{
+					//						Minecraft.getInstance().entityRenderer.loadShader(new ResourceLocation("shaders/post/spider" +
+					//							".json"));
+					//					}
 				} else if (entityPlayer != null && !entityPlayer.isSpectator())
 				{
-					ShaderGroup shaderGroup = Minecraft.getInstance().entityRenderer.getShaderGroup();
-					if (shaderGroup != null && shaderGroup.getShaderGroupName().equals("minecraft:shaders/post/spider" +
-						".json"))
-					{
-						Minecraft.getInstance().entityRenderer.stopUseShader();
-					}
+					// TODO
+					//					ShaderGroup shaderGroup = Minecraft.getInstance().entityRenderer.getShaderGroup();
+					//					if (shaderGroup != null && shaderGroup.getShaderGroupName().equals("minecraft:shaders/post/spider" +
+					//						".json"))
+					//					{
+					//						Minecraft.getInstance().entityRenderer.stopUseShader();
+					//					}
 				}
 			}
 		}

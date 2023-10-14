@@ -14,19 +14,28 @@ import static flaxbeard.cyberware.common.registry.items.Components.*;
 
 public class Skin extends ItemRegistry
 {
-	public static final RegistryObject<Item> SOLAR_SKIN = skinUpgrade("skin_upgrades.solar_skin", () -> new CyberwareProperties(
+	private Skin()
+	{
+	}
+
+	public static void init()
+	{
+		// controls static class init
+	}
+
+	public static final RegistryObject<Item> SOLAR_SKIN = skinUpgrade("skin_upgrades_solar_skin", () -> new CyberwareProperties(
 		Rarity.VERY_COMMON, 12, 1,
 		new ItemStack(REACTOR.get(), 1), new ItemStack(PLATING.get(), 1), new ItemStack(FIBER_OPTICS.get(), 2), new ItemStack(MICRO_ELECTRIC.get(), 1)
 	));
-	public static final RegistryObject<Item> SUBDERMAL_SPIKES = skinUpgrade("skin_upgrades.subdermal_spikes", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> SUBDERMAL_SPIKES = skinUpgrade("skin_upgrades_subdermal_spikes", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 12, 1,
 		new ItemStack(ACTUATOR.get(), 1), new ItemStack(TITANIUM.get(), 2), new ItemStack(PLATING.get(), 1), new ItemStack(MICRO_ELECTRIC.get(), 1)
 	));
-	public static final RegistryObject<Item> FAKE_SKIN = skinUpgrade("skin_upgrades.fake_skin", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> FAKE_SKIN = skinUpgrade("skin_upgrades_fake_skin", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 0, 1,
 		new ItemStack(REACTOR.get(), 1), new ItemStack(PLATING.get(), 3), new ItemStack(FIBER_OPTICS.get(), 2)
 	));
-	public static final RegistryObject<Item> IMMUNO = skinUpgrade("skin_upgrades.immuno", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> IMMUNO = skinUpgrade("skin_upgrades_immuno", () -> new CyberwareProperties(
 		Rarity.RARE, -25, 1,
 		new ItemStack(REACTOR.get(), 3), new ItemStack(TITANIUM.get(), 1), new ItemStack(SYNTH_NERVES.get(), 1), new ItemStack(STORAGE.get(), 1), new ItemStack(MICRO_ELECTRIC.get(), 1)
 	));

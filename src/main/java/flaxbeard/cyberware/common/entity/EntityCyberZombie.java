@@ -4,18 +4,21 @@ import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUserDataImpl;
 import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.handler.CyberwareDataHandler;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import flaxbeard.cyberware.common.registry.CWTags;
+import flaxbeard.cyberware.common.registry.items.LowerOrgans;
+import flaxbeard.cyberware.common.registry.items.Misc;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.level.DifficultyInstance;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -25,6 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 
@@ -40,24 +44,26 @@ public class EntityCyberZombie extends Zombie
 	private static final EntityDataAccessor<Integer> CYBER_VARIANT =
 		SynchedEntityData.defineId(EntityCyberZombie.class, EntityDataSerializers.INT);
 	public boolean hasRandomWare;
-	private CyberwareUserDataImpl cyberware;
-	private final LazyOptional<CyberwareUserDataImpl> lazyCyberware = LazyOptional.of(() -> cyberware);
+	private final CyberwareUserDataImpl cyberware;
+	private final LazyOptional<CyberwareUserDataImpl> lazyCyberware;
 
 	public EntityCyberZombie(Level worldIn)
 	{
 		super(worldIn);
 		cyberware = new CyberwareUserDataImpl();
+		lazyCyberware = LazyOptional.of(() -> cyberware);
 		hasRandomWare = false;
 	}
 
-	protected void entityInit()
+	@Override
+	protected void defineSynchedData()
 	{
-		super.entityInit();
+		super.defineSynchedData();
 		entityData.define(CYBER_VARIANT, 0);
 	}
 
 	@Override
-	public void onLivingUpdate()
+	public void tick()
 	{
 		if (!hasRandomWare &&
 			!level.isClientSide()
@@ -83,42 +89,43 @@ public class EntityCyberZombie extends Zombie
 		}
 
 		if (isBrute() &&
-			height != (1.95F * 1.2F)
+			getBbHeight() != (1.95F * 1.2F)
 		)
 		{
 			setSizeNormal(0.6F * 1.2F, 1.95F * 1.2F);
 		}
-		super.onLivingUpdate();
+
+		super.tick();
 	}
 
 	// TODO: refactor, no width/height, only BB, half updated this already
 	protected void setSizeNormal(float width, float height)
 	{
-		if (width != this.width
-			|| height != this.height)
+		if (width != this.getBbWidth()
+			|| height != this.getBbHeight())
 		{
 			float widthPrevious = this.getBbWidth();
-			this.width = width;
-			this.height = height;
+			//			this.width = width;
+			//			this.height = height;
+
 			AABB axisalignedbb = getBoundingBox();
 			setBoundingBox(new AABB(axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ,
 				axisalignedbb.minX + width, axisalignedbb.minY + height, axisalignedbb.minZ + width
 			));
 
 			if (this.getBbWidth() > widthPrevious
-				&& !firstUpdate
+				&& !firstTick
 				&& !level.isClientSide())
 			{
-				move(MoverType.SELF, widthPrevious - width, 0.0D, widthPrevious - width);
+				move(MoverType.SELF, new Vec3(widthPrevious - width, 0.0D, widthPrevious - width));
 			}
 		}
 	}
 
-	@Nonnull
 	@Override
-	public CompoundTag writeToNBT(CompoundTag tagCompound)
+	public void readAdditionalSaveData(@Nonnull CompoundTag tagCompound)
 	{
-		tagCompound = super.writeToNBT(tagCompound);
+		super.readAdditionalSaveData(tagCompound);
 
 		tagCompound.putBoolean("hasRandomWare", hasRandomWare);
 		tagCompound.putBoolean("brute", isBrute());
@@ -128,13 +135,12 @@ public class EntityCyberZombie extends Zombie
 			CompoundTag tagCompoundCyberware = cyberware.serializeNBT();
 			tagCompound.put("ware", tagCompoundCyberware);
 		}
-		return tagCompound;
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag tagCompound)
+	public void load(@Nonnull CompoundTag tagCompound)
 	{
-		super.readFromNBT(tagCompound);
+		super.load(tagCompound);
 
 		boolean brute = tagCompound.getBoolean("brute");
 		if (brute)
@@ -169,14 +175,14 @@ public class EntityCyberZombie extends Zombie
 	//	}
 
 	@Override
-	protected void dropEquipment(boolean wasRecentlyHit, int lootingModifier)
+	protected void dropCustomDeathLoot(@Nonnull DamageSource pSource, int pLooting, boolean pRecentlyHit)
 	{
-		super.dropEquipment(wasRecentlyHit, lootingModifier);
+		super.dropCustomDeathLoot(pSource, pLooting, pRecentlyHit);
 
 		if (CyberwareConfig.INSTANCE.ENABLE_KATANA.get()
 			&& CyberwareConfig.INSTANCE.MOBS_ADD_CLOTHES.get()
 			&& !getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()
-			&& getItemBySlot(EquipmentSlot.MAINHAND).getItem() == CyberwareContent.katana)
+			&& getItemBySlot(EquipmentSlot.MAINHAND).is(Misc.KATANA.get()))
 		{
 			ItemStack itemstack = getItemBySlot(EquipmentSlot.MAINHAND).copy();
 			if (itemstack.isDamageableItem())
@@ -198,14 +204,14 @@ public class EntityCyberZombie extends Zombie
 			}
 
 			// TODO
-			entityDropItem(itemstack, 0.0F);
+			this.spawnAtLocation(itemstack, 0.0F);
 		}
 
 		if (hasRandomWare)
 		{
 			double rarity = Math.min(
 				100.0D,
-				CyberwareConfig.INSTANCE.MOBS_CYBER_ZOMBIE_DROP_RARITY.get() + lootingModifier * 5.0F
+				CyberwareConfig.INSTANCE.MOBS_CYBER_ZOMBIE_DROP_RARITY.get() + pLooting * 5.0F
 			);
 			if (level.getRandom().nextFloat() < (rarity / 100.0F))
 			{
@@ -234,12 +240,13 @@ public class EntityCyberZombie extends Zombie
 					return;
 				}
 
+				// TODO: body part tag
 				ItemStack drop = ItemStack.EMPTY;
 				int count = 0;
 				while (count < 50
 					&& (drop.isEmpty()
-					|| drop.getItem() == CyberwareContent.creativeBattery
-					|| drop.getItem() == CyberwareContent.bodyPart))
+					|| drop.is(LowerOrgans.BATTERY_CREATIVE.get())
+					|| drop.is(CWTags.BODY_PARTS)))
 				{
 					int random = level.getRandom().nextInt(allWares.size());
 					drop = allWares.get(random).copy();
@@ -251,24 +258,24 @@ public class EntityCyberZombie extends Zombie
 
 				if (count < 50)
 				{
-					entityDropItem(drop, 0.0F);
+					this.spawnAtLocation(drop, 0.0F);
 				}
 			}
 		}
 	}
 
 	@Override
-	protected void setEquipmentBasedOnDifficulty(@Nonnull DifficultyInstance difficulty)
+	protected void populateDefaultEquipmentSlots(@Nonnull RandomSource pRandom, @Nonnull DifficultyInstance pDifficulty)
 	{
-		super.setEquipmentBasedOnDifficulty(difficulty);
+		super.populateDefaultEquipmentSlots(pRandom, pDifficulty);
 
 		if (CyberwareConfig.INSTANCE.ENABLE_KATANA.get()
 			&& CyberwareConfig.INSTANCE.MOBS_ADD_CLOTHES.get()
-			&& !getItemBySlot(EntityEquipmentSlot.MAINHAND).isEmpty()
-			&& getItemBySlot(EntityEquipmentSlot.MAINHAND).getItem() == Items.IRON_SWORD)
+			&& !getItemBySlot(EquipmentSlot.MAINHAND).isEmpty()
+			&& getItemBySlot(EquipmentSlot.MAINHAND).getItem() == Items.IRON_SWORD)
 		{
-			setItemSlot(EntityEquipmentSlot.MAINHAND, new ItemStack(CyberwareContent.katana));
-			setDropChance(EntityEquipmentSlot.MAINHAND, 0F);
+			setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Misc.KATANA.get()));
+			setDropChance(EquipmentSlot.MAINHAND, 0F);
 		}
 	}
 
@@ -277,11 +284,9 @@ public class EntityCyberZombie extends Zombie
 		return entityData.get(CYBER_VARIANT) == 1;
 	}
 
-	public boolean setBrute()
+	public void setBrute()
 	{
-		setChild(false);
+		setBaby(false);
 		entityData.set(CYBER_VARIANT, 1);
-
-		return !hasRandomWare;
 	}
 }

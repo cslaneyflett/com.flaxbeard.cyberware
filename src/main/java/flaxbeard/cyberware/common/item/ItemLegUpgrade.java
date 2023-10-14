@@ -2,11 +2,11 @@ package flaxbeard.cyberware.common.item;
 
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.NNLUtil;
+import flaxbeard.cyberware.common.registry.items.CyberLimbs;
 import flaxbeard.cyberware.common.registry.items.LegUpgrades;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.damagesource.DamageSource;
@@ -31,8 +31,10 @@ public class ItemLegUpgrade extends ItemCyberware
 	public NonNullList<NonNullList<ItemStack>> required(@Nonnull ItemStack stack)
 	{
 		return NNLUtil.fromArray(new ItemStack[][]{
-			new ItemStack[]{CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_LEG),
-				CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_LEG)}});
+			new ItemStack[]{
+				CyberLimbs.CYBERLEG_LEFT.get().getDefaultInstance(),
+				CyberLimbs.CYBERLEG_RIGHT.get().getDefaultInstance()
+			}});
 	}
 
 	@Override
@@ -43,6 +45,8 @@ public class ItemLegUpgrade extends ItemCyberware
 
 	public static class EventHandler
 	{
+		public static final EventHandler INSTANCE = new EventHandler();
+
 		@SubscribeEvent
 		public void playerJumps(LivingEvent.LivingJumpEvent event)
 		{
@@ -55,11 +59,11 @@ public class ItemLegUpgrade extends ItemCyberware
 			if (!itemStackJumpBoost.isEmpty())
 			{
 				int numLegs = 0;
-				if (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_LEG)))
+				if (cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERLEG_LEFT.get().getDefaultInstance()))
 				{
 					numLegs++;
 				}
-				if (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_LEG)))
+				if (cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERLEG_RIGHT.get().getDefaultInstance()))
 				{
 					numLegs++;
 				}
@@ -101,8 +105,9 @@ public class ItemLegUpgrade extends ItemCyberware
 			if (cyberwareUserData == null) return;
 
 			if (cyberwareUserData.isCyberwareInstalled(LegUpgrades.FALL_DAMAGE.get().getDefaultInstance())
-				&& cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_LEG))
-				&& cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_LEG)))
+				&& cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERLEG_LEFT.get().getDefaultInstance())
+				&& cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERLEG_RIGHT.get().getDefaultInstance())
+			)
 			{
 				event.setCanceled(true);
 			}

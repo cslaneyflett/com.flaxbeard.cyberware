@@ -1,7 +1,7 @@
 package flaxbeard.cyberware.common.block.tile;
 
 import flaxbeard.cyberware.api.item.IBlueprint;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -23,7 +23,7 @@ public class TileEntityBlueprintArchive extends BlockEntity
 {
 	public TileEntityBlueprintArchive(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.BLUEPRINT_ARCHIVE.get(), pPos, pBlockState);
+		super(CWBlockEntities.BLUEPRINT_ARCHIVE.get(), pPos, pBlockState);
 	}
 
 	public static class ItemStackHandlerBlueprint extends ItemStackHandler

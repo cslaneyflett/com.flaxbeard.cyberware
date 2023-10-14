@@ -4,11 +4,11 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.ArmorClass;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.handler.EssentialsMissingHandler;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
+import flaxbeard.cyberware.common.registry.CWMobEffects;
 import flaxbeard.cyberware.common.registry.items.Skin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -78,6 +78,8 @@ public class ItemSkinUpgrade extends ItemCyberware
 
 	public static class EventHandler
 	{
+		public static final EventHandler INSTANCE = new EventHandler();
+
 		@SubscribeEvent
 		public void handleLivingUpdate(CyberwareUpdateEvent event)
 		{
@@ -143,7 +145,7 @@ public class ItemSkinUpgrade extends ItemCyberware
 
 					if (!isPowered
 						&& entityLivingBase.tickCount % 100 == 0
-						&& !entityLivingBase.hasEffect(CyberwareContent.neuropozyneEffect))
+						&& !entityLivingBase.hasEffect(CWMobEffects.NEUROPOZYNE.get()))
 					{
 						entityLivingBase.hurt(EssentialsMissingHandler.lowessence, 2.0F);
 					}

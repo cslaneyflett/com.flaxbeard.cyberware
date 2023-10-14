@@ -1,6 +1,7 @@
 package flaxbeard.cyberware.common.handler;
 
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.vertex.PoseStack;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
@@ -20,8 +21,7 @@ import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.registry.items.Eyes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -121,15 +121,15 @@ public class HudHandler
 	{
 		if (event.getOverlay() == VanillaGuiOverlay.CHAT_PANEL.type())
 		{
-			drawHUD(event.getWindow(), event.getPartialTick());
+			drawHUD(event.getPoseStack(), event.getWindow(), event.getPartialTick());
 		}
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	private void drawHUD(Window window, float partialTick)
+	private void drawHUD(PoseStack poseStack, Window window, float partialTick)
 	{
 		Minecraft mc = Minecraft.getInstance();
-		LocalPlayer entityPlayerSP = mc.player;
+		AbstractClientPlayer entityPlayerSP = mc.player;
 		if (entityPlayerSP == null) return;
 
 		if (entityPlayerSP.tickCount != cache_tickExisted)
@@ -166,13 +166,12 @@ public class HudHandler
 			MinecraftForge.EVENT_BUS.post(hudEvent);
 			cache_hudElements = hudEvent.getElements();
 			cache_isHUDjackAvailable = hudEvent.isHudjackAvailable();
-			cache_promptToOpenMenu = cyberwareUserData.getActiveItems().size() > 0
+			cache_promptToOpenMenu = !cyberwareUserData.getActiveItems().isEmpty()
 				&& !cyberwareUserData.hasOpenedRadialMenu();
 			cache_hudColorHex = cyberwareUserData.getHudColorHex();
 		}
 
-		GlStateManager.pushMatrix();
-
+		poseStack.pushPose();
 
 		var motion = entityPlayerSP.getDeltaMovement();
 		double accelLastY = lastVelY - lastLastVelY;
@@ -180,12 +179,13 @@ public class HudHandler
 		double accelPitch =
 			accelLastY + (accelY - accelLastY) * (partialTick + entityPlayerSP.tickCount - lastTickExisted) / 2F;
 
-		double pitchCameraMove =
-			cache_floatingFactor * ((entityPlayerSP.prevRenderArmPitch + (entityPlayerSP.renderArmPitch - entityPlayerSP.prevRenderArmPitch) * partialTick) - entityPlayerSP.rotationPitch);
-		double yawCameraMove =
-			cache_floatingFactor * ((entityPlayerSP.prevRenderArmYaw + (entityPlayerSP.renderArmYaw - entityPlayerSP.prevRenderArmYaw) * partialTick) - entityPlayerSP.rotationYaw);
+		// TODO
+		double pitchCameraMove = 0.0D;
+		//cache_floatingFactor * ((entityPlayerSP.prevRenderArmPitch + (entityPlayerSP.renderArmPitch - entityPlayerSP.prevRenderArmPitch) * partialTick) - entityPlayerSP.rotationPitch);
+		double yawCameraMove = 0.0D;
+		//cache_floatingFactor * ((entityPlayerSP.prevRenderArmYaw + (entityPlayerSP.renderArmYaw - entityPlayerSP.prevRenderArmYaw) * partialTick) - entityPlayerSP.rotationYaw);
 
-		GlStateManager.translate(yawCameraMove, pitchCameraMove + accelPitch * 50F * cache_floatingFactor, 0);
+		poseStack.translate(yawCameraMove, pitchCameraMove + accelPitch * 50F * cache_floatingFactor, 0);
 
 		if (entityPlayerSP.tickCount > lastTickExisted + 1)
 		{
@@ -224,7 +224,7 @@ public class HudHandler
 				);
 			}
 
-			hudElement.render(entityPlayerSP, window, cache_isHUDjackAvailable,
+			hudElement.render(entityPlayerSP, poseStack, window, cache_isHUDjackAvailable,
 				mc.screen instanceof GuiHudConfiguration, partialTick
 			);
 		}
@@ -234,11 +234,11 @@ public class HudHandler
 		{
 			String textOpenMenu = I18n.get("cyberware.gui.open_menu", KeyBinds.menu.getName());
 			Font fontRenderer = mc.font;
-			fontRenderer.draw(textOpenMenu,
+			fontRenderer.draw(poseStack, textOpenMenu,
 				window.getGuiScaledWidth() - fontRenderer.width(textOpenMenu) - 5, 5, cache_hudColorHex
 			);
 		}
 
-		GlStateManager.popMatrix();
+		poseStack.popPose();
 	}
 }

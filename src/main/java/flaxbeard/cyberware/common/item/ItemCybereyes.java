@@ -46,6 +46,8 @@ public class ItemCybereyes extends ItemCyberware
 
 	public static class EventHandler
 	{
+		public static final EventHandler INSTANCE = new EventHandler();
+
 		@SubscribeEvent
 		public void handleBlindnessImmunity(CyberwareUpdateEvent event)
 		{

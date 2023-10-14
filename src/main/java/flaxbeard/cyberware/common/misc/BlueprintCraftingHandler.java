@@ -1,77 +1,46 @@
 package flaxbeard.cyberware.common.misc;
 
-import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.item.IDeconstructable;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.item.ItemBlueprint;
+import flaxbeard.cyberware.common.registry.items.Misc;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-public class BlueprintCraftingHandler implements CraftingRecipe
+public class BlueprintCraftingHandler extends CustomRecipe
 {
-	static
-	{
-		RecipeSorter.register(Cyberware.MODID + ":blueprintCrafting", BlueprintCraftingHandler.class,
-			RecipeSorter.Category.SHAPELESS, "after:minecraft:shapeless"
-		);
-	}
-
-	private ResourceLocation resourceLocation;
 	private ItemStack itemStackCyberware;
 
-	public BlueprintCraftingHandler()
+	public BlueprintCraftingHandler(ResourceLocation pId)
 	{
-		// no operation
-	}
-
-	@Nonnull
-	@Override
-	public IRecipe setRegistryName(@Nonnull final ResourceLocation resourceLocation)
-	{
-		assert this.resourceLocation == null;
-		this.resourceLocation = resourceLocation;
-		return this;
-	}
-
-	@Nullable
-	@Override
-	public ResourceLocation getRegistryName()
-	{
-		return resourceLocation;
+		super(pId);
 	}
 
 	@Override
-	public boolean canFit(final int width, final int height)
+	public boolean canCraftInDimensions(int width, int height)
 	{
 		return width * height >= 2;
 	}
 
-	@Nonnull
 	@Override
-	public Class<IRecipe> getRegistryType()
-	{
-		return IRecipe.class;
-	}
-
-	@Override
-	public boolean matches(@Nonnull final InventoryCrafting inventoryCrafting, @Nonnull final Level world)
+	public boolean matches(@Nonnull final CraftingContainer inventoryCrafting, @Nonnull final Level world)
 	{
 		return matches(inventoryCrafting);
 	}
 
-	private boolean matches(@Nonnull final InventoryCrafting inventoryCrafting)
+	private boolean matches(@Nonnull final CraftingContainer inventoryCrafting)
 	{
 		boolean hasBlankBlueprint = false;
 		itemStackCyberware = ItemStack.EMPTY;
-		for (int indexSlot = 0; indexSlot < inventoryCrafting.getSizeInventory(); indexSlot++)
+		for (int indexSlot = 0; indexSlot < inventoryCrafting.getContainerSize(); indexSlot++)
 		{
-			ItemStack itemStackSlot = inventoryCrafting.getStackInSlot(indexSlot);
+			ItemStack itemStackSlot = inventoryCrafting.getItem(indexSlot);
 			if (!itemStackSlot.isEmpty())
 			{
 				if (itemStackSlot.getItem() instanceof IDeconstructable
@@ -84,9 +53,9 @@ public class BlueprintCraftingHandler implements CraftingRecipe
 					{
 						return false;
 					}
-				} else if (itemStackSlot.getItem() == CyberwareContent.blueprint
+				} else if (itemStackSlot.getItem() == Misc.BLUEPRINT.get()
 					&& (itemStackSlot.getTag() == null
-					|| !itemStackSlot.getTag().hasKey("blueprintItem")))
+					|| !itemStackSlot.getTag().contains("blueprintItem")))
 				{
 					if (!hasBlankBlueprint)
 					{
@@ -106,7 +75,7 @@ public class BlueprintCraftingHandler implements CraftingRecipe
 
 	@Nonnull
 	@Override
-	public ItemStack getCraftingResult(@Nonnull InventoryCrafting inventoryCrafting)
+	public ItemStack assemble(@Nonnull CraftingContainer inventoryCrafting)
 	{
 		if (matches(inventoryCrafting))
 		{
@@ -119,32 +88,35 @@ public class BlueprintCraftingHandler implements CraftingRecipe
 
 	@Nonnull
 	@Override
-	public ItemStack getRecipeOutput()
-	{
-		return ItemStack.EMPTY;
-	}
-
-	@Nonnull
-	@Override
-	public NonNullList<ItemStack> getRemainingItems(@Nonnull InventoryCrafting inventoryCrafting)
+	public NonNullList<ItemStack> getRemainingItems(@Nonnull CraftingContainer inventoryCrafting)
 	{
 		if (!matches(inventoryCrafting))
 		{
 			return NonNullList.create();
 		}
+
 		final NonNullList<ItemStack> itemStackResults = NonNullList.withSize(
-			inventoryCrafting.getSizeInventory(),
+			inventoryCrafting.getContainerSize(),
 			ItemStack.EMPTY
 		);
+
 		for (int indexSlot = 0; indexSlot < itemStackResults.size(); indexSlot++)
 		{
-			if (itemStackCyberware == inventoryCrafting.getStackInSlot(indexSlot))
+			if (itemStackCyberware == inventoryCrafting.getItem(indexSlot))
 			{
 				// note: we do need a copy here since caller decreases count on existing instance right after
 				itemStackResults.set(indexSlot, itemStackCyberware.copy());
 				break;
 			}
 		}
+
 		return itemStackResults;
+	}
+
+	@Nonnull
+	@Override
+	public RecipeSerializer<?> getSerializer()
+	{
+		return RecipeSerializer.SHAPELESS_RECIPE;
 	}
 }

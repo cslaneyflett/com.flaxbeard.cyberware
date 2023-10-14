@@ -339,17 +339,17 @@ public class ItemBrainUpgrade extends ItemCyberware implements IMenuItem
 			if (armorClass == ArmorClass.HEAVY) return;
 
 			// TODO
-			if ((float) entityLivingBase.hurtResistantTime <= (float) entityLivingBase.maxHurtResistantTime / 2.0F)
+			if (false)//(float) entityLivingBase.hurtResistantTime <= (float) entityLivingBase.maxHurtResistantTime / 2.0F)
 			{
 				RandomSource random = entityLivingBase.getRandom();
 				if (random.nextFloat() < (armorClass == ArmorClass.LIGHT ? LibConstants.DODGE_ARMOR :
 					LibConstants.DODGE_NO_ARMOR))
 				{
 					event.setCanceled(true);
-					// ???????????????
-					entityLivingBase.hurtResistantTime = entityLivingBase.maxHurtResistantTime;
-					entityLivingBase.hurtTime = entityLivingBase.maxHurtTime = 10;
-					entityLivingBase.lastDamage = 9999F;
+					// TODO
+					//entityLivingBase.hurtResistantTime = entityLivingBase.maxHurtResistantTime;
+					//entityLivingBase.hurtTime = entityLivingBase.maxHurtTime = 10;
+					//entityLivingBase.lastDamage = 9999F;
 
 					var pos = entityLivingBase.position();
 					CyberwarePacketHandler.INSTANCE.send(

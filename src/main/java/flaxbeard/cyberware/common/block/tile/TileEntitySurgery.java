@@ -14,7 +14,7 @@ import flaxbeard.cyberware.common.handler.EssentialsMissingHandler;
 import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import flaxbeard.cyberware.common.registry.items.LowerOrgans;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -55,7 +55,7 @@ public class TileEntitySurgery extends BlockEntity
 
 	public TileEntitySurgery(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.SURGERY.get(), pPos, pBlockState);
+		super(CWBlockEntities.SURGERY.get(), pPos, pBlockState);
 	}
 
 	public boolean isUsableByPlayer(Player entityPlayer)

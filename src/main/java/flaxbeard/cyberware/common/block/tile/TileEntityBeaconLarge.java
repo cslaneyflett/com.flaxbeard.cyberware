@@ -2,8 +2,8 @@ package flaxbeard.cyberware.common.block.tile;
 
 import flaxbeard.cyberware.common.block.BlockBeaconPost;
 import flaxbeard.cyberware.common.lib.LibConstants;
-import flaxbeard.cyberware.common.registry.BlockEntities;
-import flaxbeard.cyberware.common.registry.Blocks;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -19,7 +19,7 @@ public class TileEntityBeaconLarge extends TileEntityBeacon
 
 	public TileEntityBeaconLarge(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.BEACON_LARGE.get(), pPos, pBlockState);
+		super(CWBlockEntities.BEACON_LARGE.get(), pPos, pBlockState);
 	}
 
 	public static void tick(Level level, BlockPos pos, BlockState state, BlockEntity be)
@@ -33,7 +33,7 @@ public class TileEntityBeaconLarge extends TileEntityBeacon
 			|| level.hasNeighborSignal(pos.offset(0, -10, 1))
 			|| level.hasNeighborSignal(pos.offset(0, -10, -1));
 		boolean working =
-			!powered && master.getBlock() == Blocks.BEACON_POST.get() && master.getValue(BlockBeaconPost.TRANSFORMED) == 2;
+			!powered && master.getBlock() == CWBlocks.BEACON_POST.get() && master.getValue(BlockBeaconPost.TRANSFORMED) == 2;
 
 		if (!blockEntity.wasWorking && working)
 		{

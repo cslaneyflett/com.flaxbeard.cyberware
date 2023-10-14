@@ -1,6 +1,8 @@
 {
-  "pack": {
-    "pack_format": 3,
-    "description": "Resources used for Cyberware"
-  }
+    "pack": {
+        "description": "Resources used for Cyberware",
+        "pack_format": 9,
+        "forge:resource_pack_format": 9,
+        "forge:data_pack_format": 10
+    }
 }

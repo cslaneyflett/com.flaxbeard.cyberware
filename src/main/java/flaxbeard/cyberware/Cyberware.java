@@ -4,14 +4,11 @@ import com.mojang.logging.LogUtils;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.client.KeyBinds;
 import flaxbeard.cyberware.client.ShaderUtil;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.handler.*;
-import flaxbeard.cyberware.common.item.ItemArmorCyberware;
+import flaxbeard.cyberware.common.item.*;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
-import flaxbeard.cyberware.common.registry.BlockEntities;
-import flaxbeard.cyberware.common.registry.Blocks;
-import flaxbeard.cyberware.common.registry.Items;
+import flaxbeard.cyberware.common.registry.*;
 import flaxbeard.cyberware.common.registry.items.Armors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.Item;
@@ -42,12 +39,19 @@ public class Cyberware
 
 	public Cyberware()
 	{
+		logger.warn("CYBERWARE-INTERNAL: boot");
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		modEventBus.addListener(this::commonSetup);
 
-		Blocks.BLOCKS.register(modEventBus);
-		BlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
-		Items.ITEMS.register(modEventBus);
+
+		CWBlocks.BLOCKS.register(modEventBus);
+		CWBlockItems.ITEMS.register(modEventBus); // its separate because lets me do data gen
+		CWBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
+		CWMobEffects.MOB_EFFECTS.register(modEventBus);
+		CWRecipes.RECIPE_TYPES.register(modEventBus);
+
+		CWItems.init();
+		CWItems.ITEMS.register(modEventBus);
 
 		MinecraftForge.EVENT_BUS.register(this);
 		// NetworkRegistry.INSTANCE.registerGuiHandler(Cyberware.INSTANCE, new GuiHandler());
@@ -55,11 +59,25 @@ public class Cyberware
 		MinecraftForge.EVENT_BUS.register(CyberwareConfig.INSTANCE);
 		MinecraftForge.EVENT_BUS.register(MiscHandler.INSTANCE);
 		MinecraftForge.EVENT_BUS.register(EssentialsMissingHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemCybereyes.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemCyberlimb.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemArmUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemLegUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemBoneUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemFootUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemHandUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemSkinUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemLungsUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(ItemMuscleUpgrade.EventHandler.INSTANCE);
+		MinecraftForge.EVENT_BUS.register(VanillaWares.SpiderEyeWare.EventHandler.INSTANCE);
+
+		logger.warn("CYBERWARE-INTERNAL: registration done");
 	}
 
 	private void commonSetup(final FMLCommonSetupEvent event)
 	{
-		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, CyberwareConfig.INSTANCE_SPEC);
+		logger.warn("CYBERWARE-INTERNAL: commonSetup");
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CyberwareConfig.INSTANCE_SPEC);
 	}
 
 	@Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -74,6 +92,7 @@ public class Cyberware
 		@SubscribeEvent
 		public void onRegister(RegisterEvent event)
 		{
+			logger.warn("CYBERWARE-INTERNAL: SharedModEvents.onRegister");
 			CyberwarePacketHandler.register(event);
 		}
 
@@ -116,41 +135,44 @@ public class Cyberware
 		//		}
 
 		@SubscribeEvent
-		public static void onClientSetup(RegisterKeyMappingsEvent event)
+		public static void onKeyMappingsSetup(RegisterKeyMappingsEvent event)
 		{
+			logger.warn("CYBERWARE-INTERNAL: onKeyMappingsSetup");
 			KeyBinds.register(event);
 		}
 
 		@SubscribeEvent
 		public static void onClientSetup(FMLClientSetupEvent event)
 		{
+			logger.warn("CYBERWARE-INTERNAL: onClientSetup");
 			MinecraftForge.EVENT_BUS.register(EssentialsMissingHandlerClient.INSTANCE);
 			MinecraftForge.EVENT_BUS.register(CyberwareMenuHandler.INSTANCE);
 			MinecraftForge.EVENT_BUS.register(HudHandler.INSTANCE);
-			ShaderUtil.init();
+			//ShaderUtil.init();
 
-			if (CyberwareConfig.INSTANCE.ENABLE_CLOTHES.get())
-			{
+			// TODO cannot config b4 register
+//			if (CyberwareConfig.INSTANCE.ENABLE_CLOTHES.get())
+//			{
 				Minecraft.getInstance().getItemColors().register(
 					(stack, tintIndex) -> tintIndex > 0 ? -1 :
 						((ItemArmorCyberware) stack.getItem()).getColor(stack),
 					Armors.TRENCH_COAT.get()
 				);
-			}
+			//}
 		}
 
 		@SubscribeEvent
 		public void onRegister(RegisterEvent event)
 		{
-			for (Block block : CyberwareContent.blocks)
-			{
-				registerRenders(block);
-			}
-
-			for (Item item : CyberwareContent.items)
-			{
-				registerRenders(item);
-			}
+			//			for (Block block : CyberwareContent.blocks)
+			//			{
+			//				registerRenders(block);
+			//			}
+			//
+			//			for (Item item : CyberwareContent.items)
+			//			{
+			//				registerRenders(item);
+			//			}
 
 			//			ClientRegistry.bindTileEntitySpecialRenderer(TileEntitySurgeryChamber.class, new
 			//			TileEntitySurgeryChamberRenderer());

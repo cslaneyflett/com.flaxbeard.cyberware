@@ -1,8 +1,8 @@
 package flaxbeard.cyberware.common.block.tile;
 
 import flaxbeard.cyberware.common.block.BlockBeaconPost;
-import flaxbeard.cyberware.common.registry.BlockEntities;
-import flaxbeard.cyberware.common.registry.Blocks;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Block;
@@ -19,7 +19,7 @@ public class TileEntityBeaconPost extends BlockEntity
 {
 	public TileEntityBeaconPost(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.BEACON_POST.get(), pPos, pBlockState);
+		super(CWBlockEntities.BEACON_POST.get(), pPos, pBlockState);
 	}
 
 	public TileEntityBeaconPost(BlockEntityType<? extends TileEntityBeaconPost> pType, BlockPos pPos, BlockState pBlockState)
@@ -31,7 +31,7 @@ public class TileEntityBeaconPost extends BlockEntity
 	{
 		public TileEntityBeaconPostMaster(BlockPos pPos, BlockState pBlockState)
 		{
-			super(BlockEntities.BEACON_POST_MASTER.get(), pPos, pBlockState);
+			super(CWBlockEntities.BEACON_POST_MASTER.get(), pPos, pBlockState);
 		}
 
 		@OnlyIn(Dist.CLIENT)
@@ -101,7 +101,7 @@ public class TileEntityBeaconPost extends BlockEntity
 
 						BlockState state = level.getBlockState(newPos);
 						Block block = state.getBlock();
-						if (block == Blocks.BEACON_POST.get() && state.getValue(BlockBeaconPost.TRANSFORMED) > 0)
+						if (block == CWBlocks.BEACON_POST.get() && state.getValue(BlockBeaconPost.TRANSFORMED) > 0)
 						{
 							level.getBlockEntity(newPos);
 							level.getChunk(newPos).setBlockState(newPos, state.setValue(BlockBeaconPost.TRANSFORMED, 0), false);

@@ -124,7 +124,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 		for (ItemStack item : specialBatteries)
 		{
 			ISpecialBattery battery = (ISpecialBattery) CyberwareAPI.getCyberware(item);
-			specialCap += battery.getCapacity(item);
+			specialCap += battery.getPowerCapacity(item);
 		}
 		return power_capacity + specialCap;
 	}

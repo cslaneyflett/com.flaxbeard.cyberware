@@ -1,5 +1,8 @@
 package flaxbeard.cyberware.client.gui.hud;
 
+import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.hud.HudElementBase;
 import flaxbeard.cyberware.api.hud.INotification;
@@ -10,8 +13,6 @@ import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
 import flaxbeard.cyberware.common.handler.HudHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -43,7 +44,7 @@ public class NotificationDisplay extends HudElementBase
 	};
 
 	@Override
-	public void renderElement(int x, int y, Player entityPlayer, ScaledResolution resolution,
+	public void renderElement(int x, int y, Player entityPlayer, PoseStack poseStack, Window window,
 							  boolean isHUDjackAvailable, boolean isConfigOpen, float partialTicks)
 	{
 		if (isHidden()
@@ -57,10 +58,10 @@ public class NotificationDisplay extends HudElementBase
 
 		float currTime = entityPlayer.tickCount + partialTicks;
 
-		GlStateManager.pushMatrix();
-		GlStateManager.enableBlend();
+		poseStack.pushPose();
+		RenderSystem.enableBlend();
 
-		Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
+		RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
 
 		if (entityPlayer.tickCount != cache_tickExisted)
 		{
@@ -100,13 +101,13 @@ public class NotificationDisplay extends HudElementBase
 
 				float yOffset = (float) (20F * Math.sin(percentVisible * Math.PI / 2F));
 
-				GlStateManager.pushMatrix();
-				GlStateManager.color(1.0F, 1.0F, 1.0F);
-				GlStateManager.translate(0F, isTopAnchored ? -yOffset : yOffset, 0F);
+				poseStack.pushPose();
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+				poseStack.translate(0F, isTopAnchored ? -yOffset : yOffset, 0F);
 				int index = (examples.length - 1) - indexNotification;
 				int xPos = isRightAnchored ? (x + getWidth() - ((index + 1) * 18)) : (x + index * 18);
-				notification.render(xPos, y + (isTopAnchored ? 20 : 0));
-				GlStateManager.popMatrix();
+				notification.render(poseStack, xPos, y + (isTopAnchored ? 20 : 0));
+				poseStack.popPose();
 			}
 		} else
 		{
@@ -124,13 +125,13 @@ public class NotificationDisplay extends HudElementBase
 
 					float yOffset = (float) (20F * Math.sin(percentVisible * Math.PI / 2F));
 
-					GlStateManager.pushMatrix();
-					GlStateManager.color(1.0F, 1.0F, 1.0F);
-					GlStateManager.translate(0F, isTopAnchored ? -yOffset : yOffset, 0F);
+					poseStack.pushPose();
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+					poseStack.translate(0F, isTopAnchored ? -yOffset : yOffset, 0F);
 					int index = (HudHandler.notifications.size() - 1) - indexNotification;
 					int xPos = isRightAnchored ? (x + getWidth() - ((index + 1) * 18)) : (x + index * 18);
-					notification.render(xPos, y + (isTopAnchored ? 20 : 0));
-					GlStateManager.popMatrix();
+					notification.render(poseStack, xPos, y + (isTopAnchored ? 20 : 0));
+					poseStack.popPose();
 				} else
 				{
 					notificationsElapsed.add(notificationInstance);
@@ -144,7 +145,7 @@ public class NotificationDisplay extends HudElementBase
 		}
 
 		// GlStateManager.popMatrix();
-		GlStateManager.popMatrix();
+		poseStack.popPose();
 	}
 
 	@OnlyIn(Dist.CLIENT)
@@ -158,15 +159,15 @@ public class NotificationDisplay extends HudElementBase
 		}
 
 		@Override
-		public void render(int x, int y)
+		public void render(PoseStack poseStack, int x, int y)
 		{
-			Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
-			GlStateManager.pushMatrix();
+			RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
+			poseStack.pushPose();
 			float[] color = CyberwareAPI.getHUDColor();
-			GlStateManager.color(color[0], color[1], color[2]);
+			RenderSystem.setShaderColor(color[0], color[1], color[2], 1.0F);
 			ClientUtils.drawTexturedModalRect(x, y + 1, 0, 25, 15, 14);
-			GlStateManager.popMatrix();
-			GlStateManager.color(1.0F, 1.0F, 1.0F);
+			poseStack.popPose();
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
 			if (light)
 			{
@@ -195,27 +196,27 @@ public class NotificationDisplay extends HudElementBase
 		}
 
 		@Override
-		public void render(int x, int y)
+		public void render(PoseStack poseStack, int x, int y)
 		{
-			Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
+			RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
 			if (tier > 0)
 			{
-				GlStateManager.pushMatrix();
+				poseStack.pushPose();
 				float[] color = CyberwareAPI.getHUDColor();
-				GlStateManager.color(color[0], color[1], color[2]);
+				RenderSystem.setShaderColor(color[0], color[1], color[2], 1.0F);
 				ClientUtils.drawTexturedModalRect(x, y + 1, 13, 39, 15, 14);
-				GlStateManager.popMatrix();
+				poseStack.popPose();
 
 				String textRadioTier = tier == 1 ? I18n.get("cyberware.gui.radio_internal") :
 					Integer.toString(tier - 1);
-				Font fontRenderer = Minecraft.getInstance().fontRenderer;
-				fontRenderer.drawStringWithShadow(textRadioTier, x + 15 - fontRenderer.getStringWidth(textRadioTier),
+				Font fontRenderer = Minecraft.getInstance().font;
+				fontRenderer.drawShadow(poseStack, textRadioTier, x + 15 - fontRenderer.width(textRadioTier),
 					y + 9, 0xFFFFFF
 				);
 			} else
 			{
 				float[] color = CyberwareAPI.getHUDColor();
-				GlStateManager.color(color[0], color[1], color[2]);
+				RenderSystem.setShaderColor(color[0], color[1], color[2], 1.0F);
 				ClientUtils.drawTexturedModalRect(x, y + 1, 28, 39, 15, 14);
 			}
 		}

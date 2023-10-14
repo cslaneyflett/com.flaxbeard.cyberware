@@ -3,10 +3,10 @@ package flaxbeard.cyberware.common.block.tile;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.item.ItemBrainUpgrade;
 import flaxbeard.cyberware.common.lib.LibConstants;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
+import flaxbeard.cyberware.common.registry.items.BrainUpgrades;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,7 +36,7 @@ public class TileEntityBeacon extends BlockEntity
 
 	public TileEntityBeacon(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.BEACON.get(), pPos, pBlockState);
+		super(CWBlockEntities.BEACON.get(), pPos, pBlockState);
 	}
 
 	public TileEntityBeacon(BlockEntityType<? extends TileEntityBeacon> pType, BlockPos pPos, BlockState pBlockState)
@@ -197,7 +197,7 @@ public class TileEntityBeacon extends BlockEntity
 			)
 		);
 
-		ItemStack itemStackRadioRaw = CyberwareContent.brainUpgrades.getCachedStack(ItemBrainUpgrade.META_RADIO);
+		ItemStack itemStackRadioRaw = BrainUpgrades.RADIO.get().getDefaultInstance();
 		for (LivingEntity entityInRange : entitiesInRange)
 		{
 			if (ItemBrainUpgrade.isRadioWorking(entityInRange))

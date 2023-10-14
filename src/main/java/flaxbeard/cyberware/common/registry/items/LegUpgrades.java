@@ -13,29 +13,37 @@ import java.util.function.Supplier;
 
 import static flaxbeard.cyberware.common.registry.items.Components.*;
 
-public class LegUpgrades extends ItemRegistry {
-	public static final RegistryObject<Item> JUMP_BOOST = legUpgrade("leg_upgrades.jump_boost", () -> new CyberwareProperties(
+public class LegUpgrades extends ItemRegistry
+{
+	private LegUpgrades()
+	{
+	}
+
+	public static void init()
+	{
+		// controls static class init
+	}
+
+	public static final RegistryObject<Item> JUMP_BOOST = legUpgrade("leg_upgrades_jump_boost", () -> new CyberwareProperties(
 		Rarity.RARE, 3, 1,
 		new ItemStack(ACTUATOR.get(), 2), new ItemStack(TITANIUM.get(), 2)
 	));
-	public static final RegistryObject<Item> FALL_DAMAGE = legUpgrade("leg_upgrades.fall_damage", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> FALL_DAMAGE = legUpgrade("leg_upgrades_fall_damage", () -> new CyberwareProperties(
 		Rarity.RARE, 2, 1,
 		new ItemStack(TITANIUM.get(), 3), new ItemStack(PLATING.get(), 1), new ItemStack(FIBER_OPTICS.get(), 1)
 	));
-
-	public static final RegistryObject<Item> SPURS = footUpgrade("foot_upgrades.spurs", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> SPURS = footUpgrade("foot_upgrades_spurs", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 1, 1,
 		new ItemStack(ACTUATOR.get(), 1), new ItemStack(TITANIUM.get(), 1), new ItemStack(PLATING.get(), 1)
 	));
-	public static final RegistryObject<Item> AQUA = footUpgrade("foot_upgrades.aqua", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> AQUA = footUpgrade("foot_upgrades_aqua", () -> new CyberwareProperties(
 		Rarity.RARE, 2, 1,
 		new ItemStack(ACTUATOR.get(), 2), new ItemStack(TITANIUM.get(), 1), new ItemStack(MICRO_ELECTRIC.get(), 1)
 	));
-	public static final RegistryObject<Item> WHEELS = footUpgrade("foot_upgrades.wheels", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> WHEELS = footUpgrade("foot_upgrades_wheels", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 3, 1,
 		new ItemStack(ACTUATOR.get(), 2), new ItemStack(MICRO_ELECTRIC.get(), 2)
 	));
-
 
 	private static RegistryObject<Item> legUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{

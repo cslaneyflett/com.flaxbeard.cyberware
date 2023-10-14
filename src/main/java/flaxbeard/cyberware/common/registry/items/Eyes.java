@@ -16,31 +16,40 @@ import static flaxbeard.cyberware.common.registry.items.Components.*;
 
 public class Eyes extends ItemRegistry
 {
-	public static final RegistryObject<Item> CYBEREYE_BASE = eyes("cybereye_upgrades.base", () -> new CyberwareProperties(
+	private Eyes()
+	{
+	}
+
+	public static void init()
+	{
+		// controls static class init
+	}
+
+	public static final RegistryObject<Item> CYBEREYE_BASE = eyes("cybereyes", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 8, 1,
 		new ItemStack(PLATING.get(), 1), new ItemStack(FIBER_OPTICS.get(), 2), new ItemStack(SYNTH_NERVES.get(), 2)
 	));
-	public static final RegistryObject<Item> HUDLENS = eyeUpgrade2("cybereye_upgrades.hudlens", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> HUDLENS = eyeUpgrade2("eye_upgrades_hudlens", () -> new CyberwareProperties(
 		Rarity.VERY_COMMON, 1, 1,
 		new ItemStack(SSC.get(), 1), new ItemStack(FIBER_OPTICS.get(), 1), new ItemStack(FULLERENE.get(), 1), new ItemStack(SYNTH_NERVES.get(), 2)
 	));
-	public static final RegistryObject<Item> NIGHT_VISION = eyeUpgrade("cybereye_upgrades.night_vision", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> NIGHT_VISION = eyeUpgrade("cybereye_upgrades_night_vision", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 2, 1,
 		new ItemStack(PLATING.get(), 1), new ItemStack(FIBER_OPTICS.get(), 2), new ItemStack(SYNTH_NERVES.get(), 1)
 	));
-	public static final RegistryObject<Item> UNDERWATER_VISION = eyeUpgrade("cybereye_upgrades.underwater_vision", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> UNDERWATER_VISION = eyeUpgrade("cybereye_upgrades_underwater_vision", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 2, 1,
 		new ItemStack(FIBER_OPTICS.get(), 2), new ItemStack(SYNTH_NERVES.get(), 1)
 	));
-	public static final RegistryObject<Item> HUDJACK = eyeUpgrade("cybereye_upgrades.hudjack", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> HUDJACK = eyeUpgrade("cybereye_upgrades_hudjack", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 1, 1,
 		new ItemStack(SSC.get(), 1), new ItemStack(FIBER_OPTICS.get(), 1), new ItemStack(FULLERENE.get(), 1), new ItemStack(SYNTH_NERVES.get(), 2)
 	));
-	public static final RegistryObject<Item> TARGETING = eyeUpgrade("cybereye_upgrades.targeting", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> TARGETING = eyeUpgrade("cybereye_upgrades_targeting", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 1, 1,
 		new ItemStack(SSC.get(), 2), new ItemStack(FIBER_OPTICS.get(), 1), new ItemStack(FULLERENE.get(), 1), new ItemStack(SYNTH_NERVES.get(), 1)
 	));
-	public static final RegistryObject<Item> ZOOM = eyeUpgrade("cybereye_upgrades.zoom", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> ZOOM = eyeUpgrade("cybereye_upgrades_zoom", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 1, 1,
 		new ItemStack(FIBER_OPTICS.get(), 2), new ItemStack(SYNTH_NERVES.get(), 4)
 	));

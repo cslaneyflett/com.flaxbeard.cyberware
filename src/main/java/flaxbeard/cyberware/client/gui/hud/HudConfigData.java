@@ -1,18 +1,14 @@
 package flaxbeard.cyberware.client.gui.hud;
 
 import flaxbeard.cyberware.api.hud.IHudSaveData;
-import flaxbeard.cyberware.common.config.CyberwareConfig;
-import net.minecraftforge.common.config.Configuration;
-
-import java.io.File;
 
 public class HudConfigData implements IHudSaveData
 {
-	private Configuration config;
+	//private Configuration config;
 
 	public HudConfigData(String name)
 	{
-		config = new Configuration(new File(CyberwareConfig.configDirectory, "cyberware_hud/" + name + ".cfg"));
+		//config = new Configuration(new File(CyberwareConfig.configDirectory, "cyberware_hud/" + name + ".cfg"));
 	}
 
 	@Override

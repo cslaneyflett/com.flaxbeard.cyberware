@@ -1,13 +1,14 @@
 package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
@@ -15,6 +16,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Fluids;
@@ -41,6 +43,14 @@ public class BlockBeacon extends HorizontalDirectionalBlock implements EntityBlo
 		);
 	}
 
+	@Override
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
+	{
+		builder
+			.add(FACING)
+			.add(WATERLOGGED);
+	}
+
 	@Nullable
 	@Override
 	public BlockEntity newBlockEntity(@Nonnull BlockPos pPos, @Nonnull BlockState pState)
@@ -53,7 +63,7 @@ public class BlockBeacon extends HorizontalDirectionalBlock implements EntityBlo
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
 																  @Nonnull BlockEntityType<T> type)
 	{
-		return type == BlockEntities.BEACON.get() ? TileEntityBeacon::tick : null;
+		return type == CWBlockEntities.BEACON.get() ? TileEntityBeacon::tick : null;
 	}
 
 	@SuppressWarnings("deprecation") // Only deprecated for call, not override.

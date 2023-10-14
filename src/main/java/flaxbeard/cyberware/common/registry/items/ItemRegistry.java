@@ -1,6 +1,6 @@
 package flaxbeard.cyberware.common.registry.items;
 
-import flaxbeard.cyberware.common.registry.Items;
+import flaxbeard.cyberware.common.registry.CWItems;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -10,6 +10,6 @@ abstract public class ItemRegistry
 {
 	public static <I extends Item> RegistryObject<I> register(final String name, final Supplier<? extends I> sup)
 	{
-		return Items.ITEMS.register(name, sup);
+		return CWItems.ITEMS.register(name, sup);
 	}
 }

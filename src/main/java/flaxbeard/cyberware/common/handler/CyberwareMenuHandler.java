@@ -5,7 +5,6 @@ import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.client.ClientUtils;
 import flaxbeard.cyberware.client.KeyBinds;
-import flaxbeard.cyberware.client.gui.GuiCyberwareMenu;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.OpenRadialMenuPacket;
 import net.minecraft.client.Minecraft;
@@ -88,13 +87,15 @@ public class CyberwareMenuHandler
 				mc.options.keyShift.setKeyConflictContext(gui);
 				mc.options.keySprint.setKeyConflictContext(gui);
 
-				mc.setScreen(new GuiCyberwareMenu());
+				// TODO
+				//				mc.setScreen(new GuiCyberwareMenu());
 				cyberwareUserData.setOpenedRadialMenu(true);
 				CyberwarePacketHandler.INSTANCE.sendToServer(new OpenRadialMenuPacket());
 
 				wasInScreen = 5;
-			} else if (wasInScreen > 0
-				&& mc.screen instanceof GuiCyberwareMenu)
+				// TODO
+			} else if (wasInScreen > 0 && false)
+			//				&& mc.screen instanceof GuiCyberwareMenu)
 			{
 				wasSprinting = mc.player.isSprinting();
 			}

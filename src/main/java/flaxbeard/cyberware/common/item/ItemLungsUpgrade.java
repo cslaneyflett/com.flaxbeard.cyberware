@@ -68,6 +68,7 @@ public class ItemLungsUpgrade extends ItemCyberware
 
 	public static class EventHandler
 	{
+		public static final EventHandler INSTANCE = new EventHandler();
 		// TODO: render
 		//	import net.minecraft.client.gui.ScaledResolution;
 		//	import net.minecraft.client.renderer.GlStateManager;

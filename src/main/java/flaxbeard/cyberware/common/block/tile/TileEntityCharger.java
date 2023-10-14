@@ -3,7 +3,7 @@ package flaxbeard.cyberware.common.block.tile;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -31,7 +31,7 @@ public class TileEntityCharger extends BlockEntity implements IEnergyStorage
 
 	public TileEntityCharger(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.CHARGER.get(), pPos, pBlockState);
+		super(CWBlockEntities.CHARGER.get(), pPos, pBlockState);
 	}
 
 	@Override

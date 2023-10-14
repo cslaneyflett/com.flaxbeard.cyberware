@@ -1,16 +1,15 @@
 package flaxbeard.cyberware.client.gui.hud;
 
+import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.hud.HudElementBase;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.handler.HudHandler;
+import flaxbeard.cyberware.common.registry.items.Eyes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -23,14 +22,15 @@ public class MissingPowerDisplay extends HudElementBase
 
 	static
 	{
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
-		exampleStacks.add(new ItemStack(CyberwareContent.cybereyes));
+		var eyes = Eyes.CYBEREYE_BASE.get();
+		exampleStacks.add(new ItemStack(eyes));
+		exampleStacks.add(new ItemStack(eyes));
+		exampleStacks.add(new ItemStack(eyes));
+		exampleStacks.add(new ItemStack(eyes));
+		exampleStacks.add(new ItemStack(eyes));
+		exampleStacks.add(new ItemStack(eyes));
+		exampleStacks.add(new ItemStack(eyes));
+		exampleStacks.add(new ItemStack(eyes));
 	}
 
 	public MissingPowerDisplay()
@@ -43,7 +43,7 @@ public class MissingPowerDisplay extends HudElementBase
 	}
 
 	@Override
-	public void renderElement(int x, int y, Player entityPlayer, ScaledResolution resolution,
+	public void renderElement(int x, int y, Player entityPlayer, PoseStack poseStack, Window window,
 							  boolean isHUDjackAvailable, boolean isConfigOpen, float partialTicks)
 	{
 		if (isHidden()
@@ -58,19 +58,19 @@ public class MissingPowerDisplay extends HudElementBase
 		boolean isRightAnchored = getHorizontalAnchor() == EnumAnchorHorizontal.RIGHT;
 		float currTime = entityPlayer.tickCount + partialTicks;
 
-		GlStateManager.pushMatrix();
-		GlStateManager.enableBlend();
+		poseStack.pushPose();
+		RenderSystem.enableBlend();
 
-		Minecraft.getInstance().getTextureManager().bindTexture(HudHandler.HUD_TEXTURE);
+		RenderSystem.setShaderTexture(0, HudHandler.HUD_TEXTURE);
 
-		Font fontRenderer = Minecraft.getInstance().fontRenderer;
+		Font fontRenderer = Minecraft.getInstance().font;
 
-		RenderItem renderItem = Minecraft.getInstance().getRenderItem();
+		var renderItem = Minecraft.getInstance().getItemRenderer();
 		List<ItemStack> stacksPowerOutage = isConfigOpen ? exampleStacks : cyberwareUserData.getPowerOutages();
 		List<Integer> timesPowerOutage = cyberwareUserData.getPowerOutageTimes();
 		List<Integer> indexesElapsed = new ArrayList<>();
-		float zLevelSaved = renderItem.zLevel;
-		renderItem.zLevel = -300;
+		//float zLevelSaved = renderItem.zLevel;
+		//renderItem.zLevel = -300;
 		int xPosition = x - 1 + (isRightAnchored ? 0 : 20);
 		int yPosition = y;
 		for (int index = stacksPowerOutage.size() - 1; index >= 0; index--)
@@ -95,16 +95,16 @@ public class MissingPowerDisplay extends HudElementBase
 					double percentVisible = Math.max(0F, (currTime - time - 20) / 30F);
 					float xOffset = (float) (20F * Math.sin(percentVisible * Math.PI / 2F));
 
-					GlStateManager.pushMatrix();
-					GlStateManager.translate(isRightAnchored ? xOffset : -xOffset, 0.0F, 0.0F);
+					poseStack.pushPose();
+					poseStack.translate(isRightAnchored ? xOffset : -xOffset, 0.0F, 0.0F);
 
-					fontRenderer.drawStringWithShadow("!", xPosition + 14, yPosition + 8, 0xFF0000);
+					fontRenderer.draw(poseStack, "!", xPosition + 14, yPosition + 8, 0xFF0000);
 
-					RenderHelper.enableStandardItemLighting();
-					renderItem.renderItemAndEffectIntoGUI(stack, xPosition, yPosition);
-					RenderHelper.disableStandardItemLighting();
+					//RenderHelper.enableStandardItemLighting();
+					renderItem.renderGuiItem(stack, xPosition, yPosition);
+					//RenderHelper.disableStandardItemLighting();
 
-					GlStateManager.popMatrix();
+					poseStack.popPose();
 					yPosition += 18;
 				} else if (!isConfigOpen)
 				{
@@ -112,7 +112,7 @@ public class MissingPowerDisplay extends HudElementBase
 				}
 			}
 		}
-		renderItem.zLevel = zLevelSaved;
+		//renderItem.zLevel = zLevelSaved;
 
 		for (int indexElapsed : indexesElapsed)
 		{
@@ -120,6 +120,6 @@ public class MissingPowerDisplay extends HudElementBase
 			timesPowerOutage.remove(indexElapsed);
 		}
 
-		GlStateManager.popMatrix();
+		poseStack.popPose();
 	}
 }

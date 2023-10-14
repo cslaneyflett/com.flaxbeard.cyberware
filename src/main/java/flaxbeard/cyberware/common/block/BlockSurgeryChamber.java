@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
@@ -48,6 +49,15 @@ public class BlockSurgeryChamber extends HorizontalDirectionalBlock implements E
 				.setValue(FACING, Direction.NORTH)
 				.setValue(HALF, DoubleBlockHalf.LOWER)
 		);
+	}
+
+	@Override
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
+	{
+		builder
+			.add(FACING)
+			.add(OPEN)
+			.add(HALF);
 	}
 
 	@Nullable

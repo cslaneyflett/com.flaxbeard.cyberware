@@ -1,7 +1,7 @@
 package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityBeaconPost;
-import flaxbeard.cyberware.common.registry.Blocks;
+import flaxbeard.cyberware.common.registry.CWBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 import javax.annotation.Nonnull;
@@ -38,6 +39,18 @@ public class BlockBeaconPost extends FenceBlock implements EntityBlock
 				.setValue(SOUTH, Boolean.FALSE)
 				.setValue(WEST, Boolean.FALSE)
 		);
+	}
+
+	@Override
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
+	{
+		builder
+			.add(TRANSFORMED)
+			.add(NORTH)
+			.add(EAST)
+			.add(SOUTH)
+			.add(WEST)
+			.add(WATERLOGGED);
 	}
 
 	@Nullable
@@ -164,7 +177,7 @@ public class BlockBeaconPost extends FenceBlock implements EntityBlock
 
 					var state = level.getBlockState(p);
 					var block = state.getBlock();
-					if (block != Blocks.BEACON_POST.get() || state.getValue(TRANSFORMED) != 0)
+					if (block != CWBlocks.BEACON_POST.get() || state.getValue(TRANSFORMED) != 0)
 					{
 						return ScanResult.RETURN_FALSE;
 					}

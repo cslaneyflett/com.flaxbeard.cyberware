@@ -2,10 +2,12 @@ package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityScanner;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -17,6 +19,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -40,7 +43,7 @@ public class BlockScanner extends Block implements EntityBlock
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
 																  @Nonnull BlockEntityType<T> type)
 	{
-		return type == BlockEntities.SCANNER.get() ? TileEntityScanner::tick : null;
+		return type == CWBlockEntities.SCANNER.get() ? TileEntityScanner::tick : null;
 	}
 
 	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
@@ -57,13 +60,24 @@ public class BlockScanner extends Block implements EntityBlock
 				blockEntity.ticks = CyberwareConfig.INSTANCE.SCANNER_TIME.get() - 200;
 			}
 
-			// TODO
-			// entityPlayer.openGui(Cyberware.INSTANCE, 3, world, pos.getX(), pos.getY(), pos.getZ());
+			if (!level.isClientSide)
+			{
+				NetworkHooks.openScreen((ServerPlayer) player, state.getMenuProvider(level, pos));
+			}
 
-			return InteractionResult.SUCCESS;
+			return InteractionResult.sidedSuccess(level.isClientSide);
 		}
 
 		return InteractionResult.FAIL;
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nullable
+	@Override
+	public MenuProvider getMenuProvider(@Nonnull BlockState pState, @Nonnull Level pLevel, @Nonnull BlockPos pPos)
+	{
+		// TODO
+		return super.getMenuProvider(pState, pLevel, pPos);
 	}
 
 	@SuppressWarnings("deprecation") // Only deprecated for call, not override.

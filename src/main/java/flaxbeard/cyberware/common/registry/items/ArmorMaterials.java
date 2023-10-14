@@ -25,7 +25,6 @@ public enum ArmorMaterials implements ArmorMaterial
 		"cyberware:trench_coat", 5, new int[]{1, 2, 3, 1}, 15,
 		SoundEvents.ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> Ingredient.of(Items.LEATHER)
 	);
-
 	private static final int[] HEALTH_PER_SLOT = new int[]{13, 15, 16, 11};
 	private final String name;
 	private final int durabilityMultiplier;

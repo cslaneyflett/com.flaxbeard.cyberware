@@ -5,8 +5,6 @@ import flaxbeard.cyberware.api.CyberwareUserDataImpl;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.CyberwareContent.ZombieItem;
 import flaxbeard.cyberware.common.block.tile.TileEntityBeacon;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.config.StartingStacksConfig;
@@ -15,8 +13,10 @@ import flaxbeard.cyberware.common.item.ItemArmorCyberware;
 import flaxbeard.cyberware.common.item.ItemCreativeBattery;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
+import flaxbeard.cyberware.common.misc.ZombieItem;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.CyberwareSyncPacket;
+import flaxbeard.cyberware.common.registry.CWGameRules;
 import flaxbeard.cyberware.common.registry.items.Armors;
 import flaxbeard.cyberware.common.registry.items.LowerOrgans;
 import net.minecraft.core.BlockPos;
@@ -26,20 +26,18 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.random.WeightedRandom;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.GameRules.ValueType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
@@ -61,8 +59,6 @@ import java.util.Objects;
 public class CyberwareDataHandler
 {
 	public static final CyberwareDataHandler INSTANCE = new CyberwareDataHandler();
-	public static final String KEEP_WARE_GAMERULE = "cyberware_keepCyberware";
-	public static final String DROP_WARE_GAMERULE = "cyberware_dropCyberware";
 
 	@SubscribeEvent
 	public void onEntityConstructed(EntityEvent.EntityConstructing event)
@@ -70,26 +66,14 @@ public class CyberwareDataHandler
 		if (event.getEntity() instanceof LivingEntity entityLivingBase)
 		{
 			// TODO: registry?
-			entityLivingBase.getAttributes().registerAttribute(CyberwareAPI.TOLERANCE_ATTR);
+			//			entityLivingBase.getAttributes().registerAttribute(CyberwareAPI.TOLERANCE_ATTR);
 		}
 	}
 
 	@SubscribeEvent
 	public void worldLoad(LevelEvent.Load event)
 	{
-		// TODO: registry?
-		if (!rules.hasRule(KEEP_WARE_GAMERULE))
-		{
-			rules.addGameRule(KEEP_WARE_GAMERULE, Boolean.toString(CyberwareConfig.INSTANCE.DEFAULT_KEEP.get()),
-				ValueType.BOOLEAN_VALUE
-			);
-		}
-		if (!rules.hasRule(DROP_WARE_GAMERULE))
-		{
-			rules.addGameRule(DROP_WARE_GAMERULE, Boolean.toString(CyberwareConfig.INSTANCE.DEFAULT_DROP.get()),
-				ValueType.BOOLEAN_VALUE
-			);
-		}
+		// used to load game rules
 	}
 
 	@SubscribeEvent
@@ -109,7 +93,7 @@ public class CyberwareDataHandler
 		if (event.isWasDeath())
 		{
 			GameRules rules = Objects.requireNonNull(PlayerLiving.getLevel().getServer()).getGameRules();
-			if (rules.getBoolean(KEEP_WARE_GAMERULE))
+			if (rules.getBoolean(CWGameRules.KEEP_WARE_GAMERULE))
 			{
 				ICyberwareUserData cyberwareUserDataDead = CyberwareAPI.getCapabilityOrNull(PlayerDead);
 				ICyberwareUserData cyberwareUserDataLiving = CyberwareAPI.getCapabilityOrNull(PlayerLiving);
@@ -136,9 +120,9 @@ public class CyberwareDataHandler
 		if (entityLivingBase instanceof Player player && !entityLivingBase.level.isClientSide())
 		{
 			var rules = player.level.getLevelData().getGameRules();
-			if ((rules.getBoolean(DROP_WARE_GAMERULE) &&
-				!rules.getBoolean(KEEP_WARE_GAMERULE)) ||
-				(rules.getBoolean(KEEP_WARE_GAMERULE) && shouldDropWare(event.getSource())))
+			if ((rules.getBoolean(CWGameRules.DROP_WARE_GAMERULE) &&
+				!rules.getBoolean(CWGameRules.KEEP_WARE_GAMERULE)) ||
+				(rules.getBoolean(CWGameRules.KEEP_WARE_GAMERULE) && shouldDropWare(event.getSource())))
 			{
 				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(player);
 				if (cyberwareUserData != null)
@@ -204,7 +188,7 @@ public class CyberwareDataHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void handleCZSpawn(LivingSpawnEvent.SpecialSpawn event)
 	{
-		LivingEntity entityLiving = event.getEntity();
+		Mob entityLiving = event.getEntity();
 
 		if (!(entityLiving instanceof Zombie))
 		{
@@ -241,7 +225,20 @@ public class CyberwareDataHandler
 					entityCyberZombie.setYRot(entityLiving.getYRot());
 
 					var pos = entityCyberZombie.getPosition(1.0F);
-					entityCyberZombie.onInitialSpawn(event.getLevel().getCurrentDifficultyAt(new BlockPos(pos.x, pos.y, pos.z)), null);
+					entityCyberZombie.finalizeSpawn(
+						(ServerLevelAccessor) event.getLevel(),
+						event.getLevel().getCurrentDifficultyAt(new BlockPos(pos.x, pos.y, pos.z)),
+						MobSpawnType.NATURAL,
+						null,
+						null
+					);
+
+					ForgeEventFactory.doSpecialSpawn(
+						entityCyberZombie, event.getLevel(), (float) pos.x, (float) pos.y, (float) pos.z,
+						null, MobSpawnType.NATURAL
+					);
+
+					// TODO apparently must call net.minecraftforge.event.ForgeEventFactory.doSpecialSpawn
 
 					for (EquipmentSlot slot : EquipmentSlot.values())
 					{
@@ -277,7 +274,7 @@ public class CyberwareDataHandler
 
 				entityLiving.setDropChance(
 					EquipmentSlot.HEAD,
-					CyberwareConfig.INSTANCE.MOBS_CLOTH_DROP_RARITY.get() / 100F
+					(float) (CyberwareConfig.INSTANCE.MOBS_CLOTH_DROP_RARITY.get() / 100F)
 				);
 			}
 
@@ -301,7 +298,7 @@ public class CyberwareDataHandler
 
 				entityLiving.setDropChance(
 					EquipmentSlot.CHEST,
-					CyberwareConfig.INSTANCE.MOBS_CLOTH_DROP_RARITY.get() / 100F
+					(float) (CyberwareConfig.INSTANCE.MOBS_CLOTH_DROP_RARITY.get() / 100F)
 				);
 			} else if (entityLiving.getItemBySlot(EquipmentSlot.CHEST).isEmpty()
 				&& chestRand - (LibConstants.ZOMBIE_TRENCH_CHANCE / 100F) < LibConstants.ZOMBIE_BIKER_CHANCE / 100F)
@@ -312,7 +309,7 @@ public class CyberwareDataHandler
 
 				entityLiving.setDropChance(
 					EquipmentSlot.CHEST,
-					CyberwareConfig.INSTANCE.MOBS_CLOTH_DROP_RARITY.get() / 100F
+					(float) (CyberwareConfig.INSTANCE.MOBS_CLOTH_DROP_RARITY.get() / 100F)
 				);
 			}
 		}
@@ -337,10 +334,11 @@ public class CyberwareDataHandler
 		ItemStack battery = new ItemStack(creativeBat);
 		wares.get(creativeBat.getSlot(battery).ordinal()).add(battery);
 
+		// TODO: seems very wrong, used to be .num
 		int numberOfItemsToInstall = WeightedRandom.getRandomItem(
 			cyberZombie.level.getRandom(),
-			CyberwareContent.numItems
-		).num;
+			ZombieItem.entries
+		).orElseThrow().getWeight().asInt();
 
 		if (brute)
 		{
@@ -349,7 +347,7 @@ public class CyberwareDataHandler
 
 		List<ItemStack> installed = new ArrayList<>();
 
-		List<ZombieItem> items = new ArrayList<>(CyberwareContent.zombieItems);
+		List<ZombieItem> items = new ArrayList<>(ZombieItem.entries.size());
 		for (int indexItem = 0; indexItem < numberOfItemsToInstall; indexItem++)
 		{
 			int tries = 0;
@@ -460,8 +458,9 @@ public class CyberwareDataHandler
 
 	public boolean isValidDimension(@Nonnull LevelAccessor level)
 	{
-		// TODO
-		boolean isListed = CyberwareConfig.INSTANCE.MOBS_DIMENSION_IDS.get().contains(level.dimension());
+		// TODO: seems wrong
+		var level2 = (Level) level;
+		boolean isListed = CyberwareConfig.INSTANCE.MOBS_DIMENSION_IDS.get().contains(level2.dimension());
 		return (CyberwareConfig.INSTANCE.MOBS_IS_DIMENSION_BLACKLIST.get() && !isListed)
 			|| (!CyberwareConfig.INSTANCE.MOBS_IS_DIMENSION_BLACKLIST.get() && isListed);
 	}

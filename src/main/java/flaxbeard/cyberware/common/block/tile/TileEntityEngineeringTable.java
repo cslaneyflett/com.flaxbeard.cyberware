@@ -7,7 +7,7 @@ import flaxbeard.cyberware.common.item.ItemBlueprint;
 import flaxbeard.cyberware.common.misc.SpecificWrapper;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.ScannerSmashPacket;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -43,7 +43,7 @@ public class TileEntityEngineeringTable extends BlockEntity
 {
 	public TileEntityEngineeringTable(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.ENGINEERING_TABLE.get(), pPos, pBlockState);
+		super(CWBlockEntities.ENGINEERING_TABLE.get(), pPos, pBlockState);
 	}
 
 	public TileEntityEngineeringTable(BlockEntityType<? extends TileEntityEngineeringTable> pType, BlockPos pPos, BlockState pBlockState)
@@ -55,7 +55,7 @@ public class TileEntityEngineeringTable extends BlockEntity
 	{
 		public TileEntityEngineeringDummy(BlockPos pPos, BlockState pBlockState)
 		{
-			super(BlockEntities.ENGINEERING_TABLE_DUMMY.get(), pPos, pBlockState);
+			super(CWBlockEntities.ENGINEERING_TABLE_DUMMY.get(), pPos, pBlockState);
 		}
 
 		//		@Override

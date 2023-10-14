@@ -265,8 +265,8 @@ public class ItemCybereyeUpgrade extends ItemCyberware implements IMenuItem, IHu
 		//
 		//		if (!inUse && !wasInUse)
 		//		{
-		//			fov = mc.gameSettings.fovSetting;
-		//			sensitivity = mc.gameSettings.mouseSensitivity;
+		//			fov = mc.options.fovSetting;
+		//			sensitivity = mc.options.mouseSensitivity;
 		//		}
 		//
 		//		wasInUse = inUse;
@@ -277,47 +277,47 @@ public class ItemCybereyeUpgrade extends ItemCyberware implements IMenuItem, IHu
 		//		{
 		//			player = entityPlayer;
 		//
-		//			if (mc.gameSettings.thirdPersonView == 0)
+		//			if (mc.options.thirdPersonView == 0)
 		//			{
 		//				switch (zoomSettingOn)
 		//				{
 		//					case 0:
-		//						mc.gameSettings.fovSetting = fov;
-		//						mc.gameSettings.mouseSensitivity = sensitivity;
+		//						mc.options.fovSetting = fov;
+		//						mc.options.mouseSensitivity = sensitivity;
 		//						break;
 		//
 		//					case 1:
-		//						mc.gameSettings.fovSetting = fov;
-		//						mc.gameSettings.mouseSensitivity = sensitivity;
+		//						mc.options.fovSetting = fov;
+		//						mc.options.mouseSensitivity = sensitivity;
 		//						int i = 0;
-		//						while (Math.abs((mc.gameSettings.fovSetting - ((fov + 5F)) / 2.0F)) > 2.5F && i < 200)
+		//						while (Math.abs((mc.options.fovSetting - ((fov + 5F)) / 2.0F)) > 2.5F && i < 200)
 		//						{
-		//							mc.gameSettings.fovSetting -= 2.5F;
-		//							mc.gameSettings.mouseSensitivity -= 0.01F;
+		//							mc.options.fovSetting -= 2.5F;
+		//							mc.options.mouseSensitivity -= 0.01F;
 		//							i++;
 		//						}
 		//						break;
 		//
 		//					case 2:
-		//						mc.gameSettings.fovSetting = fov;
-		//						mc.gameSettings.mouseSensitivity = sensitivity;
+		//						mc.options.fovSetting = fov;
+		//						mc.options.mouseSensitivity = sensitivity;
 		//						i = 0;
-		//						while (Math.abs((mc.gameSettings.fovSetting - ((fov + 5F)) / 5.0F)) > 2.5F && i < 200)
+		//						while (Math.abs((mc.options.fovSetting - ((fov + 5F)) / 5.0F)) > 2.5F && i < 200)
 		//						{
-		//							mc.gameSettings.fovSetting -= 2.5F;
-		//							mc.gameSettings.mouseSensitivity -= 0.01F;
+		//							mc.options.fovSetting -= 2.5F;
+		//							mc.options.mouseSensitivity -= 0.01F;
 		//							i++;
 		//						}
 		//						break;
 		//
 		//					case 3:
-		//						mc.gameSettings.fovSetting = fov;
-		//						mc.gameSettings.mouseSensitivity = sensitivity;
+		//						mc.options.fovSetting = fov;
+		//						mc.options.mouseSensitivity = sensitivity;
 		//						i = 0;
-		//						while (Math.abs((mc.gameSettings.fovSetting - ((fov + 5F)) / 12.0F)) > 2.5F && i < 200)
+		//						while (Math.abs((mc.options.fovSetting - ((fov + 5F)) / 12.0F)) > 2.5F && i < 200)
 		//						{
-		//							mc.gameSettings.fovSetting -= 2.5F;
-		//							mc.gameSettings.mouseSensitivity -= 0.01F;
+		//							mc.options.fovSetting -= 2.5F;
+		//							mc.options.mouseSensitivity -= 0.01F;
 		//							i++;
 		//						}
 		//						break;
@@ -333,8 +333,8 @@ public class ItemCybereyeUpgrade extends ItemCyberware implements IMenuItem, IHu
 		//		{
 		//
 		//			// TODO: ForgeHooksClient.getFieldOfViewModifier
-		//			mc.gameSettings.fovSetting = fov;
-		//			mc.gameSettings.mouseSensitivity = sensitivity;
+		//			mc.options.fovSetting = fov;
+		//			mc.options.mouseSensitivity = sensitivity;
 		//		}
 		//	}
 		//}

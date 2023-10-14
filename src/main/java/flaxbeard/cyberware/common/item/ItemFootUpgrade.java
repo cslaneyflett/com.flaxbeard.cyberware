@@ -5,11 +5,11 @@ import flaxbeard.cyberware.api.CyberwareUpdateEvent;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.EnableDisableHelper;
 import flaxbeard.cyberware.api.item.IMenuItem;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.ItemCyberware;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.NNLUtil;
+import flaxbeard.cyberware.common.registry.items.CyberLimbs;
 import flaxbeard.cyberware.common.registry.items.LegUpgrades;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -40,8 +40,10 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 		if (stack.is(LegUpgrades.AQUA.get())) return NonNullList.create();
 
 		return NNLUtil.fromArray(new ItemStack[][]{
-			new ItemStack[]{CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_LEG),
-				CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_LEG)}});
+			new ItemStack[]{
+				CyberLimbs.CYBERLEG_LEFT.get().getDefaultInstance(),
+				CyberLimbs.CYBERLEG_RIGHT.get().getDefaultInstance()
+			}});
 	}
 
 	@Override
@@ -79,6 +81,8 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 
 	public static class EventHandler
 	{
+		public static final EventHandler INSTANCE = new EventHandler();
+
 		@SubscribeEvent
 		public void handleHorseMove(LivingEvent event)
 		{
@@ -131,11 +135,11 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 						if (entityLivingBase.getDeltaMovement().horizontalDistanceSqr() > 0.0F)
 						{
 							int numLegs = 0;
-							if (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_LEG)))
+							if (cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERLEG_LEFT.get().getDefaultInstance()))
 							{
 								numLegs++;
 							}
-							if (cyberwareUserData.isCyberwareInstalled(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_LEG)))
+							if (cyberwareUserData.isCyberwareInstalled(CyberLimbs.CYBERLEG_RIGHT.get().getDefaultInstance()))
 							{
 								numLegs++;
 							}

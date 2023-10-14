@@ -3,7 +3,7 @@ package flaxbeard.cyberware.common.block.tile;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.item.ItemBlueprint;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -28,7 +28,7 @@ public class TileEntityScanner extends BlockEntity
 {
 	public TileEntityScanner(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.SCANNER.get(), pPos, pBlockState);
+		super(CWBlockEntities.SCANNER.get(), pPos, pBlockState);
 	}
 
 	public static class ItemStackHandlerScanner extends ItemStackHandler

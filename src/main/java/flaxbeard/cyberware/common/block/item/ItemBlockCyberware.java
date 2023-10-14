@@ -18,13 +18,13 @@ import java.util.List;
 public class ItemBlockCyberware extends BlockItem implements ICyberwareTabItem
 {
 	private final String[] tooltip;
-	
+
 	public ItemBlockCyberware(Block block, Properties properties, String... tooltip)
 	{
 		super(block, properties);
 		this.tooltip = tooltip;
 	}
-	
+
 	@Override
 	public EnumCategory getCategory(ItemStack stack)
 	{

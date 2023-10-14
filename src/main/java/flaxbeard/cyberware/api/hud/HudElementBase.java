@@ -1,6 +1,7 @@
 package flaxbeard.cyberware.api.hud;
 
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.world.entity.player.Player;
 
 public abstract class HudElementBase implements IHudElement
@@ -24,7 +25,7 @@ public abstract class HudElementBase implements IHudElement
 	}
 
 	@Override
-	public void render(Player entityPlayer, Window window, boolean isHUDjackAvailable, boolean isConfigOpen,
+	public void render(Player entityPlayer, PoseStack poseStack, Window window, boolean isHUDjackAvailable, boolean isConfigOpen,
 					   float partialTicks)
 	{
 		int x = getX();
@@ -38,10 +39,10 @@ public abstract class HudElementBase implements IHudElement
 			y = window.getGuiScaledHeight() - y - getHeight();
 		}
 
-		renderElement(x, y, entityPlayer, window, isHUDjackAvailable, isConfigOpen, partialTicks);
+		renderElement(x, y, entityPlayer, poseStack, window, isHUDjackAvailable, isConfigOpen, partialTicks);
 	}
 
-	public abstract void renderElement(int x, int y, Player entityPlayer, Window window, boolean hudjackAvailable,
+	public abstract void renderElement(int x, int y, Player entityPlayer, PoseStack poseStack, Window window, boolean hudjackAvailable,
 									   boolean isConfigOpen, float partialTicks);
 
 	public void setDefaultX(int x)

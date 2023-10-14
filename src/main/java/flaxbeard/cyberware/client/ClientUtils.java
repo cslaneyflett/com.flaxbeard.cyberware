@@ -6,7 +6,6 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
-import flaxbeard.cyberware.client.render.ModelTrenchCoat;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.TriggerActiveAbilityPacket;
 import net.minecraft.client.Minecraft;
@@ -25,8 +24,8 @@ import java.util.List;
 @OnlyIn(Dist.CLIENT)
 public class ClientUtils
 {
-	@OnlyIn(Dist.CLIENT)
-	public static final ModelTrenchCoat modelTrenchCoat = new ModelTrenchCoat(0.51F);
+	//	@OnlyIn(Dist.CLIENT)
+	//	public static final ModelTrenchCoat modelTrenchCoat = new ModelTrenchCoat(0.51F);
 	private static final float TEXTURE_SCALE = 1.0F / 256;
 
 	public static void drawTexturedModalRect(int x, int y, int textureX, int textureY, int width, int height)

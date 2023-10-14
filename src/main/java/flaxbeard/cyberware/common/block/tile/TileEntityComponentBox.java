@@ -1,7 +1,7 @@
 package flaxbeard.cyberware.common.block.tile;
 
-import flaxbeard.cyberware.common.CyberwareContent;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
+import flaxbeard.cyberware.common.registry.CWTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -22,7 +22,7 @@ public class TileEntityComponentBox extends BlockEntity
 {
 	public TileEntityComponentBox(BlockPos pPos, BlockState pBlockState)
 	{
-		super(BlockEntities.COMPONENT_BOX.get(), pPos, pBlockState);
+		super(CWBlockEntities.COMPONENT_BOX.get(), pPos, pBlockState);
 	}
 
 	public static class ItemStackHandlerComponent extends ItemStackHandler
@@ -44,7 +44,7 @@ public class TileEntityComponentBox extends BlockEntity
 		public boolean isItemValidForSlot(int slot, @Nonnull ItemStack stack)
 		{
 			// TODO: component tag?
-			if (!stack.isEmpty() && stack.getItem() == CyberwareContent.component) return true;
+			if (!stack.isEmpty() && stack.is(CWTags.COMPONENTS)) return true;
 
 			return stack.isEmpty();
 		}

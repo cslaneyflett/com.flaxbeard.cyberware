@@ -1,18 +1,20 @@
 package flaxbeard.cyberware.common.block;
 
 import flaxbeard.cyberware.common.block.tile.TileEntityBeaconLarge;
-import flaxbeard.cyberware.common.registry.BlockEntities;
+import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.Fluids;
@@ -39,6 +41,14 @@ public class BlockBeaconLarge extends HorizontalDirectionalBlock implements Enti
 		);
 	}
 
+	@Override
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
+	{
+		builder
+			.add(FACING)
+			.add(WATERLOGGED);
+	}
+
 	@Nullable
 	@Override
 	public BlockEntity newBlockEntity(@Nonnull BlockPos pPos, @Nonnull BlockState pState)
@@ -51,7 +61,7 @@ public class BlockBeaconLarge extends HorizontalDirectionalBlock implements Enti
 	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
 																  @Nonnull BlockEntityType<T> type)
 	{
-		return type == BlockEntities.BEACON_LARGE.get() ? TileEntityBeaconLarge::tick : null;
+		return type == CWBlockEntities.BEACON_LARGE.get() ? TileEntityBeaconLarge::tick : null;
 	}
 
 	private static final VoxelShape eastWest = Shapes.create(

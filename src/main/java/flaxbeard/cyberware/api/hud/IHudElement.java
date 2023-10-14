@@ -1,6 +1,7 @@
 package flaxbeard.cyberware.api.hud;
 
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.world.entity.player.Player;
 
 public interface IHudElement
@@ -17,7 +18,7 @@ public interface IHudElement
 		BOTTOM;
 	}
 
-	public void render(Player entityPlayer, Window window, boolean isHUDjackAvailable, boolean isConfigOpen,
+	public void render(Player entityPlayer, PoseStack poseStack, Window window, boolean isHUDjackAvailable, boolean isConfigOpen,
 					   float partialTicks);
 
 	public boolean canMove();

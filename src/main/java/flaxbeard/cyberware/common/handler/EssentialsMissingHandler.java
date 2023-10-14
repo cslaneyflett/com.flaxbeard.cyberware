@@ -1,6 +1,7 @@
 package flaxbeard.cyberware.common.handler;
 
 import com.google.common.collect.HashMultimap;
+import com.mojang.blaze3d.systems.RenderSystem;
 import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUpdateEvent;
@@ -8,12 +9,12 @@ import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.api.item.ICyberware.BodyRegionEnum;
 import flaxbeard.cyberware.api.item.ICyberware.ISidedLimb.EnumSide;
 import flaxbeard.cyberware.client.ClientUtils;
-import flaxbeard.cyberware.common.CyberwareContent;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.item.ItemCyberlimb;
+import flaxbeard.cyberware.common.registry.CWMobEffects;
+import flaxbeard.cyberware.common.registry.items.CyberLimbs;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -28,7 +29,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
-import net.minecraft.world.phys.AABB;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
@@ -123,9 +123,9 @@ public class EssentialsMissingHandler
 
 			if (tolerance < CyberwareConfig.INSTANCE.CRITICAL_ESSENCE.get()
 				&& entityLivingBase.tickCount % 100 == 0
-				&& !entityLivingBase.hasEffect(CyberwareContent.neuropozyneEffect))
+				&& !entityLivingBase.hasEffect(CWMobEffects.NEUROPOZYNE.get()))
 			{
-				entityLivingBase.addEffect(new MobEffectInstance(CyberwareContent.rejectionEffect, 110, 0, true, false));
+				entityLivingBase.addEffect(new MobEffectInstance(CWMobEffects.REJECTION.get(), 110, 0, true, false));
 				entityLivingBase.hurt(lowessence, 2F);
 			}
 
@@ -150,7 +150,7 @@ public class EssentialsMissingHandler
 		}
 
 		ItemStack legLeft =
-			cyberwareUserData.getCyberware(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_LEG));
+			cyberwareUserData.getCyberware(CyberLimbs.CYBERLEG_LEFT.get().getDefaultInstance());
 		if (!legLeft.isEmpty()
 			&& !ItemCyberlimb.isPowered(legLeft))
 		{
@@ -158,7 +158,7 @@ public class EssentialsMissingHandler
 		}
 
 		ItemStack legRight =
-			cyberwareUserData.getCyberware(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_LEG));
+			cyberwareUserData.getCyberware(CyberLimbs.CYBERLEG_RIGHT.get().getDefaultInstance());
 		if (!legRight.isEmpty()
 			&& !ItemCyberlimb.isPowered(legRight))
 		{
@@ -170,15 +170,16 @@ public class EssentialsMissingHandler
 			if (numMissingLegsVisible == 2)
 			{
 				// TODO: cant set these
-				entityLivingBase.height = 1.8F - (10F / 16F);
-				((Player) entityLivingBase).eyeHeight =
-					((Player) entityLivingBase).getEyeHeight() - (10F / 16F);
-				AABB axisalignedbb = entityLivingBase.getBoundingBox();
-				entityLivingBase.setBoundingBox(new AABB(
-					axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ,
-					axisalignedbb.minX + entityLivingBase.getBbWidth(), axisalignedbb.minY + entityLivingBase.getBbHeight(),
-					axisalignedbb.minZ + entityLivingBase.getBbWidth()
-				));
+				//				entityLivingBase.height = 1.8F - (10F / 16F);
+				//				((Player) entityLivingBase).eyeHeight =
+				//					((Player) entityLivingBase).getEyeHeight() - (10F / 16F);
+				//
+				//				AABB axisalignedbb = entityLivingBase.getBoundingBox();
+				//				entityLivingBase.setBoundingBox(new AABB(
+				//					axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ,
+				//					axisalignedbb.minX + entityLivingBase.getBbWidth(), axisalignedbb.minY + entityLivingBase.getBbHeight(),
+				//					axisalignedbb.minZ + entityLivingBase.getBbWidth()
+				//				));
 
 				if (entityLivingBase.level.isClientSide())
 				{
@@ -190,15 +191,16 @@ public class EssentialsMissingHandler
 			} else if (last(entityLivingBase.level.isClientSide(), entityLivingBase))
 			{
 				// TODO: cant set these
-				entityLivingBase.height = 1.8F;
-				((Player) entityLivingBase).eyeHeight =
-					((Player) entityLivingBase).getEyeHeight();
-				AABB axisalignedbb = entityLivingBase.getBoundingBox();
-				entityLivingBase.setBoundingBox(new AABB(
-					axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ,
-					axisalignedbb.minX + entityLivingBase.getBbWidth(), axisalignedbb.minY + entityLivingBase.getBbHeight(),
-					axisalignedbb.minZ + entityLivingBase.getBbWidth()
-				));
+				//				entityLivingBase.height = 1.8F;
+				//				((Player) entityLivingBase).eyeHeight =
+				//					((Player) entityLivingBase).getEyeHeight();
+				//
+				//				AABB axisalignedbb = entityLivingBase.getBoundingBox();
+				//				entityLivingBase.setBoundingBox(new AABB(
+				//					axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ,
+				//					axisalignedbb.minX + entityLivingBase.getBbWidth(), axisalignedbb.minY + entityLivingBase.getBbHeight(),
+				//					axisalignedbb.minZ + entityLivingBase.getBbWidth()
+				//				));
 
 				if (entityLivingBase.level.isClientSide())
 				{
@@ -287,14 +289,14 @@ public class EssentialsMissingHandler
 			}
 
 			ItemStack legLeft =
-				cyberwareUserData.getCyberware(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_LEG));
+				cyberwareUserData.getCyberware(CyberLimbs.CYBERLEG_LEFT.get().getDefaultInstance());
 			if (!legLeft.isEmpty() && !ItemCyberlimb.isPowered(legLeft))
 			{
 				numMissingLegs++;
 			}
 
 			ItemStack legRight =
-				cyberwareUserData.getCyberware(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_LEG));
+				cyberwareUserData.getCyberware(CyberLimbs.CYBERLEG_RIGHT.get().getDefaultInstance());
 			if (!legRight.isEmpty() && !ItemCyberlimb.isPowered(legRight))
 			{
 				numMissingLegs++;
@@ -394,24 +396,29 @@ public class EssentialsMissingHandler
 	@OnlyIn(Dist.CLIENT)
 	public void overlayPre(RenderGuiOverlayEvent.Pre event)
 	{
-		if (true)// event.getOverlay() == ElementType.ALL)
+		// TODO ???
+		if (false)//event.getOverlay() == ElementType.ALL)
 		{
+			var poseStack = event.getPoseStack();
 			Player entityPlayer = Minecraft.getInstance().player;
 			if (entityPlayer == null) return;
+
+			var windowWidth = event.getWindow().getWidth();
+			var windowHeight = event.getWindow().getHeight();
 
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
 			if (cyberwareUserData != null
 				&& !cyberwareUserData.hasEssential(BodyRegionEnum.EYES)
 				&& !entityPlayer.isCreative())
 			{
-				GlStateManager.pushMatrix();
-				GlStateManager.enableBlend();
-				GlStateManager.color(1.0F, 1.0F, 1.0F, 0.9F);
-				Minecraft.getInstance().getTextureManager().bindTexture(BLACK_PX);
-				ClientUtils.drawTexturedModalRect(0, 0, 0, 0, Minecraft.getInstance().displayWidth,
-					Minecraft.getInstance().displayHeight
+				poseStack.pushPose();
+				RenderSystem.enableBlend();
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 0.9F);
+				RenderSystem.setShaderTexture(0, BLACK_PX);
+				ClientUtils.drawTexturedModalRect(0, 0, 0, 0,
+					windowWidth, windowHeight
 				);
-				GlStateManager.popMatrix();
+				poseStack.popPose();
 			}
 
 			if (TileEntitySurgery.workingOnPlayer)
@@ -425,14 +432,15 @@ public class EssentialsMissingHandler
 				{
 					trans = (80F - ticks) / 20F;
 				}
-				GlStateManager.enableBlend();
-				GlStateManager.color(1.0F, 1.0F, 1.0F, trans);
-				Minecraft.getInstance().getTextureManager().bindTexture(BLACK_PX);
-				ClientUtils.drawTexturedModalRect(0, 0, 0, 0, Minecraft.getInstance().displayWidth,
-					Minecraft.getInstance().displayHeight
+
+				RenderSystem.enableBlend();
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, trans);
+				RenderSystem.setShaderTexture(0, BLACK_PX);
+				ClientUtils.drawTexturedModalRect(0, 0, 0, 0,
+					windowWidth, windowHeight
 				);
-				GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-				GlStateManager.disableBlend();
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+				RenderSystem.disableBlend();
 			}
 		}
 	}
@@ -511,7 +519,7 @@ public class EssentialsMissingHandler
 
 		boolean leftUnpowered = false;
 		ItemStack armLeft =
-			cyberwareUserData.getCyberware(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_LEFT_CYBER_ARM));
+			cyberwareUserData.getCyberware(CyberLimbs.CYBERARM_LEFT.get().getDefaultInstance());
 		if (!armLeft.isEmpty() && !ItemCyberlimb.isPowered(armLeft))
 		{
 			leftUnpowered = true;
@@ -519,7 +527,7 @@ public class EssentialsMissingHandler
 
 		boolean rightUnpowered = false;
 		ItemStack armRight =
-			cyberwareUserData.getCyberware(CyberwareContent.cyberlimbs.getCachedStack(ItemCyberlimb.META_RIGHT_CYBER_ARM));
+			cyberwareUserData.getCyberware(CyberLimbs.CYBERARM_RIGHT.get().getDefaultInstance());
 		if (!armRight.isEmpty() && !ItemCyberlimb.isPowered(armRight))
 		{
 			rightUnpowered = true;

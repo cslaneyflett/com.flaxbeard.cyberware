@@ -14,11 +14,20 @@ import static flaxbeard.cyberware.common.registry.items.Components.*;
 
 public class MuscleUpgrades extends ItemRegistry
 {
-	public static final RegistryObject<Item> WIRED_REFLEXES = muscleUpgrade("muscle_upgrades.wired_reflexes", () -> new CyberwareProperties(
+	private MuscleUpgrades()
+	{
+	}
+
+	public static void init()
+	{
+		// controls static class init
+	}
+
+	public static final RegistryObject<Item> WIRED_REFLEXES = muscleUpgrade("muscle_upgrades_wired_reflexes", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 5, 1,
 		new ItemStack(SSC.get(), 1), new ItemStack(FIBER_OPTICS.get(), 1), new ItemStack(SYNTH_NERVES.get(), 3)
 	));
-	public static final RegistryObject<Item> MUSCLE_REPLACEMENTS = muscleUpgrade("muscle_upgrades.muscle_replacements", () -> new CyberwareProperties(
+	public static final RegistryObject<Item> MUSCLE_REPLACEMENTS = muscleUpgrade("muscle_upgrades_muscle_replacements", () -> new CyberwareProperties(
 		Rarity.RARE, 15, 1,
 		new ItemStack(ACTUATOR.get(), 3), new ItemStack(TITANIUM.get(), 1), new ItemStack(FIBER_OPTICS.get(), 2)
 	));

@@ -25,15 +25,6 @@ public final class CyberwareProperties
 		this.maxStack = maxStack;
 		this.components = components;
 		this.tooltips = new HashMap<>();
-
-		// TODO: rarity, zombie handler
-		// maybe its not gonna go here, but has to go somewhere
-
-		// ItemStack stack = new ItemStack(this, 1, CyberwareItemMetadata.of(meta));
-		// int installedStackSize = installedStackSize(stack);
-		// stack.setCount(installedStackSize);
-		// this.setQuality(stack, CyberwareAPI.QUALITY_SCAVENGED);
-		// CyberwareContent.zombieItems.add(new ZombieItem(weight.get(meta), stack));
 	}
 
 	public NonNullList<ItemStack> componentList()
