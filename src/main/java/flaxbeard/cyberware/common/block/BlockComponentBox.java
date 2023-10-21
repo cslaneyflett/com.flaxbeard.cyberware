@@ -5,8 +5,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -27,6 +29,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -122,14 +125,25 @@ public class BlockComponentBox extends HorizontalDirectionalBlock implements Ent
 				level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
 			} else
 			{
-				// TODO
-				// player.openGui(Cyberware.INSTANCE, 5, world, pos.getX(), pos.getY(), pos.getZ());
+				if (!level.isClientSide)
+				{
+					NetworkHooks.openScreen((ServerPlayer) player, state.getMenuProvider(level, pos));
+				}
 			}
 
-			return InteractionResult.SUCCESS;
+			return InteractionResult.sidedSuccess(level.isClientSide);
 		}
 
 		return InteractionResult.FAIL;
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nullable
+	@Override
+	public MenuProvider getMenuProvider(@Nonnull BlockState pState, @Nonnull Level pLevel, @Nonnull BlockPos pPos)
+	{
+		// TODO
+		return super.getMenuProvider(pState, pLevel, pPos);
 	}
 
 	@SuppressWarnings("deprecation") // Only deprecated for call, not override.

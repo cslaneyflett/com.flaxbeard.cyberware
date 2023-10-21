@@ -6,8 +6,10 @@ import flaxbeard.cyberware.common.config.CyberwareConfig;
 import flaxbeard.cyberware.common.registry.CWAttributes;
 import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -19,6 +21,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -61,13 +64,24 @@ public class BlockSurgery extends Block implements EntityBlock
 			var cyberwareUserData = CyberwareAPI.getCapabilityOrNull(player);
 			blockEntity.updatePlayerSlots(player, cyberwareUserData);
 
-			// TODO
-			// player.openGui(Cyberware.INSTANCE, 0, world, pos.getX(), pos.getY(), pos.getZ());
+			if (!level.isClientSide)
+			{
+				NetworkHooks.openScreen((ServerPlayer) player, state.getMenuProvider(level, pos));
+			}
 
-			return InteractionResult.SUCCESS;
+			return InteractionResult.sidedSuccess(level.isClientSide);
 		}
 
 		return InteractionResult.FAIL;
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nullable
+	@Override
+	public MenuProvider getMenuProvider(@Nonnull BlockState pState, @Nonnull Level pLevel, @Nonnull BlockPos pPos)
+	{
+		// TODO
+		return super.getMenuProvider(pState, pLevel, pPos);
 	}
 
 	@SuppressWarnings("deprecation") // Only deprecated for call, not override.

@@ -1,0 +1,62 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"textures": {
+		"0": "cyberware:block/radio_back",
+		"1": "cyberware:block/radio_side",
+		"2": "cyberware:block/radio_front",
+		"3": "cyberware:block/radio_top",
+		"4": "cyberware:block/radio_antenna_base",
+		"5": "cyberware:block/radio_antenna_pole",
+		"7": "cyberware:block/radio_wire"
+	},
+	"elements": [
+		{
+			"name": "Radio",
+			"from": [1, 0, 2],
+			"to": [13, 4, 10],
+			"faces": {
+				"north": {"uv": [0, 0, 12, 4], "texture": "#0"},
+				"east": {"uv": [0, 0, 8, 4], "texture": "#1"},
+				"south": {"uv": [0, 0, 12, 4], "texture": "#2"},
+				"west": {"uv": [0, 0, 8, 4], "texture": "#1"},
+				"up": {"uv": [0, 0, 12, 8], "texture": "#3"},
+				"down": {"uv": [0, 0, 12, 8], "texture": "#3"}
+			}
+		},
+		{
+			"name": "Antenna",
+			"from": [12, 0, 13],
+			"to": [14, 1, 15],
+			"faces": {
+				"north": {"uv": [0, 0, 2, 1], "texture": "#4"},
+				"east": {"uv": [0, 0, 2, 1], "texture": "#4"},
+				"south": {"uv": [0, 0, 2, 1], "texture": "#4"},
+				"west": {"uv": [0, 0, 2, 1], "texture": "#4"},
+				"up": {"uv": [0, 0, 2, 2], "texture": "#4"},
+				"down": {"uv": [0, 0, 2, 2], "texture": "#4"}
+			}
+		},
+		{
+			"name": "Antenna_pole",
+			"from": [12.5, 1, 13.5],
+			"to": [13.5, 14, 14.5],
+			"faces": {
+				"north": {"uv": [0, 0, 1, 13], "texture": "#5"},
+				"east": {"uv": [0, 0, 1, 13], "texture": "#5"},
+				"south": {"uv": [0, 0, 1, 13], "texture": "#5"},
+				"west": {"uv": [0, 0, 1, 13], "texture": "#5"},
+				"up": {"uv": [0, 0, 1, 1], "texture": "#5"},
+				"down": {"uv": [0, 0, 1, 1], "texture": "#5"}
+			}
+		},
+		{
+			"name": "Wire",
+			"from": [0, 0.01, 0],
+			"to": [16, 0.01, 16],
+			"faces": {
+				"up": {"uv": [0, 0, 16, 16], "texture": "#7", "cullface": "up"}
+			}
+		}
+	]
+}

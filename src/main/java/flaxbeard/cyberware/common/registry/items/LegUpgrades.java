@@ -4,6 +4,7 @@ import flaxbeard.cyberware.common.item.ItemFootUpgrade;
 import flaxbeard.cyberware.common.item.ItemLegUpgrade;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties.Rarity;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
@@ -47,11 +48,11 @@ public class LegUpgrades extends ItemRegistry
 
 	private static RegistryObject<Item> legUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemLegUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemLegUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 
 	private static RegistryObject<Item> footUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemFootUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemFootUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 }

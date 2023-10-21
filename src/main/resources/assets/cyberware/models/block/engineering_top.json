@@ -1,0 +1,40 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"textures": {
+		"0": "cyberware:block/engineering_piston_top_front",
+		"1": "cyberware:block/engineering_piston_top_side",
+		"2": "cyberware:block/engineering_top_front",
+		"3": "cyberware:block/engineering_top_side",
+		"4": "cyberware:block/engineering_top_top",
+		"5": "cyberware:block/engineering_piston_top_top"
+	},
+	"elements": [
+		{
+			"name": "Holder",
+			"from": [4, 8, 4],
+			"to": [12, 16, 12],
+			"faces": {
+				"north": {"uv": [0, 0, 8, 8], "texture": "#0"},
+				"east": {"uv": [8, 0, 0, 8], "texture": "#1"},
+				"south": {"uv": [0, 0, 8, 8], "texture": "#0"},
+				"west": {"uv": [0, 0, 8, 8], "texture": "#1"},
+				"up": {"uv": [0, 0, 8, 8], "texture": "#5"},
+				"down": {"uv": [0, 0, 8, 8], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Tall",
+			"from": [4, 0, 0],
+			"to": [12, 16, 4],
+			"faces": {
+				"north": {"uv": [4, 0, 12, 16], "texture": "#2"},
+				"east": {"uv": [0, 0, 4, 16], "texture": "#3"},
+				"south": {"uv": [4, 0, 12, 16], "texture": "#2"},
+				"west": {"uv": [4, 0, 0, 16], "texture": "#3"},
+				"up": {"uv": [0, 0, 8, 4], "texture": "#4"},
+				"down": {"uv": [0, 0, 8, 4], "texture": "#4"}
+			}
+		}
+	]
+}

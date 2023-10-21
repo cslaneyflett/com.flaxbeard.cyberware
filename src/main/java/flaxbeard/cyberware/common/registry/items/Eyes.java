@@ -5,6 +5,7 @@ import flaxbeard.cyberware.common.item.ItemCybereyes;
 import flaxbeard.cyberware.common.item.ItemEyeUpgrade;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties.Rarity;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
@@ -56,16 +57,16 @@ public class Eyes extends ItemRegistry
 
 	private static RegistryObject<Item> eyeUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemCybereyeUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemCybereyeUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 
 	private static RegistryObject<Item> eyeUpgrade2(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemEyeUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemEyeUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 
 	private static RegistryObject<Item> eyes(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemCybereyes(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemCybereyes(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 }

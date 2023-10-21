@@ -1,0 +1,26 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"textures": {
+		"0": "cyberware:block/toolbox_back",
+		"1": "cyberware:block/toolbox_side",
+		"2": "cyberware:block/toolbox_front",
+		"3": "cyberware:block/toolbox_top",
+		"4": "cyberware:block/toolbox_bottom"
+	},
+	"elements": [
+		{
+			"name": "Cube",
+			"from": [1, 0, 4],
+			"to": [15, 10, 12],
+			"faces": {
+				"north": {"uv": [1, 0, 15, 10], "texture": "#0"},
+				"east": {"uv": [0, 0, 8, 10], "texture": "#1"},
+				"south": {"uv": [0, 0, 14, 10], "texture": "#2"},
+				"west": {"uv": [0, 0, 8, 10], "texture": "#1"},
+				"up": {"uv": [0, 0, 14, 8], "texture": "#3"},
+				"down": {"uv": [0, 0, 14, 8], "texture": "#4"}
+			}
+		}
+	]
+}

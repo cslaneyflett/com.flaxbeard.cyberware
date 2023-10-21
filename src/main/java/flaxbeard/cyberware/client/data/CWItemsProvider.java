@@ -23,9 +23,12 @@ public class CWItemsProvider extends ItemModelProvider
 	@Override
 	protected void registerModels()
 	{
+		basicItem(CWBlockItems.ENGINEERING_TABLE.get());
+		basicItem(CWBlockItems.SURGERY_CHAMBER.get());
+
 		// they are all basic :)
 		for (RegistryObject<Item> item: CWItems.ITEMS.getEntries()) {
-			this.basicItem(item.get());
+			basicItem(item.get());
 		}
 
 		// TODO scavenged textures?

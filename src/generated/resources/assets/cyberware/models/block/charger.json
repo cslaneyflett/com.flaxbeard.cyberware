@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_top",
+  "textures": {
+    "side": "cyberware:block/charger_side",
+    "top": "cyberware:block/charger_top"
+  }
+}

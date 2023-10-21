@@ -4,6 +4,7 @@ import flaxbeard.cyberware.common.item.ItemArmUpgrade;
 import flaxbeard.cyberware.common.item.ItemHandUpgrade;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties.Rarity;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
@@ -43,11 +44,11 @@ public class ArmUpgrades extends ItemRegistry
 
 	private static RegistryObject<ItemArmUpgrade> armUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemArmUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemArmUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 
 	private static RegistryObject<ItemHandUpgrade> handUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemHandUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemHandUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 }

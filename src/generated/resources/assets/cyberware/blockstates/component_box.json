@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=east,waterlogged=false": {
+      "model": "cyberware:block/toolbox",
+      "y": 90
+    },
+    "facing=east,waterlogged=true": {
+      "model": "cyberware:block/toolbox",
+      "y": 90
+    },
+    "facing=north,waterlogged=false": {
+      "model": "cyberware:block/toolbox"
+    },
+    "facing=north,waterlogged=true": {
+      "model": "cyberware:block/toolbox"
+    },
+    "facing=south,waterlogged=false": {
+      "model": "cyberware:block/toolbox",
+      "y": 180
+    },
+    "facing=south,waterlogged=true": {
+      "model": "cyberware:block/toolbox",
+      "y": 180
+    },
+    "facing=west,waterlogged=false": {
+      "model": "cyberware:block/toolbox",
+      "y": 270
+    },
+    "facing=west,waterlogged=true": {
+      "model": "cyberware:block/toolbox",
+      "y": 270
+    }
+  }
+}

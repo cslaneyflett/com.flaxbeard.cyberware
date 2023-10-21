@@ -4,8 +4,10 @@ import flaxbeard.cyberware.common.block.tile.TileEntityEngineeringTable;
 import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -31,6 +33,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -111,13 +114,24 @@ public class BlockEngineeringTable extends HorizontalDirectionalBlock implements
 
 		if (level.getBlockEntity(pos) instanceof TileEntityEngineeringTable blockEntity)
 		{
-			// TODO
-			// player.openGui(Cyberware.INSTANCE, 2, world, pos.getX(), pos.getY(), pos.getZ());
+			if (!level.isClientSide)
+			{
+				NetworkHooks.openScreen((ServerPlayer) player, state.getMenuProvider(level, pos));
+			}
 
-			return InteractionResult.SUCCESS;
+			return InteractionResult.sidedSuccess(level.isClientSide);
 		}
 
 		return InteractionResult.FAIL;
+	}
+
+	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
+	@Nullable
+	@Override
+	public MenuProvider getMenuProvider(@Nonnull BlockState pState, @Nonnull Level pLevel, @Nonnull BlockPos pPos)
+	{
+		// TODO
+		return super.getMenuProvider(pState, pLevel, pPos);
 	}
 
 	private static final VoxelShape SHAPE_SOUTH = Shapes.create(
@@ -139,7 +153,8 @@ public class BlockEngineeringTable extends HorizontalDirectionalBlock implements
 	public VoxelShape getShape(@Nonnull BlockState state, @Nonnull BlockGetter level, @Nonnull BlockPos pos,
 							   @Nonnull CollisionContext context)
 	{
-		return switch (state.getValue(FACING).getOpposite())
+		if (state.getValue(HALF) == DoubleBlockHalf.LOWER) return Shapes.block();
+		return switch (state.getValue(FACING))
 		{
 			case SOUTH -> SHAPE_SOUTH;
 			case WEST -> SHAPE_WEST;

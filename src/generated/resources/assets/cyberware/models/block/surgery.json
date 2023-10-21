@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_top",
+  "textures": {
+    "side": "cyberware:block/robosurgeon_screen",
+    "top": "cyberware:block/blank_machine"
+  }
+}

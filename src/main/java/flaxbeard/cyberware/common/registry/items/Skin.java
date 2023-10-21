@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.registry.items;
 import flaxbeard.cyberware.common.item.ItemSkinUpgrade;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties.Rarity;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
@@ -42,6 +43,6 @@ public class Skin extends ItemRegistry
 
 	private static RegistryObject<Item> skinUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemSkinUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemSkinUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 }

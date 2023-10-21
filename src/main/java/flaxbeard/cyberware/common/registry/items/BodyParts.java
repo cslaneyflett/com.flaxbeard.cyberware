@@ -4,6 +4,7 @@ import flaxbeard.cyberware.api.item.ICyberware.BodyPartEnum;
 import flaxbeard.cyberware.common.item.ItemBodyPart;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties.Rarity;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -36,7 +37,7 @@ public class BodyParts extends ItemRegistry
 	private static RegistryObject<Item> bodyPart(@Nonnull String name, @Nonnull BodyPartEnum part)
 	{
 		return register(name, () -> new ItemBodyPart(
-			new Item.Properties(), new CyberwareProperties(Rarity.NEVER, 0, 1),
+			new Item.Properties().tab(CWCreativeTabs.CYBERWARE), new CyberwareProperties(Rarity.NEVER, 0, 1),
 			part
 		));
 	}

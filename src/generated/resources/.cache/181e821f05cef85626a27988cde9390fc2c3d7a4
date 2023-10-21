@@ -1,4 +1,4 @@
-// 1.19.2	2023-10-14T21:09:00.9158517	Item Models: cyberware
+// 1.19.2	2023-10-21T20:35:35.835597	Item Models: cyberware
 b55739a61ccde2d3a52ff702a030851fd3983853 assets/cyberware/models/item/arm_upgrades_bow.json
 534281a73118b8656e62334188876134b939a599 assets/cyberware/models/item/blueprint.json
 8c103362a73b107de31d54074023ee846063d1ef assets/cyberware/models/item/body_part_arm_left.json
@@ -45,6 +45,7 @@ e7ddeb4b3453bd6a21be2c698bb36faf04e33e84 assets/cyberware/models/item/cyberheart
 5aa95d8660ce23de8824cc66fa946e0cd0dc4bf1 assets/cyberware/models/item/cyberlimbs_cyberleg_left.json
 5b8662e5c12721a34213daf0e68f3250867fdffe assets/cyberware/models/item/cyberlimbs_cyberleg_right.json
 351a302ae1f79efbe4ec0e7f167b644eb87fbb69 assets/cyberware/models/item/dense_battery.json
+7a32e9e57e609ac12bd64fa246fb1979715a5c88 assets/cyberware/models/item/engineering_table.json
 aaff1a1d0211022ef20501817b85860624f30936 assets/cyberware/models/item/exp_capsule.json
 1654ec5e8e9fabd807992136f5519e76f516a451 assets/cyberware/models/item/eye_upgrades_hudlens.json
 0fbb9b15b66d87d67c92f0acac6ff1d71e319753 assets/cyberware/models/item/foot_upgrades_aqua.json
@@ -75,4 +76,5 @@ bdc75504aa0cf331fed8f72c02d89f49663f8ec4 assets/cyberware/models/item/skin_upgra
 a51f573ea5638eb4a3ba2a65057a83c2ef04e1c1 assets/cyberware/models/item/skin_upgrades_immuno.json
 82b3a6ac32ed7184d59613e11ff3f31e3dd5d5ed assets/cyberware/models/item/skin_upgrades_solar_skin.json
 bb2133d98d0c19aa4bddf84ac7af45b8c7ffd283 assets/cyberware/models/item/skin_upgrades_subdermal_spikes.json
+15a392ac2a00cc682d9de9f7afc49f9b8d1f7379 assets/cyberware/models/item/surgery_chamber.json
 8286a64885b33a0d07825f36b61775368a489251 assets/cyberware/models/item/trench_coat.json

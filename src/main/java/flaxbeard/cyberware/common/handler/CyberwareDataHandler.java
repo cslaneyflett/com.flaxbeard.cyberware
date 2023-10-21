@@ -192,8 +192,6 @@ public class CyberwareDataHandler
 			}
 		}
 
-		Cyberware.logger.debug("what the fuck: " + CyberwareConfig.INSTANCE.MOBS_ENABLE_CYBER_ZOMBIES.get());
-
 		if (
 			CyberwareConfig.INSTANCE.MOBS_ENABLE_CYBER_ZOMBIES.get()
 			&& !(entityLiving instanceof EntityCyberZombie)

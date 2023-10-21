@@ -5,6 +5,7 @@ import flaxbeard.cyberware.common.item.ItemDenseBattery;
 import flaxbeard.cyberware.common.item.ItemLowerOrgansUpgrade;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties.Rarity;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
@@ -51,16 +52,16 @@ public class LowerOrgans extends ItemRegistry
 
 	private static RegistryObject<ItemDenseBattery> batteryDense(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemDenseBattery(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemDenseBattery(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 
 	private static RegistryObject<ItemCreativeBattery> batteryCreative(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemCreativeBattery(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemCreativeBattery(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 
 	private static RegistryObject<ItemLowerOrgansUpgrade> lowerOrgansUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemLowerOrgansUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemLowerOrgansUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 }

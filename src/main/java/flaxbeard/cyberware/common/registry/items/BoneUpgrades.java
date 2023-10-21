@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.registry.items;
 import flaxbeard.cyberware.common.item.ItemBoneUpgrade;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties.Rarity;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
@@ -52,6 +53,6 @@ public class BoneUpgrades extends ItemRegistry
 
 	private static RegistryObject<ItemBoneUpgrade> boneUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemBoneUpgrade(new Item.Properties(), props.get()));
+		return register(name, () -> new ItemBoneUpgrade(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get()));
 	}
 }

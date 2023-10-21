@@ -33,6 +33,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class BlockSurgeryChamber extends HorizontalDirectionalBlock implements EntityBlock
 {
@@ -150,14 +154,33 @@ public class BlockSurgeryChamber extends HorizontalDirectionalBlock implements E
 	private static final VoxelShape SHAPE_BOTTOM = Shapes.create(
 		new AABB(0F, 0F, 0F, 1F, 1F / 16F, 1F)
 	);
-	private static final VoxelShape SHAPE_TOP_SOUTH = Shapes.join(SHAPE_TOP, SHAPE_SOUTH, BooleanOp.OR);
-	private static final VoxelShape SHAPE_TOP_NORTH = Shapes.join(SHAPE_TOP, SHAPE_NORTH, BooleanOp.OR);
-	private static final VoxelShape SHAPE_TOP_EAST = Shapes.join(SHAPE_TOP, SHAPE_EAST, BooleanOp.OR);
-	private static final VoxelShape SHAPE_TOP_WEST = Shapes.join(SHAPE_TOP, SHAPE_WEST, BooleanOp.OR);
-	private static final VoxelShape SHAPE_BOTTOM_SOUTH = Shapes.join(SHAPE_BOTTOM, SHAPE_SOUTH, BooleanOp.OR);
-	private static final VoxelShape SHAPE_BOTTOM_NORTH = Shapes.join(SHAPE_BOTTOM, SHAPE_NORTH, BooleanOp.OR);
-	private static final VoxelShape SHAPE_BOTTOM_EAST = Shapes.join(SHAPE_BOTTOM, SHAPE_EAST, BooleanOp.OR);
-	private static final VoxelShape SHAPE_BOTTOM_WEST = Shapes.join(SHAPE_BOTTOM, SHAPE_WEST, BooleanOp.OR);
+	private static final VoxelShape SHAPE_TOP_SOUTH = mergeAllButFaceToHalf(DoubleBlockHalf.UPPER, Direction.SOUTH);
+	private static final VoxelShape SHAPE_TOP_NORTH = mergeAllButFaceToHalf(DoubleBlockHalf.UPPER, Direction.NORTH);
+	private static final VoxelShape SHAPE_TOP_EAST = mergeAllButFaceToHalf(DoubleBlockHalf.UPPER, Direction.EAST);
+	private static final VoxelShape SHAPE_TOP_WEST = mergeAllButFaceToHalf(DoubleBlockHalf.UPPER, Direction.WEST);
+	private static final VoxelShape SHAPE_BOTTOM_SOUTH = mergeAllButFaceToHalf(DoubleBlockHalf.LOWER, Direction.SOUTH);
+	private static final VoxelShape SHAPE_BOTTOM_NORTH = mergeAllButFaceToHalf(DoubleBlockHalf.LOWER, Direction.NORTH);
+	private static final VoxelShape SHAPE_BOTTOM_EAST = mergeAllButFaceToHalf(DoubleBlockHalf.LOWER, Direction.EAST);
+	private static final VoxelShape SHAPE_BOTTOM_WEST = mergeAllButFaceToHalf(DoubleBlockHalf.LOWER, Direction.WEST);
+
+	private static VoxelShape mergeAllButFaceToHalf(DoubleBlockHalf half, Direction face)
+	{
+		List<VoxelShape> merge = switch (face)
+		{
+			case SOUTH -> Arrays.asList(SHAPE_NORTH, SHAPE_EAST, SHAPE_WEST);
+			case WEST  -> Arrays.asList(SHAPE_NORTH, SHAPE_EAST, SHAPE_SOUTH);
+			case EAST  -> Arrays.asList(SHAPE_NORTH, SHAPE_SOUTH, SHAPE_WEST);
+			default    -> Arrays.asList(SHAPE_SOUTH, SHAPE_EAST, SHAPE_WEST);
+		};
+
+		var shape = half == DoubleBlockHalf.UPPER ? SHAPE_TOP : SHAPE_BOTTOM;
+		for (var next : merge) {
+			shape = Shapes.join(shape, next, BooleanOp.OR);
+		}
+
+		return shape;
+	}
+
 
 	@SuppressWarnings("deprecation") // Only deprecated for call, not override.
 	@Nonnull

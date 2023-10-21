@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.registry.items;
 import flaxbeard.cyberware.api.item.ICyberware.BodyPartEnum;
 import flaxbeard.cyberware.common.item.ItemCyberlimb;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
+import flaxbeard.cyberware.common.registry.CWCreativeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.RegistryObject;
@@ -58,6 +59,6 @@ public class CyberLimbs extends ItemRegistry
 
 	private static RegistryObject<ItemCyberlimb> cyberLimb(@Nonnull String name, @Nonnull BodyPartEnum slot, @Nonnull Supplier<CyberwareProperties> props)
 	{
-		return register(name, () -> new ItemCyberlimb(new Item.Properties(), props.get(), slot));
+		return register(name, () -> new ItemCyberlimb(new Item.Properties().tab(CWCreativeTabs.CYBERWARE), props.get(), slot));
 	}
 }
