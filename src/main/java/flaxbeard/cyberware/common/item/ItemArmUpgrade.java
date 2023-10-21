@@ -35,9 +35,9 @@ public class ItemArmUpgrade extends ItemCyberware
 		return l1;
 	}
 
-	public static class EventHandler
+	public static class ItemArmUpgradeEventHandler
 	{
-		public static final ItemCyberlimb.EventHandler INSTANCE = new ItemCyberlimb.EventHandler();
+		public static final ItemCyberlimb.ItemCyberlimbEventHandler INSTANCE = new ItemCyberlimb.ItemCyberlimbEventHandler();
 
 		@SubscribeEvent
 		public void useBow(LivingEntityUseItemEvent.Tick event)

@@ -147,9 +147,9 @@ public class VanillaWares
 			return false;
 		}
 
-		public static class EventHandler
+		public static class VanillaWaresEventHandler
 		{
-			public static final EventHandler INSTANCE = new EventHandler();
+			public static final VanillaWaresEventHandler INSTANCE = new VanillaWaresEventHandler();
 
 			@SubscribeEvent
 			public void handleSpiderNightVision(CyberwareUpdateEvent event)

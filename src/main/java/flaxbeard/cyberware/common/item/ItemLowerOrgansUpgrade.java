@@ -30,142 +30,6 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 		super(itemProperties, cyberwareProperties, BodyRegionEnum.LOWER_ORGANS);
 	}
 
-	private static final Map<UUID, Collection<MobEffectInstance>> mapPotions = new HashMap<>();
-
-	@SubscribeEvent
-	public void handleEatFoodTick(LivingEntityUseItemEvent.Tick event)
-	{
-		LivingEntity entityLivingBase = event.getEntity();
-		if (!(entityLivingBase instanceof Player entityPlayer)) return;
-
-		ItemStack stack = event.getItem();
-		if (!stack.isEmpty() && (
-			stack.getItem().getUseAnimation(stack) == UseAnim.EAT ||
-				stack.getItem().getUseAnimation(stack) == UseAnim.DRINK))
-		{
-			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-			if (cyberwareUserData != null
-				&& cyberwareUserData.isCyberwareInstalled(LowerOrgans.LIVER_FILTER.get().getDefaultInstance()))
-			{
-				mapPotions.put(entityPlayer.getUUID(), new ArrayList<>(entityPlayer.getActiveEffects()));
-			}
-		}
-	}
-
-	@SubscribeEvent
-	public void handleEatFoodEnd(LivingEntityUseItemEvent.Finish event)
-	{
-		LivingEntity entityLivingBase = event.getEntity();
-		if (!(entityLivingBase instanceof Player entityPlayer)) return;
-
-		ItemStack stack = event.getItem();
-		if (!stack.isEmpty()
-			&& (stack.getItem().getUseAnimation(stack) == UseAnim.EAT
-			|| stack.getItem().getUseAnimation(stack) == UseAnim.DRINK))
-		{
-			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
-
-			if (cyberwareUserData != null
-				&& cyberwareUserData.isCyberwareInstalled(LowerOrgans.LIVER_FILTER.get().getDefaultInstance()))
-			{
-				Collection<MobEffectInstance> potionEffectsRemoved = new ArrayList<>(entityPlayer.getActiveEffects());
-				for (MobEffectInstance potionEffect : potionEffectsRemoved)
-				{
-					if (!potionEffect.getEffect().isBeneficial())
-					{
-						entityPlayer.removeEffect(potionEffect.getEffect());
-					}
-				}
-
-				Collection<MobEffectInstance> potionEffectsToAdd = mapPotions.get(entityPlayer.getUUID());
-				if (potionEffectsToAdd != null)
-				{
-					for (MobEffectInstance potionEffectToAdd : potionEffectsToAdd)
-					{
-						for (MobEffectInstance potionEffectRemoved : potionEffectsRemoved)
-						{
-							if (potionEffectRemoved.getEffect() == potionEffectToAdd.getEffect())
-							{
-								entityPlayer.addEffect(potionEffectToAdd);
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	@SubscribeEvent
-	public void handleLivingUpdate(CyberwareUpdateEvent event)
-	{
-		LivingEntity entityLivingBase = event.getEntity();
-		if (entityLivingBase.tickCount % 20 != 0) return;
-
-		ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
-
-		ItemStack itemStackMetabolicGenerator =
-			cyberwareUserData.getCyberware(LowerOrgans.METABOLIC.get().getDefaultInstance());
-		if (!itemStackMetabolicGenerator.isEmpty()
-			&& EnableDisableHelper.isEnabled(itemStackMetabolicGenerator)
-			&& !cyberwareUserData.isAtCapacity(
-			itemStackMetabolicGenerator,
-			getPowerProduction(itemStackMetabolicGenerator)
-		))
-		{
-			if (entityLivingBase instanceof Player entityPlayer)
-			{
-				if (entityPlayer.getFoodData().getFoodLevel() > 0
-					|| entityPlayer.isCreative())
-				{
-					int toRemove = getTicksTilRemove(itemStackMetabolicGenerator);
-					if (!entityPlayer.isCreative() && toRemove <= 0)
-					{
-						entityPlayer.getFoodData().addExhaustion(6.0F);
-						toRemove = LibConstants.METABOLIC_USES;
-					} else if (toRemove > 0)
-					{
-						toRemove--;
-					}
-					CyberwareAPI.getCyberwareNBT(itemStackMetabolicGenerator).putInt("toRemove", toRemove);
-
-					cyberwareUserData.addPower(
-						getPowerProduction(itemStackMetabolicGenerator),
-						itemStackMetabolicGenerator
-					);
-				}
-			} else
-			{
-				cyberwareUserData.addPower(
-					getPowerProduction(itemStackMetabolicGenerator) / 10,
-					itemStackMetabolicGenerator
-				);
-			}
-		}
-
-		ItemStack itemStackAdrenalinePump = cyberwareUserData.getCyberware(LowerOrgans.ADRENALINE.get().getDefaultInstance());
-		if (!itemStackAdrenalinePump.isEmpty())
-		{
-			boolean wasBelow = wasBelow(itemStackAdrenalinePump);
-			boolean isBelow = false;
-			if (entityLivingBase.getMaxHealth() > 8 && entityLivingBase.getHealth() < 8)
-			{
-				isBelow = true;
-
-				if (!wasBelow
-					&& cyberwareUserData.usePower(itemStackAdrenalinePump,
-					this.getPowerConsumption(itemStackAdrenalinePump), false
-				))
-				{
-					entityLivingBase.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 600, 0, true, false));
-					entityLivingBase.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 0, true, false));
-				}
-			}
-
-			CyberwareAPI.getCyberwareNBT(itemStackAdrenalinePump).putBoolean("wasBelow", isBelow);
-		}
-	}
-
 	private int getTicksTilRemove(ItemStack stack)
 	{
 		CompoundTag data = CyberwareAPI.getCyberwareNBT(stack);
@@ -256,5 +120,148 @@ public class ItemLowerOrgansUpgrade extends ItemCyberware implements IMenuItem
 	public float[] getColor(ItemStack stack)
 	{
 		return EnableDisableHelper.isEnabled(stack) ? f : null;
+	}
+
+	public static class ItemLowerOrgansUpgradeEventHandler
+	{
+		public static final ItemLowerOrgansUpgradeEventHandler INSTANCE = new ItemLowerOrgansUpgradeEventHandler();
+
+		private static final Map<UUID, Collection<MobEffectInstance>> mapPotions = new HashMap<>();
+
+		@SubscribeEvent
+		public void handleEatFoodTick(LivingEntityUseItemEvent.Tick event)
+		{
+			LivingEntity entityLivingBase = event.getEntity();
+			if (!(entityLivingBase instanceof Player entityPlayer)) return;
+
+			ItemStack stack = event.getItem();
+			if (!stack.isEmpty() && (
+				stack.getItem().getUseAnimation(stack) == UseAnim.EAT ||
+					stack.getItem().getUseAnimation(stack) == UseAnim.DRINK))
+			{
+				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+				if (cyberwareUserData != null
+					&& cyberwareUserData.isCyberwareInstalled(LowerOrgans.LIVER_FILTER.get().getDefaultInstance()))
+				{
+					mapPotions.put(entityPlayer.getUUID(), new ArrayList<>(entityPlayer.getActiveEffects()));
+				}
+			}
+		}
+
+		@SubscribeEvent
+		public void handleEatFoodEnd(LivingEntityUseItemEvent.Finish event)
+		{
+			LivingEntity entityLivingBase = event.getEntity();
+			if (!(entityLivingBase instanceof Player entityPlayer)) return;
+
+			ItemStack stack = event.getItem();
+			if (!stack.isEmpty()
+				&& (stack.getItem().getUseAnimation(stack) == UseAnim.EAT
+				|| stack.getItem().getUseAnimation(stack) == UseAnim.DRINK))
+			{
+				ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityPlayer);
+
+				if (cyberwareUserData != null
+					&& cyberwareUserData.isCyberwareInstalled(LowerOrgans.LIVER_FILTER.get().getDefaultInstance()))
+				{
+					Collection<MobEffectInstance> potionEffectsRemoved = new ArrayList<>(entityPlayer.getActiveEffects());
+					for (MobEffectInstance potionEffect : potionEffectsRemoved)
+					{
+						if (!potionEffect.getEffect().isBeneficial())
+						{
+							entityPlayer.removeEffect(potionEffect.getEffect());
+						}
+					}
+
+					Collection<MobEffectInstance> potionEffectsToAdd = mapPotions.get(entityPlayer.getUUID());
+					if (potionEffectsToAdd != null)
+					{
+						for (MobEffectInstance potionEffectToAdd : potionEffectsToAdd)
+						{
+							for (MobEffectInstance potionEffectRemoved : potionEffectsRemoved)
+							{
+								if (potionEffectRemoved.getEffect() == potionEffectToAdd.getEffect())
+								{
+									entityPlayer.addEffect(potionEffectToAdd);
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		@SubscribeEvent
+		public void handleLivingUpdate(CyberwareUpdateEvent event)
+		{
+			LivingEntity entityLivingBase = event.getEntity();
+			if (entityLivingBase.tickCount % 20 != 0) return;
+
+			ICyberwareUserData cyberwareUserData = event.getCyberwareUserData();
+
+			var metabolicItem = LowerOrgans.METABOLIC.get();
+			ItemStack itemStackMetabolicGenerator =
+				cyberwareUserData.getCyberware(metabolicItem.getDefaultInstance());
+			if (!itemStackMetabolicGenerator.isEmpty()
+				&& EnableDisableHelper.isEnabled(itemStackMetabolicGenerator)
+				&& !cyberwareUserData.isAtCapacity(
+				itemStackMetabolicGenerator,
+				metabolicItem.getPowerProduction(itemStackMetabolicGenerator)
+			))
+			{
+				if (entityLivingBase instanceof Player entityPlayer)
+				{
+					if (entityPlayer.getFoodData().getFoodLevel() > 0
+						|| entityPlayer.isCreative())
+					{
+						int toRemove = metabolicItem.getTicksTilRemove(itemStackMetabolicGenerator);
+						if (!entityPlayer.isCreative() && toRemove <= 0)
+						{
+							entityPlayer.getFoodData().addExhaustion(6.0F);
+							toRemove = LibConstants.METABOLIC_USES;
+						} else if (toRemove > 0)
+						{
+							toRemove--;
+						}
+						CyberwareAPI.getCyberwareNBT(itemStackMetabolicGenerator).putInt("toRemove", toRemove);
+
+						cyberwareUserData.addPower(
+							metabolicItem.getPowerProduction(itemStackMetabolicGenerator),
+							itemStackMetabolicGenerator
+						);
+					}
+				} else
+				{
+					cyberwareUserData.addPower(
+						metabolicItem.getPowerProduction(itemStackMetabolicGenerator) / 10,
+						itemStackMetabolicGenerator
+					);
+				}
+			}
+
+			var adrenalineItem = LowerOrgans.ADRENALINE.get();
+			ItemStack itemStackAdrenalinePump = cyberwareUserData.getCyberware(adrenalineItem.getDefaultInstance());
+			if (!itemStackAdrenalinePump.isEmpty())
+			{
+				boolean wasBelow = adrenalineItem.wasBelow(itemStackAdrenalinePump);
+				boolean isBelow = false;
+				if (entityLivingBase.getMaxHealth() > 8 && entityLivingBase.getHealth() < 8)
+				{
+					isBelow = true;
+
+					if (!wasBelow
+						&& cyberwareUserData.usePower(itemStackAdrenalinePump,
+						adrenalineItem.getPowerConsumption(itemStackAdrenalinePump), false
+					))
+					{
+						entityLivingBase.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 600, 0, true, false));
+						entityLivingBase.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 0, true, false));
+					}
+				}
+
+				CyberwareAPI.getCyberwareNBT(itemStackAdrenalinePump).putBoolean("wasBelow", isBelow);
+			}
+		}
 	}
 }

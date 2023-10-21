@@ -156,9 +156,9 @@ public class ItemMuscleUpgrade extends ItemCyberware implements IMenuItem
 			&& CyberwareAPI.getCyberware(other).isEssential(other);
 	}
 
-	public static class EventHandler
+	public static class ItemMuscleUpgradeEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemMuscleUpgradeEventHandler INSTANCE = new ItemMuscleUpgradeEventHandler();
 
 		@SubscribeEvent
 		public void handleHurt(LivingHurtEvent event)

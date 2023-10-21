@@ -36,7 +36,7 @@ public interface ICyberwareUserData
 
 	void resetBuffer();
 
-	void addPower(int amount, ItemStack inputter);
+	void addPower(int amount, ItemStack provider);
 
 	boolean isAtCapacity(ItemStack stack);
 

@@ -3,6 +3,7 @@ package flaxbeard.cyberware.common.block;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.common.block.tile.TileEntitySurgery;
 import flaxbeard.cyberware.common.config.CyberwareConfig;
+import flaxbeard.cyberware.common.registry.CWAttributes;
 import flaxbeard.cyberware.common.registry.CWBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -54,7 +55,7 @@ public class BlockSurgery extends Block implements EntityBlock
 		if (level.getBlockEntity(pos) instanceof TileEntitySurgery blockEntity)
 		{
 			// Ensure the Base Tolerance Attribute has been updated for any Config Changes.
-			Objects.requireNonNull(player.getAttribute(CyberwareAPI.TOLERANCE_ATTR))
+			Objects.requireNonNull(player.getAttribute(CWAttributes.TOLERANCE.get()))
 				.setBaseValue(CyberwareConfig.INSTANCE.ESSENCE.get());
 
 			var cyberwareUserData = CyberwareAPI.getCapabilityOrNull(player);

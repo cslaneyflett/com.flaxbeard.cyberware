@@ -1,6 +1,7 @@
 package flaxbeard.cyberware.common.item;
 
 import com.google.common.collect.HashMultimap;
+import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.ICyberwareUserData;
 import flaxbeard.cyberware.common.item.base.CyberwareProperties;
@@ -71,9 +72,9 @@ public class ItemBoneUpgrade extends ItemCyberware
 		return other.getItem() == this;
 	}
 
-	public static class EventHandler
+	public static class ItemBoneUpgradeEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemBoneUpgradeEventHandler INSTANCE = new ItemBoneUpgradeEventHandler();
 
 		@SubscribeEvent
 		public void handleJoinWorld(EntityJoinLevelEvent event)
@@ -84,8 +85,9 @@ public class ItemBoneUpgrade extends ItemCyberware
 			ICyberwareUserData cyberwareUserData = CyberwareAPI.getCapabilityOrNull(entityLivingBase);
 			if (cyberwareUserData != null)
 			{
-				var itemStackMetalLacing = cyberwareUserData.getCyberware(BoneUpgrades.LACING.get().getDefaultInstance());
-				var lacingItem = (ItemBoneUpgrade) itemStackMetalLacing.getItem();
+				var lacingItem = BoneUpgrades.LACING.get();
+				var itemStackMetalLacing = cyberwareUserData.getCyberware(lacingItem.getDefaultInstance());
+
 				if (!itemStackMetalLacing.isEmpty())
 				{
 					lacingItem.onAdded(entityLivingBase, cyberwareUserData.getCyberware(itemStackMetalLacing));

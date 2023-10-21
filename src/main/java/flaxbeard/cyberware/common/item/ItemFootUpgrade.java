@@ -79,9 +79,9 @@ public class ItemFootUpgrade extends ItemCyberware implements IMenuItem
 		return EnableDisableHelper.isEnabled(stack) ? f : null;
 	}
 
-	public static class EventHandler
+	public static class ItemFootUpgradeEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemFootUpgradeEventHandler INSTANCE = new ItemFootUpgradeEventHandler();
 
 		@SubscribeEvent
 		public void handleHorseMove(LivingEvent event)

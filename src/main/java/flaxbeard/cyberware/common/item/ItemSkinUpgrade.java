@@ -76,9 +76,9 @@ public class ItemSkinUpgrade extends ItemCyberware
 		}
 	}
 
-	public static class EventHandler
+	public static class ItemSkinUpgradeEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemSkinUpgradeEventHandler INSTANCE = new ItemSkinUpgradeEventHandler();
 
 		@SubscribeEvent
 		public void handleLivingUpdate(CyberwareUpdateEvent event)

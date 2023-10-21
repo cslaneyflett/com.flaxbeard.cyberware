@@ -1,5 +1,6 @@
 package flaxbeard.cyberware.api;
 
+import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.hud.UpdateHudColorPacket;
 import flaxbeard.cyberware.api.item.ICyberware;
 import flaxbeard.cyberware.api.item.ICyberware.Quality;
@@ -58,13 +59,6 @@ public final class CyberwareAPI
 		CapabilityManager.get(new CapabilityToken<>()
 		{
 		});
-	/**
-	 * Maximum Tolerance, per-player
-	 */
-	public static final Attribute TOLERANCE_ATTR = new RangedAttribute("cyberware.tolerance",
-		CyberwareConfig.INSTANCE.ESSENCE.get(), 0.0F,
-		Double.MAX_VALUE
-	);
 	public static Map<ItemStack, ICyberware> linkedWare = new HashMap<>();
 	public static SimpleChannel PACKET_HANDLER;
 
@@ -281,7 +275,7 @@ public final class CyberwareAPI
 	}
 
 	/**
-	 * Returns an instance of ICyberware linked with an itemstack, usually
+	 * Returns an instance of ICyberware linked with an ItemStack, usually
 	 * the item which extends ICyberware, though it may be a standalone
 	 * ICyberware-implementing object
 	 *
@@ -301,7 +295,7 @@ public final class CyberwareAPI
 			}
 		}
 
-		throw new RuntimeException("Cannot call getCyberware on a non-cyberware item!");
+		throw new RuntimeException("Cannot call getCyberware on a non-cyberware item! " + stack + " : " + linkedWare);
 	}
 
 	/**
@@ -351,7 +345,7 @@ public final class CyberwareAPI
 		{
 			ItemStack entryKey = entry.getKey();
 
-			if (CyberwareItemMetadata.matchesOrWildcard(entryKey, key))
+			if (entryKey.is(key.getItem()))
 			{
 				return entry.getValue();
 			}

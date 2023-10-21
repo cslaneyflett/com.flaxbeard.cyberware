@@ -71,7 +71,7 @@ public class CyberwareConfig
 		// INT "Vanilla Zombie = 100, Enderman = 10, Witch = 5"
 		MOBS_CYBER_ZOMBIE_WEIGHT = builder
 			.comment("CyberZombies spawning weight")
-			.defineInRange("MOBS_ENABLE_CYBER_ZOMBIES", DefaultConfig.MOBS_CYBER_ZOMBIE_WEIGHT, 0,
+			.defineInRange("MOBS_CYBER_ZOMBIE_WEIGHT", DefaultConfig.MOBS_CYBER_ZOMBIE_WEIGHT, 0,
 				Integer.MAX_VALUE
 			)
 		;

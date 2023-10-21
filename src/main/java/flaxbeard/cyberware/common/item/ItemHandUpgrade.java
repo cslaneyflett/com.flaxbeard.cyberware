@@ -141,9 +141,9 @@ public class ItemHandUpgrade extends ItemCyberware implements IMenuItem
 		entityLivingBase.getAttributes().removeAttributeModifiers(multimapClawsDamageAttribute);
 	}
 
-	public static class EventHandler
+	public static class ItemHandUpgradeEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemHandUpgradeEventHandler INSTANCE = new ItemHandUpgradeEventHandler();
 
 		private ItemStack getItemStackTool()
 		{

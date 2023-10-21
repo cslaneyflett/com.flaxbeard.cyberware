@@ -12,6 +12,7 @@ import flaxbeard.cyberware.common.config.StartingStacksConfig;
 import flaxbeard.cyberware.common.lib.LibConstants;
 import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.misc.NNLUtil;
+import flaxbeard.cyberware.common.registry.CWAttributes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
@@ -32,10 +33,7 @@ import net.minecraftforge.fml.DistExecutor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CyberwareUserDataImpl implements ICyberwareUserData
 {
@@ -65,7 +63,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 	public CyberwareUserDataImpl()
 	{
 		hudData = new CompoundTag();
-		for (BodyRegionEnum slot : BodyRegionEnum.values())
+		for (BodyRegionEnum ignoredSlot : BodyRegionEnum.values())
 		{
 			NonNullList<ItemStack> nnlCyberwaresInSlot = NonNullList.create();
 			for (int indexSlot = 0; indexSlot < LibConstants.WARE_PER_SLOT; indexSlot++)
@@ -177,7 +175,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 	}
 
 	@Override
-	public void addPower(int amount, ItemStack inputter)
+	public void addPower(int amount, ItemStack provider)
 	{
 		if (amount < 0)
 		{
@@ -185,15 +183,15 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 		}
 
 		ItemStack stack = ItemStack.EMPTY;
-		if (!inputter.isEmpty())
+		if (!provider.isEmpty())
 		{
-			if (inputter.hasTag()
-				|| inputter.getCount() != 1)
+			if (provider.hasTag()
+				|| provider.getCount() != 1)
 			{
-				stack = new ItemStack(inputter.getItem(), 1, CyberwareItemMetadata.copy(inputter));
+				stack = new ItemStack(provider.getItem(), 1, CyberwareItemMetadata.copy(provider));
 			} else
 			{
-				stack = inputter;
+				stack = provider;
 			}
 		}
 
@@ -600,7 +598,7 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 		power_stored = tagCompound.getInt("storedPower");
 		if (tagCompound.contains("essence"))
 		{
-			missingEssence = getMaxEssence() - tagCompound.getInt("essence");
+			missingEssence = _getMaxEssence() - tagCompound.getInt("essence");
 		} else
 		{
 			missingEssence = tagCompound.getInt("missingEssence");
@@ -674,12 +672,11 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 		public static final ResourceLocation NAME = new ResourceLocation(Cyberware.MODID, "cyberware");
 		private final LazyOptional<ICyberwareUserData> cyberwareUserData = LazyOptional.of(CyberwareUserDataImpl::new);
 
-		// TODO?
-		//		@Override
-		//		public boolean hasCapability(@Nonnull Capability<?> capability, Direction facing)
-		//		{
-		//			return capability == CyberwareAPI.CYBERWARE_CAPABILITY;
-		//		}
+		//@Override
+		//public boolean hasCapability(@Nonnull Capability<?> capability, Direction facing)
+		//{
+		//	return capability == CyberwareAPI.CYBERWARE_CAPABILITY;
+		//}
 
 		@Override
 		public @Nonnull <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability,
@@ -750,12 +747,17 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 	@Deprecated
 	public int getEssence()
 	{
-		return getMaxEssence() - missingEssence;
+		return _getMaxEssence() - missingEssence;
 	}
 
 	@Override
 	@Deprecated
 	public int getMaxEssence()
+	{
+		return _getMaxEssence();
+	}
+
+	private int _getMaxEssence()
 	{
 		return CyberwareConfig.INSTANCE.ESSENCE.get();
 	}
@@ -764,25 +766,25 @@ public class CyberwareUserDataImpl implements ICyberwareUserData
 	@Deprecated
 	public void setEssence(int essence)
 	{
-		missingEssence = getMaxEssence() - essence;
+		missingEssence = _getMaxEssence() - essence;
 	}
 
 	@Override
-	public int getMaxTolerance(@Nonnull LivingEntity LivingEntity)
+	public int getMaxTolerance(@Nonnull LivingEntity livingEntity)
 	{
-		return (int) LivingEntity.getAttributes().getInstance(CyberwareAPI.TOLERANCE_ATTR).getValue();
+		return (int) Objects.requireNonNull(livingEntity.getAttributes().getInstance(CWAttributes.TOLERANCE.get())).getValue();
 	}
 
 	@Override
-	public int getTolerance(@Nonnull LivingEntity LivingEntity)
+	public int getTolerance(@Nonnull LivingEntity livingEntity)
 	{
-		return getMaxTolerance(LivingEntity) - missingEssence;
+		return getMaxTolerance(livingEntity) - missingEssence;
 	}
 
 	@Override
-	public void setTolerance(@Nonnull LivingEntity LivingEntity, int amount)
+	public void setTolerance(@Nonnull LivingEntity livingEntity, int amount)
 	{
-		missingEssence = getMaxTolerance(LivingEntity) - amount;
+		missingEssence = getMaxTolerance(livingEntity) - amount;
 	}
 
 	@Override

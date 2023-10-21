@@ -105,9 +105,8 @@ public class ItemCyberware extends Item implements ICyberware, ICyberwareTabItem
 
 	public List<String> getStackDesc(ItemStack stack)
 	{
-		String[] toReturnArray = I18n.get(
-			this.cyberwareProperties.tooltip(CyberwareProperties.TooltipType.MAIN)
-		).split("\\\\n");
+		var raw = this.cyberwareProperties.tooltip(CyberwareProperties.TooltipType.MAIN);
+		String[] toReturnArray = raw != null ? I18n.get(raw).split("\\\\n") : new String[]{};
 		List<String> toReturn = new ArrayList<>(Arrays.asList(toReturnArray));
 
 		if (!toReturn.isEmpty() && toReturn.get(0).isEmpty())

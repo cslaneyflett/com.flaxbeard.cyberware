@@ -43,9 +43,9 @@ public class ItemLegUpgrade extends ItemCyberware
 		return stack.is(LegUpgrades.JUMP_BOOST.get()) ? LibConstants.JUMPBOOST_CONSUMPTION : 0;
 	}
 
-	public static class EventHandler
+	public static class ItemLegUpgradeEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemLegUpgradeEventHandler INSTANCE = new ItemLegUpgradeEventHandler();
 
 		@SubscribeEvent
 		public void playerJumps(LivingEvent.LivingJumpEvent event)

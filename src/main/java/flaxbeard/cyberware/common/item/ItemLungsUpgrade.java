@@ -66,9 +66,9 @@ public class ItemLungsUpgrade extends ItemCyberware
 		return super.getUnmodifiedEssenceCost(stack);
 	}
 
-	public static class EventHandler
+	public static class ItemLungsUpgradeEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemLungsUpgradeEventHandler INSTANCE = new ItemLungsUpgradeEventHandler();
 		// TODO: render
 		//	import net.minecraft.client.gui.ScaledResolution;
 		//	import net.minecraft.client.renderer.GlStateManager;

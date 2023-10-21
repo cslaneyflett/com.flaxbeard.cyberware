@@ -1,5 +1,6 @@
 package flaxbeard.cyberware.common.handler;
 
+import flaxbeard.cyberware.Cyberware;
 import flaxbeard.cyberware.api.CyberwareAPI;
 import flaxbeard.cyberware.api.CyberwareUserDataImpl;
 import flaxbeard.cyberware.api.ICyberwareUserData;
@@ -16,6 +17,7 @@ import flaxbeard.cyberware.common.misc.CyberwareItemMetadata;
 import flaxbeard.cyberware.common.misc.ZombieItem;
 import flaxbeard.cyberware.common.network.CyberwarePacketHandler;
 import flaxbeard.cyberware.common.network.CyberwareSyncPacket;
+import flaxbeard.cyberware.common.registry.CWAttributes;
 import flaxbeard.cyberware.common.registry.CWGameRules;
 import flaxbeard.cyberware.common.registry.items.Armors;
 import flaxbeard.cyberware.common.registry.items.LowerOrgans;
@@ -38,7 +40,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingSpawnEvent;
@@ -59,16 +61,6 @@ import java.util.Objects;
 public class CyberwareDataHandler
 {
 	public static final CyberwareDataHandler INSTANCE = new CyberwareDataHandler();
-
-	@SubscribeEvent
-	public void onEntityConstructed(EntityEvent.EntityConstructing event)
-	{
-		if (event.getEntity() instanceof LivingEntity entityLivingBase)
-		{
-			// TODO: registry?
-			//			entityLivingBase.getAttributes().registerAttribute(CyberwareAPI.TOLERANCE_ATTR);
-		}
-	}
 
 	@SubscribeEvent
 	public void worldLoad(LevelEvent.Load event)
@@ -200,7 +192,10 @@ public class CyberwareDataHandler
 			}
 		}
 
-		if (CyberwareConfig.INSTANCE.MOBS_ENABLE_CYBER_ZOMBIES.get()
+		Cyberware.logger.debug("what the fuck: " + CyberwareConfig.INSTANCE.MOBS_ENABLE_CYBER_ZOMBIES.get());
+
+		if (
+			CyberwareConfig.INSTANCE.MOBS_ENABLE_CYBER_ZOMBIES.get()
 			&& !(entityLiving instanceof EntityCyberZombie)
 			&& (!CyberwareConfig.INSTANCE.MOBS_APPLY_DIMENSION_TO_BEACON.get()
 			|| isValidDimension(event.getLevel())))

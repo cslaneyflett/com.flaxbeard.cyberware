@@ -37,20 +37,20 @@ public class BoneUpgrades extends ItemRegistry
 	//			? MAX_STACK_SIZE_LACING
 	//			: wareStack.getItem() == Boneupgrades_BATTERY.get() ? 4 : 1;
 	//	}
-	public static final RegistryObject<Item> LACING = boneUpgrade("bone_upgrades_bonelacing", () -> new CyberwareProperties(
+	public static final RegistryObject<ItemBoneUpgrade> LACING = boneUpgrade("bone_upgrades_bonelacing", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 3, 1,
 		new ItemStack(REACTOR.get(), 1), new ItemStack(TITANIUM.get(), 2), new ItemStack(FULLERENE.get(), 2)
 	));
-	public static final RegistryObject<Item> FLEX = boneUpgrade("bone_upgrades_boneflex", () -> new CyberwareProperties(
+	public static final RegistryObject<ItemBoneUpgrade> FLEX = boneUpgrade("bone_upgrades_boneflex", () -> new CyberwareProperties(
 		Rarity.RARE, 5, 1,
 		new ItemStack(REACTOR.get(), 3), new ItemStack(TITANIUM.get(), 2), new ItemStack(STORAGE.get(), 2)
 	));
-	public static final RegistryObject<Item> BATTERY = boneUpgrade("bone_upgrades_bonebattery", () -> new CyberwareProperties(
+	public static final RegistryObject<ItemBoneUpgrade> BATTERY = boneUpgrade("bone_upgrades_bonebattery", () -> new CyberwareProperties(
 		Rarity.UNCOMMON, 2, 1,
 		new ItemStack(REACTOR.get(), 2), new ItemStack(STORAGE.get(), 2), new ItemStack(MICRO_ELECTRIC.get(), 1)
 	));
 
-	private static RegistryObject<Item> boneUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
+	private static RegistryObject<ItemBoneUpgrade> boneUpgrade(@Nonnull String name, @Nonnull Supplier<CyberwareProperties> props)
 	{
 		return register(name, () -> new ItemBoneUpgrade(new Item.Properties(), props.get()));
 	}

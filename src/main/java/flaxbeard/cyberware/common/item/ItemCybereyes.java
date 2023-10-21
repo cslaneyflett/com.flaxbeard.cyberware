@@ -44,9 +44,9 @@ public class ItemCybereyes extends ItemCyberware
 		return LibConstants.CYBEREYES_CONSUMPTION;
 	}
 
-	public static class EventHandler
+	public static class ItemCybereyesEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemCybereyesEventHandler INSTANCE = new ItemCybereyesEventHandler();
 
 		@SubscribeEvent
 		public void handleBlindnessImmunity(CyberwareUpdateEvent event)

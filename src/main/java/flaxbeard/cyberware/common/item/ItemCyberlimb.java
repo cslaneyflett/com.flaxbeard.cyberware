@@ -76,9 +76,9 @@ public class ItemCyberlimb extends ItemCyberware implements ISidedLimb
 		return LibConstants.LIMB_CONSUMPTION;
 	}
 
-	public static class EventHandler
+	public static class ItemCyberlimbEventHandler
 	{
-		public static final EventHandler INSTANCE = new EventHandler();
+		public static final ItemCyberlimbEventHandler INSTANCE = new ItemCyberlimbEventHandler();
 		private final Set<Integer> didFall = new HashSet<>();
 
 		@SubscribeEvent

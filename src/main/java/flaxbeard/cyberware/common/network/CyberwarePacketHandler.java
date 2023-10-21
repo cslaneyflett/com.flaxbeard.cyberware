@@ -26,7 +26,7 @@ public class CyberwarePacketHandler
 		CyberwareAPI.PACKET_HANDLER = INSTANCE;
 	}
 
-	public static void register(RegisterEvent ignoredEvent)
+	public static void init()
 	{
 		INSTANCE.registerMessage(
 			0,
